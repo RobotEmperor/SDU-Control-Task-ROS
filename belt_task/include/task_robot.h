@@ -5,8 +5,8 @@
  *      Author: yik
  */
 
-#ifndef SDU_CONTROL_TASKS_BELT_TASK_INCLUDE_TASK_ROBOT_H_
-#define SDU_CONTROL_TASKS_BELT_TASK_INCLUDE_TASK_ROBOT_H_
+#ifndef SDU_CONTROL_TASK_ROS_BELT_TASK_INCLUDE_TASK_ROBOT_H_
+#define SDU_CONTROL_TASK_ROS_BELT_TASK_INCLUDE_TASK_ROBOT_H_
 //#define WC_FILE "/home/yik/sdu_ws/SDU-Control-Tasks/belt_task/config/wc/UR10e_2018/UR10e.xml"
 
 #include <Eigen/Dense>
@@ -90,6 +90,8 @@ public:
 	std::vector<double> get_current_q_();
 	rw::math::Transform3D<> get_tf_current_();
 	rw::math::Transform3D<> get_tf_base_to_bearing_();
+
+	bool get_finish_task();
 
 private:
 
@@ -227,6 +229,7 @@ private:
 
 	//
 	bool flag;
+	bool finish_task_;
 
 	rw::math::Transform3D<> tf_bearing_to_static_robot;
 	rw::math::Transform3D<> tf_bearing_to_rubber_point;

@@ -5,8 +5,8 @@
  *      Author: yik
  */
 
-#ifndef SDU_CONTROL_TASKS_BELT_TASK_INCLUDE_ROS_NODE_H_
-#define SDU_CONTROL_TASKS_BELT_TASK_INCLUDE_ROS_NODE_H_
+#ifndef SDU_CONTROL_TASK_ROS_BELT_TASK_INCLUDE_ROS_NODE_H_
+#define SDU_CONTROL_TASK_ROS_BELT_TASK_INCLUDE_ROS_NODE_H_
 
 #include "ros/ros.h"
 #include "std_msgs/Float64MultiArray.h"
@@ -23,11 +23,14 @@
 
 
 #include <yaml-cpp/yaml.h>
+#include <actionlib/server/simple_action_server.h>
+#include <belt_task/belt_task_actionAction.h>
+
 
 class RosNode
 {
 public:
-  RosNode(int argc, char **argv, std::string node_name);
+  RosNode(int argc, char **argv, std::string node_name, ros::NodeHandle nh_);
   ~RosNode();
 
   void initialize();
@@ -62,10 +65,13 @@ public:
 
 
   bool get_test();
+  //bool get_program_on_off_();
 
   std::string get_task_command();
 
 private:
+  ros::NodeHandle nh;
+
   double gain_p_, gain_i_, gain_d_;
   double force_gain_p_, force_gain_i_, force_gain_d_;
   std::string task_command_;
@@ -123,9 +129,11 @@ private:
   std_msgs::Float64MultiArray ee_velocity_msg_;
   std_msgs::Bool satefy_violation_msg_;
 
+  //message for action
+
   bool test_;
 };
 
 
 
-#endif /* SDU_CONTROL_TASKS_BELT_TASK_INCLUDE_ROS_NODE_H_ */
+#endif /* SDU_CONTROL_TASK_ROS_BELT_TASK_INCLUDE_ROS_NODE_H_ */

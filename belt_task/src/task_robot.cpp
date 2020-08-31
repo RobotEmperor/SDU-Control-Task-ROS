@@ -288,6 +288,8 @@ void TaskRobot::estimation_of_belt_position(double radious)
   cout << " change_y_  :"<< change_y_ << endl;
   cout << " change_z_  :"<< change_z_ << endl;
 
+  finish_task_ = false;
+
 }
 bool TaskRobot::tasks(std::string command)
 {
@@ -413,6 +415,7 @@ bool TaskRobot::tasks(std::string command)
       {
         robot_task_->finish_2(contact_check_, 0, 0, -0.04, 0, 0, 0);
         //task_check = robot_task_->up_motion(contact_check_, 0.005, 0, 0, 0, 0, 0);
+        finish_task_ = 1;
       }
 
     }
@@ -853,6 +856,10 @@ void TaskRobot::terminate_robot()
 void TaskRobot::terminate_data_log()
 {
   data_log_->save_file();
+}
+bool TaskRobot::get_finish_task()
+{
+  return finish_task_;
 }
 
 

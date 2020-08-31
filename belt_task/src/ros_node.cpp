@@ -7,9 +7,10 @@
 
 #include "ros_node.h"
 
-RosNode::RosNode(int argc, char **argv, std::string node_name)
+RosNode::RosNode(int argc, char **argv, std::string node_name,ros::NodeHandle nh_):
+nh(nh_)
 {
-	ros::init(argc, argv, node_name);
+	//ros::init(argc, argv, node_name);
 	task_command_ = "";
 	gain_p_ = 0;
 	gain_i_ = 0;
@@ -24,7 +25,7 @@ RosNode::~RosNode()
 }
 void RosNode::initialize()
 {
-	ros::NodeHandle nh;
+  //ros::NodeHandle nh;
 
 	raw_force_torque_pub_ = nh.advertise<std_msgs::Float64MultiArray>("/sdu/ur10e/raw_force_torque_data", 10);
 	filtered_force_torque_pub_ = nh.advertise<std_msgs::Float64MultiArray>("/sdu/ur10e/filtered_force_torque_data", 10);
@@ -56,6 +57,7 @@ void RosNode::initialize()
 	test_sub_ =  nh.subscribe("/sdu/ur10e/test", 10, &RosNode::TestMsgCallBack, this);
 
 	set_point_.assign(6,0);
+
 }
 void RosNode::EeCommandDataMsgCallBack (const std_msgs::Float64MultiArray::ConstPtr& msg)
 {

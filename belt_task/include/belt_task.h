@@ -4,8 +4,8 @@
  *  Created on: Jun 15, 2020
  *      Author: yik
  */
-#ifndef SDU_CONTROL_TASKS_BELT_TASK_INCLUDE_BELT_TASK_H_
-#define SDU_CONTROL_TASKS_BELT_TASK_INCLUDE_BELT_TASK_H_
+#ifndef SDU_CONTROL_TASK_ROS_BELT_TASK_INCLUDE_BELT_TASK_H_
+#define SDU_CONTROL_TASK_ROS_BELT_TASK_INCLUDE_BELT_TASK_H_
 #define EIGEN_NO_DEBUG
 #define EIGEN_NO_STATIC_ASSERT
 #define CLOCK_RES 1e-9 //Clock resolution is 1 us by default 1e-9
@@ -46,10 +46,20 @@ std::string robot_path;
 std::string silmulation_on_off;
 //ros
 std::shared_ptr<RosNode> ros_state;
+typedef actionlib::SimpleActionServer<belt_task::belt_task_actionAction> Server;
+void executeAction(const belt_task::belt_task_actionGoalConstPtr &start_end, Server* as);
+
+bool program_on_off_;
+bool done_check_;
+belt_task::belt_task_actionResult result_;
+
+
+
 double control_time;
 bool gazebo_check;
 bool exit_program;
+bool wait_command;
 
 std::mutex m;
 
-#endif /* SDU_CONTROL_TASKS_BELT_TASK_INCLUDE_BELT_TASK_H_ */
+#endif /* SDU_CONTROL_TASK_ROS_BELT_TASK_INCLUDE_BELT_TASK_H_ */
