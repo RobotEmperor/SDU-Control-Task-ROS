@@ -144,8 +144,7 @@ void executeAction(const belt_task::belt_task_actionGoalConstPtr &start_end, Ser
   {
     wait_command = true;
 
-
-    while(!robot_b->get_finish_task())
+    while(!robot_b->get_finish_task() && !exit_program)
     {
       usleep(0.1);
     }
@@ -181,11 +180,12 @@ int main (int argc, char **argv)
   while(!wait_command)
   {
     ros_state->update_ros_data();
-    usleep(0.1);
+    usleep(1);
   }
 
   std::cout << COLOR_YELLOW_BOLD << "Simulation On [ yes / no ]" << COLOR_RESET << std::endl;
-  cin >> silmulation_on_off;
+  //cin >> silmulation_on_off;
+  silmulation_on_off = "n";
 
   if(!silmulation_on_off.compare("yes") || !silmulation_on_off.compare("y"))
     std::cout << COLOR_GREEN_BOLD << "Setting up Simulation " << COLOR_RESET << std::endl;
@@ -193,7 +193,8 @@ int main (int argc, char **argv)
   {
     std::cout << COLOR_GREEN_BOLD << "REAL Robot, Be careful to run:" << COLOR_RESET << std::endl;
     std::cout << COLOR_GREEN_BOLD << "Are you sure ? [yes / no]" << COLOR_RESET << std::endl;
-    cin >> silmulation_on_off;
+    //cin >> silmulation_on_off;
+    silmulation_on_off = "y";
     if(silmulation_on_off.compare("y")!=0)
     {
       ros_state->shout_down_ros();
