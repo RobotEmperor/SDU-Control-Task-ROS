@@ -32,10 +32,11 @@ void DataLogging::initialize()
   getActualQ_ = " actual_q_0 actual_q_1 actual_q_2 actual_q_3 actual_q_4 actual_q_5";
   getPidCompensation_ = " x_compensation y_compensation z_compensation eaa_x_compensation eaa_y_compensation eaa_z_compensation";
   getBeltPosition_ = " belt_x belt_y belt_z";
-  getDesiredBeltPosition_ = " desired_belt_x desired_belt_y desired_belt_z";///////////////////////////////
+  getDesiredBeltPosition_ = " desired_belt_x desired_belt_y desired_belt_z";
+  getBearingTCPPosition_ = " bearing_tcp_x bearing_tcp_y bearing_tcp_z";///////////////////////////////
 
   data_line_ = "time"+getTargetTCPPose_+getActualTCPPose_+getActualTCPForceTorque_+getFilteredTCPForceTorque_+getContactedForceTorque_+
-      getActualToolAccelerometer_+getActualQ_+getPidCompensation_+getDesiredTCPPose_+getBeltPosition_+getDesiredBeltPosition_+"\n";//////////////////////////////////
+      getActualToolAccelerometer_+getActualQ_+getPidCompensation_+getDesiredTCPPose_+getBeltPosition_+getDesiredBeltPosition_+ getBearingTCPPosition_+"\n";//////////////////////////////////
 
   //out << data_line << std::endl;
   out->write(data_line_.c_str(),data_line_.size());
@@ -105,13 +106,22 @@ void DataLogging::set_data_getBeltPosition(std::vector<double> belt_position)
     getBeltPosition_ += " "+std::to_string(belt_position[num]);
   }
 }
-void DataLogging::set_data_getDesiredBeltPosition(std::vector<double> desired_belt_position)///////////////////////////////
+void DataLogging::set_data_getDesiredBeltPosition(std::vector<double> desired_belt_position)
 {
   if(desired_belt_position.size() == 0)
     return;
   for(int num = 0; num < 3; num++)
   {
     getDesiredBeltPosition_ += " "+std::to_string(desired_belt_position[num]);
+  }
+}
+void DataLogging::set_data_getBearingTCPPosition(std::vector<double> bearing_tcp_position)///////////////////////////////
+{
+  if(bearing_tcp_position.size() == 0)
+    return;
+  for(int num = 0; num < 3; num++)
+  {
+    getDesiredBeltPosition_ += " "+std::to_string(bearing_tcp_position[num]);
   }
 }
 void DataLogging::set_data_getActualToolAccelerometer(std::vector<double> acutal_acc)
@@ -125,7 +135,7 @@ void DataLogging::set_data_getActualToolAccelerometer(std::vector<double> acutal
 }
 void DataLogging::set_data_new_line()
 {
-  data_line_ = time_count_+getTargetTCPPose_+getActualTCPPose_+getActualTCPForceTorque_+getFilteredTCPForceTorque_+getContactedForceTorque_+getActualToolAccelerometer_+getActualQ_+getPidCompensation_+getDesiredTCPPose_+getBeltPosition_+getDesiredBeltPosition_+"\n";////////////////////
+  data_line_ = time_count_+getTargetTCPPose_+getActualTCPPose_+getActualTCPForceTorque_+getFilteredTCPForceTorque_+getContactedForceTorque_+getActualToolAccelerometer_+getActualQ_+getPidCompensation_+getDesiredTCPPose_+getBeltPosition_+getDesiredBeltPosition_+ getBearingTCPPosition_+"\n";////////////////////
 
   out->write(data_line_.c_str(),data_line_.size());
 
@@ -140,7 +150,8 @@ void DataLogging::set_data_new_line()
   getPidCompensation_ = "";
   getDesiredTCPPose_="";
   getBeltPosition_ = "";
-  getDesiredBeltPosition_ = "";/////////////////////////
+  getDesiredBeltPosition_ = "";
+  getBearingTCPPosition_ = "";/////////////////////////
 }
 std::string DataLogging::data_change_to_string(std::vector<double> data)
 {

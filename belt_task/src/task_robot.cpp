@@ -36,6 +36,7 @@ TaskRobot::TaskRobot(std::string robot_name, std::string init_path)
 
   data_current_belt_.assign(3,0);
   data_desired_belt_.assign(3,0);
+  data_bearing_tcp_belt_.assign(3,0);
 
   force_controller_gain_.x_kp = 0;
   force_controller_gain_.x_ki = 0;
@@ -324,6 +325,10 @@ bool TaskRobot::tasks(std::string command)
         data_current_belt_[0] = current_belt_[0];
         data_current_belt_[1] = current_belt_[1];
         data_current_belt_[2] = current_belt_[2];
+
+        data_bearing_tcp_belt_[0] = tf_bearing_to_moveable_robot.P()[0];
+        data_bearing_tcp_belt_[1] = tf_bearing_to_moveable_robot.P()[1];
+        data_bearing_tcp_belt_[2] = tf_bearing_to_moveable_robot.P()[2];
 
       }
       if(robot_task_->get_phases_() == 3)
@@ -647,7 +652,8 @@ bool TaskRobot::hybrid_controller()
   data_log_->set_data_getPidCompensation(pid_compensation_);
   data_log_->set_data_getDesiredTCPPose(desired_pose_vector_);
   data_log_->set_data_getBeltPosition(data_current_belt_);
-  data_log_->set_data_getDesiredBeltPosition(data_desired_belt_);
+  data_log_->set_data_getDesiredBeltPosition(data_desired_belt_);  //data_bearing_tcp_belt_
+  data_log_->set_data_getBearingTCPPosition(data_bearing_tcp_belt_);
   data_log_->set_data_new_line();
 
   return control_check_;

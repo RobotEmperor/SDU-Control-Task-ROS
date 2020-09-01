@@ -183,6 +183,7 @@ private:
 
   std::vector<double> data_current_belt_;
   std::vector<double> data_desired_belt_;
+  std::vector<double> data_bearing_tcp_belt_;
 
 	//task motion
 	std::string previous_task_command_;
