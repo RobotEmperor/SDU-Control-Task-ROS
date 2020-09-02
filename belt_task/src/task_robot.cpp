@@ -232,15 +232,17 @@ void TaskRobot::estimation_of_belt_position(double radious)
     init_current_belt_[2] = tf_bearing_to_moveable_robot_start.P()[2];
 
     desired_belt_[1] = radious; // radious 0.031 gripper 66 %
-    desired_belt_[2] = -0.004;
+    //desired_belt_[2] = -0.004;
 
   if(!robot_name_.compare("robot_B"))
     {
     desired_belt_[0] = -0.01;
+    desired_belt_[2] = -0.006;
     }
     else
     {
     desired_belt_[0] = 0;
+    desired_belt_[2] = -0.005;
     }
 
 
@@ -424,8 +426,9 @@ bool TaskRobot::tasks(std::string command)
       {
         robot_task_->finish_2(contact_check_, 0, 0, -0.04, 0, 0, 0);
         //task_check = robot_task_->up_motion(contact_check_, 0.005, 0, 0, 0, 0, 0);
-        finish_task_ = 1;
       }
+      if(robot_task_->get_phases_() == 6)
+    	  finish_task_ = 1;
 
     }
 

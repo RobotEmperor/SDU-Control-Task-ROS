@@ -479,7 +479,7 @@ bool TaskMotion::finish_2(bool contact_, double x, double y, double z, double ax
 void TaskMotion::check_phases()
 {
   pre_phases_ = phases_;
-  if(robot_traj->is_moving_check == false && phases_ < 6)
+  if(robot_traj->is_moving_check == false && phases_ < 7)
   {
     phases_ ++;
   }

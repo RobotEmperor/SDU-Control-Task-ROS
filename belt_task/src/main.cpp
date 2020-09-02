@@ -151,6 +151,8 @@ void executeAction(const belt_task::belt_task_actionGoalConstPtr &start_end, Ser
 
     //result_.sequence = 1;
 
+    exit_program = true;
+
     as->setSucceeded();
   }
   else
@@ -163,7 +165,7 @@ void executeAction(const belt_task::belt_task_actionGoalConstPtr &start_end, Ser
 
 int main (int argc, char **argv)
 {
-
+  signal(SIGINT, my_function);
   CPU_ZERO(&cpu_robot);
 
   mlockall(MCL_CURRENT | MCL_FUTURE); //Lock the memory to avoid memory swapping for this program
@@ -179,6 +181,8 @@ int main (int argc, char **argv)
 
   while(!wait_command)
   {
+    if(exit_program)
+      wait_command = true;
     ros_state->update_ros_data();
     usleep(1);
   }
@@ -242,7 +246,6 @@ int main (int argc, char **argv)
   rt_task_start(&loop_robot_b, &loop_robot_b_proc, 0);//Since task starts in suspended mode, start task
   std::cout << COLOR_GREEN << "Real time task loop was created!" << COLOR_RESET << std::endl;
 
-  signal(SIGINT, my_function);
 
   while(!exit_program)
   {
