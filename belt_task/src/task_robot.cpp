@@ -402,6 +402,10 @@ bool TaskRobot::tasks(std::string command)
         data_current_belt_[0] = current_belt_[0];
         data_current_belt_[1] = current_belt_[1];
         data_current_belt_[2] = current_belt_[2];
+
+        data_bearing_tcp_belt_[0] = tf_bearing_to_moveable_robot.P()[0];
+        data_bearing_tcp_belt_[1] = tf_bearing_to_moveable_robot.P()[1];
+        data_bearing_tcp_belt_[2] = tf_bearing_to_moveable_robot.P()[2];
       }
       if(robot_task_->get_phases_() == 3)
       {
