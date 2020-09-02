@@ -53,6 +53,7 @@ void DataLogging::initialize()
   getDesiredTCPPose_ = "";
   getBeltPosition_ = "";
   getDesiredBeltPosition_ = "";////////////////////////////////
+  getBearingTCPPosition_ = "";
 
 }
 void DataLogging::save_file()
@@ -121,7 +122,7 @@ void DataLogging::set_data_getBearingTCPPosition(std::vector<double> bearing_tcp
     return;
   for(int num = 0; num < 3; num++)
   {
-    getDesiredBeltPosition_ += " "+std::to_string(bearing_tcp_position[num]);
+    getBearingTCPPosition_ += " "+std::to_string(bearing_tcp_position[num]);
   }
 }
 void DataLogging::set_data_getActualToolAccelerometer(std::vector<double> acutal_acc)
