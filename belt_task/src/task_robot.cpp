@@ -101,7 +101,6 @@ TaskRobot::TaskRobot(std::string robot_name, std::string init_path)
 
   //load motion data
   robot_task_->load_task_motion(init_path + "/" + robot_name_ + "/motion/initialize.yaml", "initialize");
-  robot_task_->trans_tcp_to_base_motion(init_path + "/" + robot_name_ + "/motion/tcp_belt_task.yaml");
 
   desired_pose_vector_ = robot_task_ -> get_current_pose();
 
@@ -212,87 +211,6 @@ void TaskRobot::move_to_init_pose()
     compensated_pose_vector_ = desired_pose_vector_;
     tf_current_ = Transform3D<> (Vector3D<>(compensated_pose_vector_[0], compensated_pose_vector_[1], compensated_pose_vector_[2]), EAA<>(compensated_pose_vector_[3], compensated_pose_vector_[4], compensated_pose_vector_[5]).toRotation3D());
   }
-}
-void TaskRobot::estimation_of_belt_position(double radious)
-{
-
-  if(!flag && robot_task_->get_phases_() == 2)
-  {
-
-
-    temp = tf_base_to_bearing_;
-    temp.invMult(temp, tf_current_);
-    tf_bearing_to_moveable_robot_start = temp;
-
-
-
-    //bearing robot point
-    init_current_belt_[0] = 0;
-    init_current_belt_[1] = tf_bearing_to_moveable_robot_start.P()[1] + 0.008; // same in two robot
-    init_current_belt_[2] = tf_bearing_to_moveable_robot_start.P()[2];
-
-    desired_belt_[1] = radious; // radious 0.031 gripper 66 %
-    //desired_belt_[2] = -0.004;
-
-  if(!robot_name_.compare("robot_B"))
-    {
-    desired_belt_[0] = -0.01;
-    desired_belt_[2] = -0.006;
-    }
-    else
-    {
-    desired_belt_[0] = 0;
-    desired_belt_[2] = -0.005;
-    }
-
-
-    data_desired_belt_[0] = desired_belt_[0];
-    data_desired_belt_[1] = desired_belt_[1];
-    data_desired_belt_[2] = desired_belt_[2];
-
-    cout << " init_current_belt_  :"<< init_current_belt_ << endl;
-
-    tf_bearing_current_belt_.P() = init_current_belt_;
-    tf_bearing_desired_belt_.P() = desired_belt_;
-
-    temp = tf_bearing_to_moveable_robot_start;
-    temp.invMult(temp, tf_bearing_current_belt_);
-    tf_moveable_robot_to_init_belt_ = temp;
-
-    flag = true;
-  }
-
-  temp = tf_base_to_bearing_static_robot_;
-  temp.invMult(temp, tf_base_to_static_robot_);
-  tf_bearing_to_static_robot = temp;
-
-  temp = tf_base_to_bearing_;
-  temp.invMult(temp, tf_current_);
-  tf_bearing_to_moveable_robot = temp;
-
-  temp = tf_bearing_to_moveable_robot;
-  temp.invMult(temp, tf_bearing_current_belt_);
-  tf_tcp_current_belt_.P() = temp.P();
-
-  temp = tf_bearing_to_moveable_robot;
-  temp.invMult(temp, tf_bearing_desired_belt_);
-  tf_tcp_desired_belt_.P()  = temp.P();
-
-
-  error_ = tf_tcp_desired_belt_.P() - tf_tcp_current_belt_.P();
-
-  cout << " error_  :"<< error_<< endl;
-
-  change_x_ = error_[0];
-  change_y_ = error_[1];
-  change_z_ = error_[2];
-
-  cout << " change_x_  :"<< change_x_ << endl;
-  cout << " change_y_  :"<< change_y_ << endl;
-  cout << " change_z_  :"<< change_z_ << endl;
-
-  finish_task_ = false;
-
 }
 bool TaskRobot::tasks(std::string command)
 {
@@ -435,21 +353,6 @@ bool TaskRobot::tasks(std::string command)
     previous_phase_ = robot_task_->get_phases_();
     robot_task_->generate_trajectory();
     robot_task_->check_phases();
-  }
-  else
-  {
-    if(command.compare(previous_task_command_) != 0 && command.compare("") != 0)
-    {
-      robot_task_->clear_phase();
-      robot_task_->clear_task_motion();
-      robot_task_->change_motion(command);
-      contact_check_ = false;
-    }
-    else
-    {
-      robot_task_->run_task_motion();
-    }
-    robot_task_->generate_trajectory();
   }
 
   previous_task_command_ = command;
