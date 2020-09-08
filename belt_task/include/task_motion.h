@@ -49,7 +49,7 @@ public:
   void finish_1(bool contact_, double x, double y, double z, double axis_x, double axis_y, double axis_z);
   void finish_2(bool contact_, double x, double y, double z, double axis_x, double axis_y, double axis_z);
 
-  void estimation_of_belt_position();
+  void estimation_of_belt_position(rw::math::Vector3D<> desired_groove_position);
   void insert_into_groove();
 
   void check_phases();
@@ -85,7 +85,6 @@ private:
   bool check_change;
   bool task_done;
   bool base_frame_;
-
 
   double path_angle_;
   double path_y_;
@@ -123,29 +122,31 @@ private:
   Eigen::MatrixXd desired_pose_matrix;
 
   Transform3D<> tf_base_to_bearing_;
-  Transform3D<> tf_base_to_bearing2_;
   Transform3D<> tf_bearing_to_init_;
-  Transform3D<> tf_bearing_to_bearing2_;
   Transform3D<> tf_base_to_init_task_;
   Transform3D<> tf_static_frame_;
-  Transform3D<> tf_contact_point_to_non_contact_point_;
 
   Transform3D<> tf_tcp_desired_pose_;
-  Transform3D<> tf_parts_desired_pose_;
   Transform3D<> tf_current_pose_;
   Transform3D<> tf_desired_pose_;
 
-  Wrench6D<> tf_force_desired_;
-  Wrench6D<> tf_tcp_desired_force_;
-
   // tf for belt task
   Transform3D<> temp_;
-  Transform3D<> tf_bearing_to_master_robot_start_;
+  Transform3D<> tf_master_robot_to_ref_belt_;
+  Transform3D<> tf_master_robot_to_desired_groove_;
+  Transform3D<> tf_base_to_slave_robot_;
+  Transform3D<> tf_base_to_bearing_slave_robot_;
 
-  rw::math::Vector3D<> init_current_belt_;
-  rw::math::Vector3D<> current_belt_;
-  rw::math::Vector3D<> desired_belt_;
+  Transform3D<> tf_bearing_ref_belt_;
+  Transform3D<> tf_bearing_desired_groove_;
+  Transform3D<> tf_bearing_to_master_robot_;
+  Transform3D<> tf_bearing_to_slave_robot_;
+
+  rw::math::Vector3D<> ref_belt_;
   rw::math::Vector3D<> error_;
+
+  rw::math::Vector3D<> desired_groove_position_;
+
 
 
   bool flag_;

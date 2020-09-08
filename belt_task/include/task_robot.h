@@ -56,7 +56,6 @@ public:
 	void init_model(std::string wc_file, std::string robot_model);
 	void move_to_init_pose();
 
-	void estimation_of_belt_position(double radious);
 	bool tasks(std::string command);
 	bool hybrid_controller();
 
@@ -80,7 +79,6 @@ public:
 	void set_position_controller_eaa_z_gain(double kp,double ki,double kd);
 
 	void set_robust_value(double robust_value);
-	void set_belt_change_values(double x, double y, double z);
 	void set_tf_static_robot(rw::math::Transform3D<> tf_base_to_staric_robot, rw::math::Transform3D<> tf_base_to_bearing_staric_robot);
 
 	std::vector<double> get_raw_ft_data_();
@@ -206,13 +204,10 @@ private:
 	double time_count_;
 	double tool_mass_;
 	double belt_robust_value_;
-	double change_x_, change_y_, change_z_;
-	double current_belt_x_, current_belt_y_, current_belt_z_;
-	double desired_belt_x_, desired_belt_y_, desired_belt_z_;
 
 	bool contact_check_;
 	bool control_check_;
-	bool previous_phase_;
+	unsigned int previous_phase_;
 
 	//solution check
 	int preferred_solution_number_;
@@ -232,33 +227,7 @@ private:
 	bool flag;
 	bool finish_task_;
 
-	rw::math::Transform3D<> tf_bearing_to_static_robot;
-	rw::math::Transform3D<> tf_bearing_to_rubber_point;
-	rw::math::Transform3D<> tf_bearing_to_moveable_robot_start;
-	rw::math::Transform3D<> tf_bearing_to_moveable_robot;
-	rw::math::Transform3D<> tf_bearing_to_error;
-	rw::math::Transform3D<> distance_tf_static_robot_to_moveable_robot;
-	rw::math::Transform3D<> distance_tf_static_robot_to_moveable_robot_start;
-	rw::math::Transform3D<> tf_static_robot_to_bearing;
-	rw::math::Transform3D<> tf_static_robot_to_rubber_point;
-	rw::math::Transform3D<> tf_moveable_robot_to_bearing;
-  rw::math::Transform3D<> tf_moveable_robot_to_init_belt_;
-	rw::math::Transform3D<> tf_moveable_robot_to_error;
-
-	rw::math::Transform3D<> temp;
-	rw::math::Vector3D<> init_current_belt_;
-	rw::math::Vector3D<> current_belt_;
 	rw::math::Vector3D<> desired_belt_;
-	rw::math::Vector3D<> error_;
-
-	rw::math::Transform3D<> tf_bearing_current_belt_;
-	rw::math::Transform3D<> tf_bearing_desired_belt_;
-
-	rw::math::Transform3D<> tf_tcp_current_belt_;
-	rw::math::Transform3D<> tf_tcp_desired_belt_;
-
-
-
 };
 
 

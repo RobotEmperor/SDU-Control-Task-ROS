@@ -85,7 +85,7 @@ void loop_robot_b_proc(void *arg)
   while(!exit_program)
   {
     m.lock();
-    robot_b->set_tf_static_robot(robot_a->get_tf_current_(), robot_a->get_tf_base_to_bearing_());
+    //robot_b->set_tf_static_robot(robot_a->get_tf_current_(), robot_a->get_tf_base_to_bearing_());
     ros_state->update_ros_data();
     tstart_B = rt_timer_read();
 
@@ -189,7 +189,7 @@ int main (int argc, char **argv)
 
   std::cout << COLOR_YELLOW_BOLD << "Simulation On [ yes / no ]" << COLOR_RESET << std::endl;
   //cin >> silmulation_on_off;
-  silmulation_on_off = "n";
+  silmulation_on_off = "y";
 
   if(!silmulation_on_off.compare("yes") || !silmulation_on_off.compare("y"))
     std::cout << COLOR_GREEN_BOLD << "Setting up Simulation " << COLOR_RESET << std::endl;
