@@ -43,14 +43,16 @@ public:
 
   //a variety of motions all of things are with respect to TCP frame
   void make_belt_robust(double radious);
-  void close_to_pulleys(double x,double y,double depth);
-  void insert_belt_into_pulley(bool contact_, double change_x, double change_y, double change_z);
-  void up_motion(bool contact_, double x, double y, double z, double axis_x, double axis_y, double axis_z);
-  void finish_1(bool contact_, double x, double y, double z, double axis_x, double axis_y, double axis_z);
-  void finish_2(bool contact_, double x, double y, double z, double axis_x, double axis_y, double axis_z);
+  void close_to_pulleys(double x,double y,double depth,RPY<> tcp_rpy_);
+  void insert_belt_into_pulley(bool contact_, double change_x, double change_y, double change_z,RPY<> tcp_rpy_);
+  void up_motion(bool contact_, double x, double y, double z, double axis_x, double axis_y, double axis_z,RPY<> tcp_rpy_);
+  void finish_1(bool contact_, double x, double y, double z, double axis_x, double axis_y, double axis_z,RPY<> tcp_rpy_);
+  void finish_2(bool contact_, double x, double y, double z, double axis_x, double axis_y, double axis_z,RPY<> tcp_rpy_);
+  void rotate(double theta_);
+
 
   void estimation_of_belt_position(rw::math::Vector3D<> desired_groove_position);
-  void insert_into_groove();
+  void insert_into_groove(RPY<> tcp_rpy_);
 
   void check_phases();
   void generate_trajectory();
@@ -60,8 +62,6 @@ public:
 
   void set_initial_pose(double x, double y, double z, double axis_x, double axis_y, double axis_z);
   void set_current_pose_eaa(double x, double y, double z, double axis_x, double axis_y, double axis_z);
-
-  void set_pulley_radious(double radious);
 
   void load_data_initialize();
   void load_data_tcp_motion();
@@ -93,7 +93,6 @@ private:
   double change_path_z_;
   unsigned int phases_;
   unsigned int pre_phases_;
-  double radious_;
 
   //initial condition
   //robot's ee position
@@ -101,6 +100,7 @@ private:
   std::vector<double> bigger_pulley_bearing_position;
   std::vector<double> smaller_pulley_bearing_position;
   std::vector<double> task_initial_position;
+  std::vector<double> radious_;
   std::vector<double> set_point_;
 
   //modified robot position (in relative to base)
@@ -144,6 +144,7 @@ private:
 
   rw::math::Vector3D<> ref_belt_;
   rw::math::Vector3D<> error_;
+  rw::math::Vector3D<> modified_master_robot_;
 
   rw::math::Vector3D<> desired_groove_position_;
 

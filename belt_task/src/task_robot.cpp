@@ -34,6 +34,8 @@ TaskRobot::TaskRobot(std::string robot_name, std::string init_path)
   error_ee_pose_.assign(6,0); //(6);
   compensated_q_.assign(6,0); //(6);
 
+  robust_force_value_.assign(3,0);
+
   data_current_belt_.assign(3,0);
   data_desired_belt_.assign(3,0);
   data_bearing_tcp_belt_.assign(3,0);
@@ -122,10 +124,9 @@ TaskRobot::TaskRobot(std::string robot_name, std::string init_path)
   previous_task_command_ = "";
 
   gazebo_check_ = true;
-  belt_robust_value_ = 0;
 
   flag = false;
-  previous_phase_ = 0;
+  previous_phase_ = -1;
 
 }
 TaskRobot::~TaskRobot()
@@ -213,95 +214,92 @@ bool TaskRobot::tasks(std::string command)
 
   if(!command.compare("auto"))
   {
-    robot_task_->make_belt_robust(belt_robust_value_); // TCP force memory
+    //robot_task_->make_belt_robust(belt_robust_value_); // TCP force memory
 
     if(!robot_name_.compare("robot_A"))
     {
-//      std::cout << "robot_task_->get_phases_()"<< robot_task_->get_phases_() << std::endl;
-//      std::cout << previous_phase_ << std::endl;
       if(previous_phase_ != robot_task_->get_phases_())
       {
-        desired_belt_[0] = 0;
-        desired_belt_[1] = 0.0195;
-        desired_belt_[2] = -0.005;
-        robot_task_-> close_to_pulleys(-0.1815,0.01,-0.02); //bearing frame
-        robot_task_->estimation_of_belt_position(desired_belt_); ////bearing frame
-        robot_task_->insert_into_groove();
+        if(robot_task_->get_phases_() == 0)
+        {
+          robot_task_-> close_to_pulleys(-0.17,-0.035,-0.01, RPY<>(0,0,0)); //bearing frame
+        }
+        //desired_belt_[0] = 0;
+        //desired_belt_[1] = 0.0175;
+        //desired_belt_[2] = -0.01;
+        //robot_task_->estimation_of_belt_position(desired_belt_); ////bearing frame
+        //robot_task_->insert_into_groove();
         //robot_task_->up_motion(contact_check_, 0, -0.03, 0.011, 0, 0, 0); //bearing frame
         //robot_task_->finish_1(contact_check_, 0.02, 0, 0, 0, 0, 0); //bearing frame
         //robot_task_->finish_2(contact_check_, 0, 0, -0.04, 0, 0, 0); //bearing frame
       }
-      //      if(robot_task_->get_phases_() == 2)
-      //      {
-      //        //if(!flag)
-      //          //estimation_of_belt_position(0.0195); ////bearing frame
-      //        desired_force_torque_vector_[0] = 10;
-      //        desired_force_torque_vector_[2] = -12;
+      //if(robot_task_->get_phases_() == 2)
+      //{
+      //  //if(!flag)
+      //    //estimation_of_belt_position(0.0195); ////bearing frame
+      //  desired_force_torque_vector_[0] = 10;
+      //  desired_force_torque_vector_[2] = -12;
       //
-      //        temp = tf_base_to_bearing_;
-      //        temp.invMult(temp, tf_current_);
-      //        tf_bearing_to_moveable_robot = temp;
+      //  temp = tf_base_to_bearing_;
+      //  temp.invMult(temp, tf_current_);
+      //  tf_bearing_to_moveable_robot = temp;
       //
-      //        tf_bearing_to_rubber_point = tf_bearing_to_moveable_robot*tf_moveable_robot_to_init_belt_;
-      //        current_belt_ = tf_bearing_to_rubber_point.P();
-      //        data_current_belt_[0] = current_belt_[0];
-      //        data_current_belt_[1] = current_belt_[1];
-      //        data_current_belt_[2] = current_belt_[2];
+      //  tf_bearing_to_rubber_point = tf_bearing_to_moveable_robot*tf_moveable_robot_to_init_belt_;
+      //  current_belt_ = tf_bearing_to_rubber_point.P();
+      //  data_current_belt_[0] = current_belt_[0];
+      //  data_current_belt_[1] = current_belt_[1];
+      //  data_current_belt_[2] = current_belt_[2];
       //
-      //        data_bearing_tcp_belt_[0] = tf_bearing_to_moveable_robot.P()[0];
-      //        data_bearing_tcp_belt_[1] = tf_bearing_to_moveable_robot.P()[1];
-      //        data_bearing_tcp_belt_[2] = tf_bearing_to_moveable_robot.P()[2];
+      //  data_bearing_tcp_belt_[0] = tf_bearing_to_moveable_robot.P()[0];
+      //  data_bearing_tcp_belt_[1] = tf_bearing_to_moveable_robot.P()[1];
+      //  data_bearing_tcp_belt_[2] = tf_bearing_to_moveable_robot.P()[2];
       //
-      //      }
+      //}
+
+      //if(robot_task_->get_phases_() == 6)
+      //finish_task_ = 1;
     }
 
     if(!robot_name_.compare("robot_B"))
     {
       if(previous_phase_ != robot_task_->get_phases_())
       {
-        desired_belt_[0] = -0.01;
-        desired_belt_[1] = 0.0319;
-        desired_belt_[2] = -0.006;
+        if(robot_task_->get_phases_() == 0)
+        {
+          rw::math::Transform3D<> tf_tcp_rotated_;
 
-        rw::math::Transform3D<> tf_tcp_rotated_;
+          tcp_non_rotated_desired[0] = 0.032;
+          tcp_non_rotated_desired[1] = 0;
+          tcp_non_rotated_desired[2] = -0.01;
 
-        tcp_non_rotated_desired[0] = 0;
-        tcp_non_rotated_desired[1] = 0.031;
-        tcp_non_rotated_desired[2] = -0.01;
+          // tf_tcp_rotated_ = Transform3D<> (Vector3D<>(tcp_non_rotated_desired[0], tcp_non_rotated_desired[1], tcp_non_rotated_desired[2]), RPY<>(0, 25*DEGREE2RADIAN,0).toRotation3D());
+          //tcp_non_rotated_desired  = tf_tcp_rotated_ * tcp_non_rotated_desired;
 
-        tf_tcp_rotated_ = Transform3D<> (Vector3D<>(0, 0, 0), RPY<>(0, -25*DEGREE2RADIAN,0).toRotation3D());
+          robot_task_->close_to_pulleys(tcp_non_rotated_desired[0],tcp_non_rotated_desired[1],tcp_non_rotated_desired[2], RPY<>(0,-25*DEGREE2RADIAN,0)); //bearing frame
+        }
+        if(robot_task_->get_phases_() == 1)
+        {
+          desired_belt_[0] = 0;
+          desired_belt_[1] = 0.0319;
+          desired_belt_[2] = -0.006;
 
-        tcp_non_rotated_desired  = tf_tcp_rotated_ * tcp_non_rotated_desired;
 
-
-        robot_task_->close_to_pulleys(tcp_non_rotated_desired[0],tcp_non_rotated_desired[1],tcp_non_rotated_desired[2]); //bearing frame
-        robot_task_->estimation_of_belt_position(desired_belt_); ////bearing frame
-        robot_task_->insert_into_groove();
-        //robot_task_->up_motion(contact_check_, 0, -0.03, 0.011, 0, 0, 0); //bearing frame
-        //robot_task_->finish_1(contact_check_, 0.02, 0, 0, 0, 0, 0); //bearing frame
-        //robot_task_->finish_2(contact_check_, 0, 0, -0.04, 0, 0, 0); //bearing frame
+          robot_task_->estimation_of_belt_position(desired_belt_); ////bearing frame
+          robot_task_->insert_into_groove(RPY<>(0,-25*DEGREE2RADIAN,0));
+        }
+        if(robot_task_->get_phases_() == 2)
+        {
+          robot_task_->up_motion(contact_check_, 0.03, 0, -0.011, 0, 0, 0,RPY<>(0,-25*DEGREE2RADIAN,0)); //bearing frame
+        }
+        if(robot_task_->get_phases_() == 3)
+        {
+          robot_task_->finish_1(contact_check_, -0.03, -0.011, 0, 0, 0, 0,RPY<>(0,-25*DEGREE2RADIAN,0)); //bearing frame
+        }
+        if(robot_task_->get_phases_() == 4)
+        {
+          robot_task_->finish_2(contact_check_, -0.03, -0.011, -0.04, 0, 0, 0,RPY<>(0,-25*DEGREE2RADIAN,0)); //bearing frame
+        }
       }
-      //      if(previous_phase_ != robot_task_->get_phases_() && robot_task_->get_phases_() == 3)
-      //      {
-      //        rw::math::Transform3D<> tf_tcp_rotated_;
-      //
-      //        tcp_non_rotated_desired[0] = -0.005;
-      //        tcp_non_rotated_desired[1] = -0.064;
-      //        tcp_non_rotated_desired[2] = -0.005;
-      //
-      //        tf_tcp_rotated_ = Transform3D<> (Vector3D<>(0, 0, 0), RPY<>(0, 25*DEGREE2RADIAN,0).toRotation3D());
-      //
-      //        tcp_non_rotated_desired  = tf_tcp_rotated_ * tcp_non_rotated_desired;
-      //      }
-      //      if(robot_task_->get_phases_() == 2)
-      //      {
-      //        //if(!flag)
-      //          //estimation_of_belt_position(0.0319);
-      //        desired_force_torque_vector_[0] = 0;
-      //
-      //        temp = tf_base_to_bearing_;
-      //        temp.invMult(temp, tf_current_);
-      //        tf_bearing_to_moveable_robot = temp;
       //
       //        tf_bearing_to_rubber_point = tf_bearing_to_moveable_robot*tf_moveable_robot_to_init_belt_;
       //        current_belt_ = tf_bearing_to_rubber_point.P();
@@ -314,8 +312,6 @@ bool TaskRobot::tasks(std::string command)
       //        data_bearing_tcp_belt_[2] = tf_bearing_to_moveable_robot.P()[2];
       //      }
     }
-    if(robot_task_->get_phases_() == 6)
-      finish_task_ = 1;
 
     previous_phase_ = robot_task_->get_phases_();
     robot_task_->generate_trajectory();
@@ -367,11 +363,11 @@ bool TaskRobot::hybrid_controller()
     current_ft_ = (tf_current_.R()).inverse()*current_ft_;
     tf_current_ = Transform3D<> (Vector3D<>(actual_tcp_pose_[0], actual_tcp_pose_[1], actual_tcp_pose_[2]), EAA<>(actual_tcp_pose_[3], actual_tcp_pose_[4], actual_tcp_pose_[5]).toRotation3D());
 
-//    if(current_ft_.force()[1] > 5  && !contact_check_) // tool frame
-//    {
-//      contact_check_ = 1;
-//      std::cout << "A rubber belt was inserted in a pulley" << std::endl;
-//    }
+    //    if(current_ft_.force()[1] > 5  && !contact_check_) // tool frame
+    //    {
+    //      contact_check_ = 1;
+    //      std::cout << "A rubber belt was inserted in a pulley" << std::endl;
+    //    }
 
     position_x_controller_->PID_calculate(desired_pose_vector_[0], actual_tcp_pose_[0], 0);
     position_y_controller_->PID_calculate(desired_pose_vector_[1], actual_tcp_pose_[1], 0);
@@ -556,6 +552,7 @@ void TaskRobot::parse_init_data_(const std::string &path)
   preferred_solution_number_ =  doc["preferred_solution_number"].as<double>();
   YAML::Node initial_joint_states = doc["initial_joint_states"];
   YAML::Node bigger_pulley_bearing_position_node = doc["bigger_pulley_bearing_position"];
+  YAML::Node robust_force_value_node = doc["robust_force_value"];
   std::vector<double> bigger_pulley_bearing_position;
 
   for(int num = 0; num < 6; num ++)
@@ -612,6 +609,11 @@ void TaskRobot::parse_init_data_(const std::string &path)
   current_q_[3] = initial_joint_states[3].as<double>();
   current_q_[4] = initial_joint_states[4].as<double>();
   current_q_[5] = initial_joint_states[5].as<double>();
+
+  robust_force_value_[0] = robust_force_value_node[0].as<double>();
+  robust_force_value_[1] = robust_force_value_node[1].as<double>();
+  robust_force_value_[2] = robust_force_value_node[2].as<double>();
+
 }
 void TaskRobot::set_force_controller_x_gain(double kp,double ki,double kd)
 {
@@ -684,10 +686,6 @@ void TaskRobot::set_position_controller_eaa_z_gain(double kp,double ki,double kd
   position_controller_gain_.eaa_z_kp = kp;
   position_controller_gain_.eaa_z_ki = ki;
   position_controller_gain_.eaa_z_kd = kd;
-}
-void TaskRobot::set_robust_value(double robust_value)
-{
-  belt_robust_value_ = robust_value;
 }
 void TaskRobot::set_tf_static_robot(rw::math::Transform3D<> tf_base_to_staric_robot, rw::math::Transform3D<> tf_base_to_bearing_static_robot)
 {

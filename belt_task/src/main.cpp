@@ -29,7 +29,7 @@ void loop_robot_a_proc(void *arg)
   bool task_completed = false;
   double task_time_A = 0.0;
 
-  robot_a->set_robust_value(-0.0515);
+  //robot_a->set_robust_value(-0.0515);
 
   while(!exit_program)
   {
@@ -37,8 +37,8 @@ void loop_robot_a_proc(void *arg)
     ros_state->update_ros_data();
     tstart_A = rt_timer_read();
 
-    robot_a->tasks("auto");
-    robot_a->hybrid_controller();
+    //robot_a->tasks("auto");
+    //robot_a->hybrid_controller();
 
     if(gazebo_check)
     {
@@ -80,7 +80,7 @@ void loop_robot_b_proc(void *arg)
   bool task_completed = false;
   double task_time_B = 0.0;
 
-  robot_b->set_robust_value(0);
+  //robot_b->set_robust_value(0);
 
   while(!exit_program)
   {
@@ -134,38 +134,38 @@ void initialize()
 void my_function(int sig)
 { // can be called asynchronously
   exit_program = true; // set flag
+
 }
 
-void executeAction(const belt_task::belt_task_actionGoalConstPtr &start_end, Server* as)
-{
-  std::cout << "program_on_!!!!!!!!" << std::endl;
-
-  if(start_end->on_off_)
-  {
-    wait_command = true;
-
-    while(!robot_b->get_finish_task() && !exit_program)
-    {
-      usleep(0.1);
-    }
-
-    //result_.sequence = 1;
-
-    exit_program = true;
-
-    as->setSucceeded();
-  }
-  else
-  {
-    return;
-  }
-
-  //real time task
-}
+//void executeAction(const belt_task::belt_task_actionGoalConstPtr &start_end, Server* as)
+//{
+//  std::cout << "program_on_!!!!!!!!" << std::endl;
+//
+//  if(start_end->on_off_)
+//  {
+//    wait_command = true;
+//
+//    while(!robot_a->get_finish_task() && !exit_program)
+//    {
+//      usleep(0.1);
+//    }
+//
+//    //result_.sequence = 1;
+//
+//    exit_program = true;
+//
+//    as->setSucceeded();
+//  }
+//  else
+//  {
+//    return;
+//  }
+//
+//  //real time task
+//}
 
 int main (int argc, char **argv)
 {
-  signal(SIGINT, my_function);
   CPU_ZERO(&cpu_robot);
 
   mlockall(MCL_CURRENT | MCL_FUTURE); //Lock the memory to avoid memory swapping for this program
@@ -176,16 +176,16 @@ int main (int argc, char **argv)
   ros_state = std::make_shared<RosNode>(argc,argv,"Belt_Task",nh);
   ros_state->initialize();
 
-  Server server(nh, "belt_task", boost::bind(&executeAction, _1, &server), false);
-  server.start();
-
-  while(!wait_command)
-  {
-    if(exit_program)
-      wait_command = true;
-    ros_state->update_ros_data();
-    usleep(1);
-  }
+//  Server server(nh, "belt_task", boost::bind(&executeAction, _1, &server), false);
+//  server.start();
+//
+//  while(!wait_command)
+//  {
+//    if(exit_program)
+//      wait_command = true;
+//    ros_state->update_ros_data();
+//    usleep(1);
+//  }
 
   std::cout << COLOR_YELLOW_BOLD << "Simulation On [ yes / no ]" << COLOR_RESET << std::endl;
   //cin >> silmulation_on_off;
@@ -247,6 +247,7 @@ int main (int argc, char **argv)
   std::cout << COLOR_GREEN << "Real time task loop was created!" << COLOR_RESET << std::endl;
 
 
+  signal(SIGINT, my_function);
   while(!exit_program)
   {
     ros_state->update_ros_data();

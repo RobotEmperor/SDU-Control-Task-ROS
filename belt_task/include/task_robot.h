@@ -78,7 +78,6 @@ public:
 	void set_position_controller_eaa_y_gain(double kp,double ki,double kd);
 	void set_position_controller_eaa_z_gain(double kp,double ki,double kd);
 
-	void set_robust_value(double robust_value);
 	void set_tf_static_robot(rw::math::Transform3D<> tf_base_to_staric_robot, rw::math::Transform3D<> tf_base_to_bearing_staric_robot);
 
 	std::vector<double> get_raw_ft_data_();
@@ -203,7 +202,7 @@ private:
 	double control_time_;
 	double time_count_;
 	double tool_mass_;
-	double belt_robust_value_;
+	std::vector<double> robust_force_value_;
 
 	bool contact_check_;
 	bool control_check_;
