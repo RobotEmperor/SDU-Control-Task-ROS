@@ -16,6 +16,7 @@ TaskMotion::TaskMotion()
   change_path_z_ = 0.001;
   phases_= 0;
   pre_phases_ = 0;
+  all_phases_ = 0;
 }
 TaskMotion::~TaskMotion()
 {
@@ -175,7 +176,7 @@ void TaskMotion::estimation_of_belt_position(rw::math::Vector3D<> desired_positi
 
   //bearing robot point
   ref_belt_[0] = 0;
-  ref_belt_[1] = tf_bearing_to_master_robot_.P()[1] - 0.008; // same in two robot
+  ref_belt_[1] = tf_bearing_to_master_robot_.P()[1] + 0.008; // same in two robot
   ref_belt_[2] = tf_bearing_to_master_robot_.P()[2];
 
   desired_groove_position_ = desired_position;
@@ -255,7 +256,7 @@ void TaskMotion::close_to_pulleys(double x,double y,double depth,RPY<> tcp_rpy_)
 
   for(int num = 0; num <6 ; num ++)
   {
-    desired_pose_matrix(num,7) = 2.5;
+    desired_pose_matrix(num,7) = 5;
   }
 }
 void TaskMotion::insert_belt_into_pulley(bool contact_, double change_x, double change_y, double change_z, RPY<> tcp_rpy_)
@@ -294,7 +295,7 @@ void TaskMotion::rotate(double theta_)
   //
   //  }
 }
-void TaskMotion::up_motion(bool contact_, double x, double y, double z, double axis_x, double axis_y, double axis_z,RPY<> tcp_rpy_)
+void TaskMotion::up_motion(bool contact_, double x, double y, double z,RPY<> tcp_rpy_)
 {
 
   // output always has to be points in relative to base frame (global)
@@ -313,10 +314,10 @@ void TaskMotion::up_motion(bool contact_, double x, double y, double z, double a
 
   for(int num = 0; num <6 ; num ++)
   {
-    desired_pose_matrix(num,7) = 2;
+    desired_pose_matrix(num,7) = 5;
   }
 }
-void TaskMotion::finish_1(bool contact_, double x, double y, double z, double axis_x, double axis_y, double axis_z,RPY<> tcp_rpy_)
+void TaskMotion::finish_1(bool contact_, double x, double y, double z,RPY<> tcp_rpy_)
 {
 
   // output always has to be points in relative to base frame (global)
@@ -335,10 +336,10 @@ void TaskMotion::finish_1(bool contact_, double x, double y, double z, double ax
 
   for(int num = 0; num <6 ; num ++)
   {
-    desired_pose_matrix(num,7) = 1;
+    desired_pose_matrix(num,7) = 5;
   }
 }
-void TaskMotion::finish_2(bool contact_, double x, double y, double z, double axis_x, double axis_y, double axis_z,RPY<> tcp_rpy_)
+void TaskMotion::finish_2(bool contact_, double x, double y, double z,RPY<> tcp_rpy_)
 {
   // output always has to be points in relative to base frame (global)
 
@@ -356,13 +357,13 @@ void TaskMotion::finish_2(bool contact_, double x, double y, double z, double ax
 
   for(int num = 0; num <6 ; num ++)
   {
-    desired_pose_matrix(num,7) = 1;
+    desired_pose_matrix(num,7) = 5;
   }
 }
 void TaskMotion::check_phases()
 {
   pre_phases_ = phases_;
-  if(robot_traj->is_moving_check == false && phases_ < 7)
+  if(robot_traj->is_moving_check == false && phases_ < all_phases_)
   {
     phases_ ++;
   }
@@ -439,6 +440,10 @@ void TaskMotion::stop_motion()
   }
   robot_traj->stop_trajectory();
 }
+void TaskMotion::set_all_phases_(unsigned int all_phases)
+{
+  all_phases_ = all_phases;
+}
 std::vector<double> TaskMotion::get_current_pose()
 {
   return current_pose_vector;
@@ -459,4 +464,5 @@ unsigned int TaskMotion::get_phases_()
 {
   return phases_;
 }
+
 

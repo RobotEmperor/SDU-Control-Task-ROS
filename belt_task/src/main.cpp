@@ -29,8 +29,6 @@ void loop_robot_a_proc(void *arg)
   bool task_completed = false;
   double task_time_A = 0.0;
 
-  //robot_a->set_robust_value(-0.0515);
-
   while(!exit_program)
   {
     m.lock();
@@ -80,12 +78,9 @@ void loop_robot_b_proc(void *arg)
   bool task_completed = false;
   double task_time_B = 0.0;
 
-  //robot_b->set_robust_value(0);
-
   while(!exit_program)
   {
     m.lock();
-    //robot_b->set_tf_static_robot(robot_a->get_tf_current_(), robot_a->get_tf_base_to_bearing_());
     ros_state->update_ros_data();
     tstart_B = rt_timer_read();
 

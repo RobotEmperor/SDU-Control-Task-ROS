@@ -227,6 +227,14 @@ private:
 	bool finish_task_;
 
 	rw::math::Vector3D<> desired_belt_;
+
+	// strategy
+	void master_robot();
+	void slave_robot();
+
+	unsigned int sub_tasks_;
+	std::map<int, std::vector<double>> master_way_points_;
+
 };
 
 

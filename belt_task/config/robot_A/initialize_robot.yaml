@@ -7,7 +7,7 @@ pulley_radious: [0.15,0.1]
 robust_force_value : [10,0,0]
 
 #force controller gain
-f_x_kp : 0.00007
+f_x_kp : 0.00007 # have to be higher
 f_x_ki : 0
 f_x_kd : 0
 
@@ -55,5 +55,15 @@ p_eaa_y_kd : 0
 p_eaa_z_kp : 0
 p_eaa_z_ki : 0
 p_eaa_z_kd : 0
+
+#everyting is with respect to its frame.
+pulley_0: 
+  0: [0.032,0,-0.01,0,-25,0] # phases
+  1: [0,0.0319,-0.006,0,-25,0] # a desired belt point
+  2: [0.03,-0.04,-0.006,-30,-25,0]
+  3: [-0.03,-0.04,-0.006,0,-25,0]
+  4: [-0.03,-0.04,-0.04,0,-25,0]
+
+
 
 
