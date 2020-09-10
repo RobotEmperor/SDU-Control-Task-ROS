@@ -179,7 +179,7 @@ void ToolEstimation::initialize()
 	mass_of_tool_ = 0;
 	cutoff_frequency_ = 3;
 
-	r_ = 20;
+	r_ = 500;
 	q_ = 0.1;
 
 	kf_estimated_force = std::make_shared<KalmanFilter>();

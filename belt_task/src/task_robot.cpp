@@ -111,9 +111,9 @@ TaskRobot::TaskRobot(std::string robot_name, std::string init_path)
   force_y_compensator_ = std::make_shared<PID_function>(control_time_, 0.01, -0.01, 0, 0, 0, 0.0000001, -0.0000001);
   force_z_compensator_ = std::make_shared<PID_function>(control_time_, 0.01, -0.01, 0, 0, 0, 0.0000001, -0.0000001);
 
-  position_x_controller_ = std::make_shared<PID_function>(control_time_, 0.01, -0.01, 0, 0, 0, 0.0000001, -0.0000001);
-  position_y_controller_ = std::make_shared<PID_function>(control_time_, 0.01, -0.01, 0, 0, 0, 0.0000001, -0.0000001);
-  position_z_controller_ = std::make_shared<PID_function>(control_time_, 0.01, -0.01, 0, 0, 0, 0.0000001, -0.0000001);
+  position_x_controller_ = std::make_shared<PID_function>(control_time_, 0.02, -0.02, 0, 0, 0, 0.0000001, -0.0000001);
+  position_y_controller_ = std::make_shared<PID_function>(control_time_, 0.02, -0.02, 0, 0, 0, 0.0000001, -0.0000001);
+  position_z_controller_ = std::make_shared<PID_function>(control_time_, 0.02, -0.02, 0, 0, 0, 0.0000001, -0.0000001);
 
   control_check_ = false;
   joint_vel_limits_ = false;
@@ -286,7 +286,8 @@ void TaskRobot::slave_robot()
     }
     if(robot_task_->get_phases_() == 1)
     {
-      robot_task_-> close_to_pulleys(-0.17,-0.035,-0.01, RPY<>(0,0,0)); //bearing frame
+      //robot_task_-> close_to_pulleys(-0.16,-0.045,-0.005, RPY<>(0,0,0)); //bearing frame
+      robot_task_-> close_to_pulleys(-0.17,0,-0.04, RPY<>(0,0,0)); //bearing frame
     }
   }
 }
@@ -341,9 +342,9 @@ bool TaskRobot::hybrid_controller()
     position_y_controller_->PID_calculate(desired_pose_vector_[1], actual_tcp_pose_[1], 0);
     position_z_controller_->PID_calculate(desired_pose_vector_[2], actual_tcp_pose_[2], 0);
 
-    force_x_compensator_->PID_calculate(robot_task_->get_desired_force_torque()[0],current_ft_.force()[0],0);
-    force_y_compensator_->PID_calculate(robot_task_->get_desired_force_torque()[1],current_ft_.force()[1],0);
-    force_z_compensator_->PID_calculate(robot_task_->get_desired_force_torque()[2],current_ft_.force()[2],0);
+    force_x_compensator_->PID_calculate(desired_force_torque_vector_[0],current_ft_.force()[0],0);
+    force_y_compensator_->PID_calculate(desired_force_torque_vector_[1],current_ft_.force()[1],0);
+    force_z_compensator_->PID_calculate(desired_force_torque_vector_[2],current_ft_.force()[2],0);
 
     tf_tcp_desired_pose_ = Transform3D<> (Vector3D<>(force_x_compensator_->get_final_output(),force_y_compensator_->get_final_output(),force_z_compensator_->get_final_output()), EAA<>(0,0,0).toRotation3D());
 
@@ -354,9 +355,9 @@ bool TaskRobot::hybrid_controller()
     pid_compensation_[0] = position_x_controller_->get_final_output();
     pid_compensation_[1] = position_y_controller_->get_final_output();
     pid_compensation_[2] = position_z_controller_->get_final_output();
-    pid_compensation_[3] = (tf_modified_pose_.P())[0];
-    pid_compensation_[4] = (tf_modified_pose_.P())[1];
-    pid_compensation_[5] = (tf_modified_pose_.P())[2];
+    pid_compensation_[3] = force_x_compensator_->get_final_output();
+    pid_compensation_[4] = force_y_compensator_->get_final_output();
+    pid_compensation_[5] = force_z_compensator_->get_final_output();
 
 
     filtered_tcp_ft_data_[0] = current_ft_.force()[0];

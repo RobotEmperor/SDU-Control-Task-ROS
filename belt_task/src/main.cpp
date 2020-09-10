@@ -35,8 +35,8 @@ void loop_robot_a_proc(void *arg)
     ros_state->update_ros_data();
     tstart_A = rt_timer_read();
 
-    //robot_a->tasks("auto");
-    //robot_a->hybrid_controller();
+    robot_a->tasks("auto");
+    robot_a->hybrid_controller();
 
     if(gazebo_check)
     {
@@ -84,7 +84,7 @@ void loop_robot_b_proc(void *arg)
     ros_state->update_ros_data();
     tstart_B = rt_timer_read();
 
-    robot_b->tasks("auto");
+    //robot_b->tasks("auto");
     robot_b->hybrid_controller();
 
     if(gazebo_check)
@@ -184,7 +184,7 @@ int main (int argc, char **argv)
 
   std::cout << COLOR_YELLOW_BOLD << "Simulation On [ yes / no ]" << COLOR_RESET << std::endl;
   //cin >> silmulation_on_off;
-  silmulation_on_off = "y";
+  silmulation_on_off = "n";
 
   if(!silmulation_on_off.compare("yes") || !silmulation_on_off.compare("y"))
     std::cout << COLOR_GREEN_BOLD << "Setting up Simulation " << COLOR_RESET << std::endl;
