@@ -107,9 +107,9 @@ TaskRobot::TaskRobot(std::string robot_name, std::string init_path)
   desired_pose_vector_ = robot_task_ -> get_current_pose();
 
   //control
-  force_x_compensator_ = std::make_shared<PID_function>(control_time_, 0.01, -0.01, 0, 0, 0, 0.0000001, -0.0000001);
-  force_y_compensator_ = std::make_shared<PID_function>(control_time_, 0.01, -0.01, 0, 0, 0, 0.0000001, -0.0000001);
-  force_z_compensator_ = std::make_shared<PID_function>(control_time_, 0.01, -0.01, 0, 0, 0, 0.0000001, -0.0000001);
+  force_x_compensator_ = std::make_shared<PID_function>(control_time_, 0.02, -0.02, 0, 0, 0, 0.0000001, -0.0000001);
+  force_y_compensator_ = std::make_shared<PID_function>(control_time_, 0.02, -0.02, 0, 0, 0, 0.0000001, -0.0000001);
+  force_z_compensator_ = std::make_shared<PID_function>(control_time_, 0.02, -0.02, 0, 0, 0, 0.0000001, -0.0000001);
 
   position_x_controller_ = std::make_shared<PID_function>(control_time_, 0.02, -0.02, 0, 0, 0, 0.0000001, -0.0000001);
   position_y_controller_ = std::make_shared<PID_function>(control_time_, 0.02, -0.02, 0, 0, 0, 0.0000001, -0.0000001);
@@ -278,16 +278,25 @@ void TaskRobot::slave_robot()
 {
   if(previous_phase_ != robot_task_->get_phases_())
   {
+//    if(robot_task_->get_phases_() == 0)
+//    {
+//      desired_force_torque_vector_[0] = robust_force_value_[0];
+//      desired_force_torque_vector_[1] = robust_force_value_[1];
+//      desired_force_torque_vector_[2] = robust_force_value_[2];
+//    }
     if(robot_task_->get_phases_() == 0)
     {
       desired_force_torque_vector_[0] = robust_force_value_[0];
       desired_force_torque_vector_[1] = robust_force_value_[1];
       desired_force_torque_vector_[2] = robust_force_value_[2];
+      robot_task_-> close_to_pulleys(-0.11,-0.02,-0.005, RPY<>(0,0,0)); //bearing frame
+      //robot_task_-> close_to_pulleys(-0.17,0,-0.04, RPY<>(0,0,0)); //bearing frame
     }
     if(robot_task_->get_phases_() == 1)
     {
-      //robot_task_-> close_to_pulleys(-0.16,-0.045,-0.005, RPY<>(0,0,0)); //bearing frame
-      robot_task_-> close_to_pulleys(-0.17,0,-0.04, RPY<>(0,0,0)); //bearing frame
+      desired_force_torque_vector_[0] = robust_force_value_[0]+5;
+      desired_force_torque_vector_[1] = robust_force_value_[1];
+      desired_force_torque_vector_[2] = robust_force_value_[2];
     }
   }
 }

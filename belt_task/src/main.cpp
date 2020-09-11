@@ -84,7 +84,7 @@ void loop_robot_b_proc(void *arg)
     ros_state->update_ros_data();
     tstart_B = rt_timer_read();
 
-    //robot_b->tasks("auto");
+    robot_b->tasks("auto");
     robot_b->hybrid_controller();
 
     if(gazebo_check)

@@ -256,7 +256,7 @@ void TaskMotion::close_to_pulleys(double x,double y,double depth,RPY<> tcp_rpy_)
 
   for(int num = 0; num <6 ; num ++)
   {
-    desired_pose_matrix(num,7) = 5;
+    desired_pose_matrix(num,7) = 2.5;
   }
 }
 void TaskMotion::insert_belt_into_pulley(bool contact_, double change_x, double change_y, double change_z, RPY<> tcp_rpy_)
@@ -314,7 +314,7 @@ void TaskMotion::up_motion(bool contact_, double x, double y, double z,RPY<> tcp
 
   for(int num = 0; num <6 ; num ++)
   {
-    desired_pose_matrix(num,7) = 5;
+    desired_pose_matrix(num,7) = 2.5;
   }
 }
 void TaskMotion::finish_1(bool contact_, double x, double y, double z,RPY<> tcp_rpy_)
@@ -336,7 +336,7 @@ void TaskMotion::finish_1(bool contact_, double x, double y, double z,RPY<> tcp_
 
   for(int num = 0; num <6 ; num ++)
   {
-    desired_pose_matrix(num,7) = 5;
+    desired_pose_matrix(num,7) = 2.5;
   }
 }
 void TaskMotion::finish_2(bool contact_, double x, double y, double z,RPY<> tcp_rpy_)
@@ -357,7 +357,7 @@ void TaskMotion::finish_2(bool contact_, double x, double y, double z,RPY<> tcp_
 
   for(int num = 0; num <6 ; num ++)
   {
-    desired_pose_matrix(num,7) = 5;
+    desired_pose_matrix(num,7) = 2.5;
   }
 }
 void TaskMotion::check_phases()

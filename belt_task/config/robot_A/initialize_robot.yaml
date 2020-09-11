@@ -4,11 +4,11 @@ bigger_pulley_bearing_position: [-0.739757210413974, 0.07993900394775277, 0.2449
 initial_joint_states : [3.0208964347839355, -1.6080171070494593, -2.3849902153015137, -2.282877584496969, -2.4850109259234827, -3.1363256613360804] # for gazebo
 task_initial_position: [-0.16, 0, -0.04, 0,0,0] # in relative to bigger pulley bearing's frame.
 pulley_radious: [0.15,0.1]
-robust_force_value : [8,2,0]
+robust_force_value : [14,2,-2]
 
 #force controller gain
 f_x_kp : 0.001 # have to be higher
-f_x_ki : 0.000001
+f_x_ki : 0.00000005
 f_x_kd : 0
 
 f_y_kp : 0
@@ -32,7 +32,7 @@ f_eaa_z_ki : 0
 f_eaa_z_kd : 0
 
 #position controller gain
-p_x_kp : 0.24 #0.6
+p_x_kp : 0.17 #0.6
 p_x_ki : 0
 p_x_kd : 0
 
@@ -58,8 +58,8 @@ p_eaa_z_kd : 0
 
 #everyting is with respect to its frame.
 pulley_0: 
-  0: [0.032,0,-0.01,0,-25,0] # phases
-  1: [0,0.0319,-0.006,0,-25,0] # a desired belt point
+  0: [0.03,0,-0.01,0,-25,0] # phases
+  1: [0,0.0325,-0.006,0,-25,20] # a desired belt point
   2: [0.03,-0.04,-0.006,-30,-25,0]
   3: [-0.03,-0.04,-0.006,0,-25,0]
   4: [-0.03,-0.04,-0.04,0,-25,0]
