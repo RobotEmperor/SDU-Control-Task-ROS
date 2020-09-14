@@ -205,27 +205,23 @@ void TaskRobot::move_to_init_pose()
 }
 bool TaskRobot::tasks(std::string command) // first for only two pulleys
 {
-  static bool task_check = false;
-
   if(!command.compare(""))
     return false;
-
-  if(!command.compare("auto"))
+  else
   {
-    if(!robot_name_.compare("robot_A"))
-    {
-      robot_task_->set_all_phases_(2);
-      slave_robot();
-    }
-
-    if(!robot_name_.compare("robot_B"))
+    if(!command.compare("master"))
     {
       robot_task_->set_all_phases_(5);
       master_robot();
 
       if(sub_tasks_ == 1)
         finish_task_ = 1;
+    }
 
+    if(!command.compare("slave"))
+    {
+      robot_task_->set_all_phases_(2);
+      slave_robot();
     }
 
     previous_phase_ = robot_task_->get_phases_();
@@ -233,10 +229,29 @@ bool TaskRobot::tasks(std::string command) // first for only two pulleys
     robot_task_->check_phases();
   }
 
+//  if(!command.compare("auto"))
+//  {
+//    if(!robot_name_.compare("robot_A"))
+//    {
+//      robot_task_->set_all_phases_(2);
+//      slave_robot();
+//    }
+//    if(!robot_name_.compare("robot_B"))
+//    {
+//      robot_task_->set_all_phases_(5);
+//      master_robot();
+//
+//      if(sub_tasks_ == 1)
+//        finish_task_ = 1;
+//    }
+//    previous_phase_ = robot_task_->get_phases_();
+//    robot_task_->generate_trajectory();
+//    robot_task_->check_phases();
+//  }
 
   previous_task_command_ = command;
 
-  return task_check;
+  return true;
 }
 void TaskRobot::master_robot()
 {
@@ -274,7 +289,7 @@ void TaskRobot::master_robot()
     }
   }
 }
-void TaskRobot::slave_robot()
+void TaskRobot::slave_robot() // for robot A
 {
   if(previous_phase_ != robot_task_->get_phases_())
   {
@@ -290,7 +305,6 @@ void TaskRobot::slave_robot()
       desired_force_torque_vector_[1] = robust_force_value_[1];
       desired_force_torque_vector_[2] = robust_force_value_[2];
       robot_task_-> close_to_pulleys(-0.11,-0.02,-0.005, RPY<>(0,0,0)); //bearing frame
-      //robot_task_-> close_to_pulleys(-0.17,0,-0.04, RPY<>(0,0,0)); //bearing frame
     }
     if(robot_task_->get_phases_() == 1)
     {

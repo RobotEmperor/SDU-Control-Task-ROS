@@ -56,8 +56,8 @@ p_eaa_z_kp : 0
 p_eaa_z_ki : 0
 p_eaa_z_kd : 0
 
-#everyting is with respect to its frame.
-pulley_0: 
+#everyting is with respect to big pulley's frame 
+pulley_0: # -0.13
   0: [0.03,0,-0.01,0,-25,0] # phases
   1: [0,0.0325,-0.006,0,-25,20] # a desired belt point
   2: [0.03,-0.04,-0.006,-30,-25,0]

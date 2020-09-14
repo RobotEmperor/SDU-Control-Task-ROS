@@ -60,6 +60,8 @@ bool gazebo_check;
 bool exit_program;
 bool wait_command;
 
+int finished_insertion;
+
 std::mutex m;
 
 #endif /* SDU_CONTROL_TASK_ROS_BELT_TASK_INCLUDE_BELT_TASK_H_ */

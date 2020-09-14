@@ -35,8 +35,14 @@ void loop_robot_a_proc(void *arg)
     ros_state->update_ros_data();
     tstart_A = rt_timer_read();
 
-    robot_a->tasks("auto");
+    if(finished_insertion == 0)
+      robot_a->tasks("slave");
+    else
+      robot_a->tasks("master");
+
     robot_a->hybrid_controller();
+
+
 
     if(gazebo_check)
     {
@@ -84,8 +90,12 @@ void loop_robot_b_proc(void *arg)
     ros_state->update_ros_data();
     tstart_B = rt_timer_read();
 
-    robot_b->tasks("auto");
+    robot_b->tasks("master");
     robot_b->hybrid_controller();
+
+    if(robot_b->get_finish_task())
+      finished_insertion = 1;
+
 
     if(gazebo_check)
     {
@@ -107,6 +117,8 @@ void loop_robot_b_proc(void *arg)
 }
 void initialize()
 {
+  finished_insertion = 0;
+
   wait_command = false;
   gazebo_check = true;
   control_time = 0.002;
@@ -131,7 +143,6 @@ void my_function(int sig)
   exit_program = true; // set flag
 
 }
-
 //void executeAction(const belt_task::belt_task_actionGoalConstPtr &start_end, Server* as)
 //{
 //  std::cout << "program_on_!!!!!!!!" << std::endl;
