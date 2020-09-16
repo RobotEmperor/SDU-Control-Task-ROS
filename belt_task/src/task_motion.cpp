@@ -61,7 +61,7 @@ void TaskMotion::initialize(double control_time_, std::string load_path_)
   }
 
   // motion data load initialize//
-  YAML::Node bigger_pulley_bearing_position_node = doc["bigger_pulley_bearing_position"];
+  YAML::Node bigger_pulley_bearing_position_node = doc["pulley_bearing_position"];
   YAML::Node task_initial_position_node = doc["task_initial_position"];
   YAML::Node pulley_radious_node = doc["pulley_radious"];
 

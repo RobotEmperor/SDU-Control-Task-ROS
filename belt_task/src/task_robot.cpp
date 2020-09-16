@@ -216,6 +216,8 @@ bool TaskRobot::tasks(std::string command) // first for only two pulleys
 
       if(sub_tasks_ == 1)
         finish_task_ = 1;
+
+      //have to adjust pid configuration
     }
 
     if(!command.compare("slave"))
@@ -543,7 +545,7 @@ void TaskRobot::parse_init_data_(const std::string &path)
 
   preferred_solution_number_ =  doc["preferred_solution_number"].as<double>();
   YAML::Node initial_joint_states = doc["initial_joint_states"];
-  YAML::Node bigger_pulley_bearing_position_node = doc["bigger_pulley_bearing_position"];
+  YAML::Node bigger_pulley_bearing_position_node = doc["pulley_bearing_position"];
   YAML::Node robust_force_value_node = doc["robust_force_value"];
   YAML::Node pulley_0 = doc["pulley_0"];
   std::vector<double> bigger_pulley_bearing_position;
