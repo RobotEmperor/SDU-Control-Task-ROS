@@ -50,6 +50,8 @@ public:
   void finish_2(bool contact_, double x, double y, double z,RPY<> tcp_rpy_);
   void rotate(double theta_);
 
+  void motion_to_desired_pose(bool contact_, double x, double y, double z,RPY<> tcp_rpy_, double time);
+
 
   void estimation_of_belt_position(rw::math::Vector3D<> desired_groove_position);
   void insert_into_groove(RPY<> tcp_rpy_);
@@ -62,7 +64,7 @@ public:
 
   void set_initial_pose(double x, double y, double z, double axis_x, double axis_y, double axis_z);
   void set_current_pose_eaa(double x, double y, double z, double axis_x, double axis_y, double axis_z);
-  void set_all_phases_(unsigned int all_phases_);
+  void set_all_phases_(int all_phases_);
 
   void load_data_initialize();
   void load_data_tcp_motion();
@@ -73,7 +75,7 @@ public:
   std::vector<double> get_current_pose();
   std::vector<double> get_desired_force_torque();
   std::vector<double> get_initial_ee_position();
-  unsigned int get_phases_();
+  int get_phases_();
 
 private:
   int number_of_point;
@@ -92,9 +94,9 @@ private:
   double change_path_x_;
   double change_path_y_;
   double change_path_z_;
-  unsigned int phases_;
-  unsigned int all_phases_;
-  unsigned int pre_phases_;
+  int phases_;
+  int all_phases_;
+  int pre_phases_;
 
   //initial condition
   //robot's ee position

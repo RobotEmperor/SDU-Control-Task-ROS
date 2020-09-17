@@ -13,6 +13,8 @@ TaskRobot::TaskRobot()
 TaskRobot::TaskRobot(std::string robot_name, std::string init_path)
 {
   control_time_ = 0.002;
+  tool_mass_ = 0;
+  sub_tasks_ = 0;
 
   //vectors
   joint_positions_.assign(6,0); //(6);
@@ -33,8 +35,6 @@ TaskRobot::TaskRobot(std::string robot_name, std::string init_path)
   compensated_pose_vector_.assign(6,0); //(6);
   error_ee_pose_.assign(6,0); //(6);
   compensated_q_.assign(6,0); //(6);
-
-  robust_force_value_.assign(3,0);
 
   data_current_belt_.assign(3,0);
   data_desired_belt_.assign(3,0);
@@ -127,6 +127,10 @@ TaskRobot::TaskRobot(std::string robot_name, std::string init_path)
 
   flag = false;
   previous_phase_ = -1;
+  finish_task_ = false;
+  master_way_points_numbers_ = 0;
+  slave_way_points_numbers_ = 0;
+  robust_force_values_numbers_ = 0;
 
 }
 TaskRobot::~TaskRobot()
@@ -211,7 +215,7 @@ bool TaskRobot::tasks(std::string command) // first for only two pulleys
   {
     if(!command.compare("master"))
     {
-      robot_task_->set_all_phases_(5);
+      robot_task_->set_all_phases_(master_way_points_numbers_);
       master_robot();
 
       if(sub_tasks_ == 1)
@@ -222,7 +226,7 @@ bool TaskRobot::tasks(std::string command) // first for only two pulleys
 
     if(!command.compare("slave"))
     {
-      robot_task_->set_all_phases_(2);
+      robot_task_->set_all_phases_(slave_way_points_numbers_);
       slave_robot();
     }
 
@@ -231,25 +235,25 @@ bool TaskRobot::tasks(std::string command) // first for only two pulleys
     robot_task_->check_phases();
   }
 
-//  if(!command.compare("auto"))
-//  {
-//    if(!robot_name_.compare("robot_A"))
-//    {
-//      robot_task_->set_all_phases_(2);
-//      slave_robot();
-//    }
-//    if(!robot_name_.compare("robot_B"))
-//    {
-//      robot_task_->set_all_phases_(5);
-//      master_robot();
-//
-//      if(sub_tasks_ == 1)
-//        finish_task_ = 1;
-//    }
-//    previous_phase_ = robot_task_->get_phases_();
-//    robot_task_->generate_trajectory();
-//    robot_task_->check_phases();
-//  }
+  //  if(!command.compare("auto"))
+  //  {
+  //    if(!robot_name_.compare("robot_A"))
+  //    {
+  //      robot_task_->set_all_phases_(2);
+  //      slave_robot();
+  //    }
+  //    if(!robot_name_.compare("robot_B"))
+  //    {
+  //      robot_task_->set_all_phases_(5);
+  //      master_robot();
+  //
+  //      if(sub_tasks_ == 1)
+  //        finish_task_ = 1;
+  //    }
+  //    previous_phase_ = robot_task_->get_phases_();
+  //    robot_task_->generate_trajectory();
+  //    robot_task_->check_phases();
+  //  }
 
   previous_task_command_ = command;
 
@@ -257,12 +261,20 @@ bool TaskRobot::tasks(std::string command) // first for only two pulleys
 }
 void TaskRobot::master_robot()
 {
+  static int motion_phases_ = 0;
+
+  if(sub_tasks_ == 0 && robot_task_->get_phases_() == master_way_points_numbers_)
+  {
+    sub_tasks_++;
+    return;
+  }
+  if(sub_tasks_ == 1) // pulley numbers
+    return;
+
   if(previous_phase_ != robot_task_->get_phases_())
   {
-    if(robot_task_->get_phases_() == 0)
-    {
-      robot_task_->close_to_pulleys(master_way_points_[0][0],master_way_points_[0][1],master_way_points_[0][2], RPY<>(master_way_points_[0][3],master_way_points_[0][4],master_way_points_[0][5])); //bearing frame
-    }
+    motion_phases_ = robot_task_->get_phases_();
+
     if(robot_task_->get_phases_() == 1)
     {
       desired_belt_[0] = master_way_points_[1][0];
@@ -271,49 +283,79 @@ void TaskRobot::master_robot()
 
       robot_task_->estimation_of_belt_position(desired_belt_); ////bearing frame
       robot_task_->insert_into_groove(RPY<>(master_way_points_[1][3],master_way_points_[1][4],master_way_points_[1][5]));
-    }
-    if(robot_task_->get_phases_() == 2)
-    {
-      robot_task_->up_motion(contact_check_, master_way_points_[2][0], master_way_points_[2][1], master_way_points_[2][2], RPY<>(master_way_points_[2][3],master_way_points_[2][4],master_way_points_[2][5])); //bearing frame
 
+      return;
     }
-    if(robot_task_->get_phases_() == 3)
-    {
-      robot_task_->finish_1(contact_check_, master_way_points_[3][0], master_way_points_[3][1], master_way_points_[3][2], RPY<>(master_way_points_[3][3],master_way_points_[3][4],master_way_points_[3][5])); //bearing frame
-    }
-    if(robot_task_->get_phases_() == 4)
-    {
-      robot_task_->finish_2(contact_check_, master_way_points_[4][0], master_way_points_[4][1], master_way_points_[4][2], RPY<>(master_way_points_[4][3],master_way_points_[4][4],master_way_points_[4][5])); //bearing frame
-    }
-    if(sub_tasks_ == 0 && robot_task_->get_phases_() == 5)
-    {
-      sub_tasks_++;
-    }
+    //    if(robot_task_->get_phases_() == 0)
+    //    {
+    //      robot_task_->close_to_pulleys(master_way_points_[0][0],master_way_points_[0][1],master_way_points_[0][2], RPY<>(master_way_points_[0][3],master_way_points_[0][4],master_way_points_[0][5])); //bearing frame
+    //    }
+    //    if(robot_task_->get_phases_() == 1)
+    //    {
+    //      desired_belt_[0] = master_way_points_[1][0];
+    //      desired_belt_[1] = master_way_points_[1][1];
+    //      desired_belt_[2] = master_way_points_[1][2];
+    //
+    //      robot_task_->estimation_of_belt_position(desired_belt_); ////bearing frame
+    //      robot_task_->insert_into_groove(RPY<>(master_way_points_[1][3],master_way_points_[1][4],master_way_points_[1][5]));
+    //    }
+    //    if(robot_task_->get_phases_() == 2)
+    //    {
+    //      robot_task_->up_motion(contact_check_, master_way_points_[2][0], master_way_points_[2][1], master_way_points_[2][2], RPY<>(master_way_points_[2][3],master_way_points_[2][4],master_way_points_[2][5])); //bearing frame
+    //
+    //    }
+    //    if(robot_task_->get_phases_() == 3)
+    //    {
+    //      robot_task_->finish_1(contact_check_, master_way_points_[3][0], master_way_points_[3][1], master_way_points_[3][2], RPY<>(master_way_points_[3][3],master_way_points_[3][4],master_way_points_[3][5])); //bearing frame
+    //    }
+    //    if(robot_task_->get_phases_() == 4)
+    //    {
+    //      robot_task_->finish_2(contact_check_, master_way_points_[4][0], master_way_points_[4][1], master_way_points_[4][2], RPY<>(master_way_points_[4][3],master_way_points_[4][4],master_way_points_[4][5])); //bearing frame
+    //    }
+    //    if(sub_tasks_ == 0 && robot_task_->get_phases_() == 5)
+    //    {
+    //      sub_tasks_++;
+    //    }
+    robot_task_->motion_to_desired_pose(contact_check_, master_way_points_[motion_phases_][0],master_way_points_[motion_phases_][1],master_way_points_[motion_phases_][2], RPY<>(master_way_points_[motion_phases_][3],master_way_points_[motion_phases_][4],master_way_points_[motion_phases_][5]),master_way_points_[motion_phases_][6]); //bearing frame
   }
 }
 void TaskRobot::slave_robot() // for robot A
 {
+  static int motion_phases_ = 0;
+
+  if(sub_tasks_ == 0 && robot_task_->get_phases_() == slave_way_points_numbers_)
+  {
+    sub_tasks_++;
+    return;
+  }
+  if(sub_tasks_ == 1) // pulley numbers
+  {
+    return;
+  }
   if(previous_phase_ != robot_task_->get_phases_())
   {
-//    if(robot_task_->get_phases_() == 0)
-//    {
-//      desired_force_torque_vector_[0] = robust_force_value_[0];
-//      desired_force_torque_vector_[1] = robust_force_value_[1];
-//      desired_force_torque_vector_[2] = robust_force_value_[2];
-//    }
-    if(robot_task_->get_phases_() == 0)
+
+    motion_phases_ = robot_task_->get_phases_();
+
+    robot_task_->motion_to_desired_pose(contact_check_, slave_way_points_[motion_phases_][0],slave_way_points_[motion_phases_][1],slave_way_points_[motion_phases_][2], RPY<>(slave_way_points_[motion_phases_][3],slave_way_points_[motion_phases_][4],slave_way_points_[motion_phases_][5]),slave_way_points_[motion_phases_][6]); //bearin
+
+    for(int num = 0; num < 3; num ++)
     {
-      desired_force_torque_vector_[0] = robust_force_value_[0];
-      desired_force_torque_vector_[1] = robust_force_value_[1];
-      desired_force_torque_vector_[2] = robust_force_value_[2];
-      robot_task_-> close_to_pulleys(-0.11,-0.02,-0.005, RPY<>(0,0,0)); //bearing frame
+      desired_force_torque_vector_[num] = robust_force_values_[motion_phases_][num];
     }
-    if(robot_task_->get_phases_() == 1)
-    {
-      desired_force_torque_vector_[0] = robust_force_value_[0]+5;
-      desired_force_torque_vector_[1] = robust_force_value_[1];
-      desired_force_torque_vector_[2] = robust_force_value_[2];
-    }
+    //    if(robot_task_->get_phases_() == 0)
+    //    {
+    //      desired_force_torque_vector_[0] = robust_force_value_[0];
+    //      desired_force_torque_vector_[1] = robust_force_value_[1];
+    //      desired_force_torque_vector_[2] = robust_force_value_[2];
+    //      robot_task_-> close_to_pulleys(-0.11,-0.02,-0.005, RPY<>(0,0,0)); //bearing frame
+    //    }
+    //    if(robot_task_->get_phases_() == 1)
+    //    {
+    //      desired_force_torque_vector_[0] = robust_force_value_[0]+5;
+    //      desired_force_torque_vector_[1] = robust_force_value_[1];
+    //      desired_force_torque_vector_[2] = robust_force_value_[2];
+    //    }
   }
 }
 bool TaskRobot::hybrid_controller()
@@ -547,9 +589,11 @@ void TaskRobot::parse_init_data_(const std::string &path)
   YAML::Node initial_joint_states = doc["initial_joint_states"];
   YAML::Node bigger_pulley_bearing_position_node = doc["pulley_bearing_position"];
   YAML::Node robust_force_value_node = doc["robust_force_value"];
-  YAML::Node pulley_0 = doc["pulley_0"];
+  YAML::Node master_pulley_0_node = doc["master_pulley_0"];
+  YAML::Node slave_0_node = doc["slave_0"];
+
   std::vector<double> bigger_pulley_bearing_position;
-  std::vector<double> temp_master_way_points_;
+  std::vector<double> temp_points_;
 
   for(int num = 0; num < 6; num ++)
   {
@@ -560,26 +604,69 @@ void TaskRobot::parse_init_data_(const std::string &path)
 
   bigger_pulley_bearing_position.clear();
 
-  int point_numbers;
-  point_numbers = 0;
+  master_way_points_numbers_ = 0;
 
-  for (YAML::iterator it = pulley_0.begin(); it != pulley_0.end(); ++it)
+  for (YAML::iterator it = master_pulley_0_node.begin(); it != master_pulley_0_node.end(); ++it)
   {
-    point_numbers = it->first.as<int>();
+    master_way_points_numbers_ = it->first.as<int>();
 
     for(int num = 0; num < 3; num++)
     {
-      temp_master_way_points_.push_back(it->second[num].as<double>());
+      temp_points_.push_back(it->second[num].as<double>());
     }
     for(int num = 3; num < 6; num++)
     {
-      temp_master_way_points_.push_back(it->second[num].as<double>()*DEGREE2RADIAN);
+      temp_points_.push_back(it->second[num].as<double>()*DEGREE2RADIAN);
     }
-    master_way_points_[point_numbers] = temp_master_way_points_;
+    temp_points_.push_back(it->second[6].as<double>());
 
-    temp_master_way_points_.clear();
+    master_way_points_[master_way_points_numbers_] = temp_points_;
 
-    cout <<  point_numbers <<"::"<< master_way_points_[point_numbers]  << endl;
+    temp_points_.clear();
+
+    cout <<  master_way_points_numbers_ <<"::"<< master_way_points_[master_way_points_numbers_]  << endl;
+  }
+
+  temp_points_.clear();
+
+  for (YAML::iterator it = robust_force_value_node.begin(); it != robust_force_value_node.end(); ++it)
+  {
+    robust_force_values_numbers_ = it->first.as<int>();
+
+    for(int num = 0; num < 3; num++)
+    {
+      temp_points_.push_back(it->second[num].as<double>());
+    }
+
+    robust_force_values_[robust_force_values_numbers_] = temp_points_;
+
+    temp_points_.clear();
+
+    cout <<  robust_force_values_numbers_ <<"::"<< robust_force_values_[robust_force_values_numbers_]  << endl;
+  }
+
+  temp_points_.clear();
+
+  for (YAML::iterator it = slave_0_node.begin(); it != slave_0_node.end(); ++it)
+  {
+    slave_way_points_numbers_ = it->first.as<int>();
+
+    for(int num = 0; num < 3; num++)
+    {
+      temp_points_.push_back(it->second[num].as<double>());
+    }
+    for(int num = 3; num < 6; num++)
+    {
+      temp_points_.push_back(it->second[num].as<double>()*DEGREE2RADIAN);
+    }
+
+    temp_points_.push_back(it->second[6].as<double>());
+
+    slave_way_points_[slave_way_points_numbers_] = temp_points_;
+
+    temp_points_.clear();
+
+    cout <<  slave_way_points_numbers_ <<"::"<< slave_way_points_[slave_way_points_numbers_]  << endl;
   }
 
   force_controller_gain_.x_kp = doc["f_x_kp"].as<double>();
@@ -627,11 +714,6 @@ void TaskRobot::parse_init_data_(const std::string &path)
   current_q_[3] = initial_joint_states[3].as<double>();
   current_q_[4] = initial_joint_states[4].as<double>();
   current_q_[5] = initial_joint_states[5].as<double>();
-
-  robust_force_value_[0] = robust_force_value_node[0].as<double>();
-  robust_force_value_[1] = robust_force_value_node[1].as<double>();
-  robust_force_value_[2] = robust_force_value_node[2].as<double>();
-
 }
 void TaskRobot::set_force_controller_x_gain(double kp,double ki,double kd)
 {

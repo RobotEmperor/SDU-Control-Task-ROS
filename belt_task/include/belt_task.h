@@ -57,7 +57,6 @@ belt_task::belt_task_actionResult result_;
 
 double control_time;
 bool gazebo_check;
-bool exit_program;
 bool wait_command;
 
 int finished_insertion;

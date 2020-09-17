@@ -6,6 +6,8 @@
  */
 #include "belt_task.h"
 
+volatile bool exit_program = false;
+
 void loop_robot_a_proc(void *arg)
 {
   RT_TASK *curtask;
@@ -35,10 +37,10 @@ void loop_robot_a_proc(void *arg)
     ros_state->update_ros_data();
     tstart_A = rt_timer_read();
 
-    if(finished_insertion == 0)
+    //if(finished_insertion == 0)
       robot_a->tasks("slave");
-    else
-      robot_a->tasks("master");
+    //else
+      //robot_a->tasks("master");
 
     robot_a->hybrid_controller();
 

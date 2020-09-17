@@ -360,6 +360,27 @@ void TaskMotion::finish_2(bool contact_, double x, double y, double z,RPY<> tcp_
     desired_pose_matrix(num,7) = 2.5;
   }
 }
+void TaskMotion::motion_to_desired_pose(bool contact_, double x, double y, double z,RPY<> tcp_rpy_, double time)
+{
+  // output always has to be points in relative to base frame (global)
+
+  tf_tcp_desired_pose_ = Transform3D<> (Vector3D<>(x, y, z), tcp_rpy_.toRotation3D());
+
+  tf_desired_pose_ = tf_base_to_bearing_*tf_tcp_desired_pose_;
+
+  desired_pose_matrix(0,1) = Vector3D<> (tf_desired_pose_.P())[0];
+  desired_pose_matrix(1,1) = Vector3D<> (tf_desired_pose_.P())[1];
+  desired_pose_matrix(2,1) = Vector3D<> (tf_desired_pose_.P())[2];
+
+  desired_pose_matrix(3,1) = EAA<> (tf_desired_pose_.R())[0];
+  desired_pose_matrix(4,1) = EAA<> (tf_desired_pose_.R())[1];
+  desired_pose_matrix(5,1) = EAA<> (tf_desired_pose_.R())[2];
+
+  for(int num = 0; num <6 ; num ++)
+  {
+    desired_pose_matrix(num,7) = time;
+  }
+}
 void TaskMotion::check_phases()
 {
   pre_phases_ = phases_;
@@ -440,7 +461,7 @@ void TaskMotion::stop_motion()
   }
   robot_traj->stop_trajectory();
 }
-void TaskMotion::set_all_phases_(unsigned int all_phases)
+void TaskMotion::set_all_phases_(int all_phases)
 {
   all_phases_ = all_phases;
 }
@@ -460,7 +481,7 @@ std::vector<double> TaskMotion::get_initial_ee_position()
 {
   return initial_robot_ee_position;
 }
-unsigned int TaskMotion::get_phases_()
+int TaskMotion::get_phases_()
 {
   return phases_;
 }

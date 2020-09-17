@@ -202,11 +202,10 @@ private:
 	double control_time_;
 	double time_count_;
 	double tool_mass_;
-	std::vector<double> robust_force_value_;
 
 	bool contact_check_;
 	bool control_check_;
-	unsigned int previous_phase_;
+	int previous_phase_;
 
 	//solution check
 	int preferred_solution_number_;
@@ -232,8 +231,20 @@ private:
 	void master_robot();
 	void slave_robot();
 
-	unsigned int sub_tasks_;
+	int sub_tasks_;
+
+	//master robot
 	std::map<int, std::vector<double>> master_way_points_;
+	int master_way_points_numbers_;
+
+	//slave robot
+	std::map<int, std::vector<double>> slave_way_points_;
+	int slave_way_points_numbers_;
+
+	//roboust force values
+	std::map<int, std::vector<double>> robust_force_values_;
+	int robust_force_values_numbers_;
+
 
 };
 
