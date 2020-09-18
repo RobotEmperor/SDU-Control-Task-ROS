@@ -76,19 +76,19 @@ void RosNode::PidGainCommandMsgCallBack (const std_msgs::Float64MultiArray::Cons
 	gain_i_ = msg->data[1];
 	gain_d_ = msg->data[2];
 
-	YAML::Emitter y_out;
-	std::string path_ = "../config/pose_pid_gain.yaml";
-
-	y_out << YAML::BeginMap;
-	y_out << YAML::Key << "p_gain";
-	y_out << YAML::Value << gain_p_;
-	y_out << YAML::Key << "i_gain";
-	y_out << YAML::Value << gain_i_;
-	y_out << YAML::Key << "d_gain";
-	y_out << YAML::Value << gain_d_;
-	y_out << YAML::EndMap;
-	std::ofstream fout(path_.c_str());
-	fout << y_out.c_str(); // dump it back into the file
+//	YAML::Emitter y_out;
+//	std::string path_ = "../config/pose_pid_gain.yaml";
+//
+//	y_out << YAML::BeginMap;
+//	y_out << YAML::Key << "p_gain";
+//	y_out << YAML::Value << gain_p_;
+//	y_out << YAML::Key << "i_gain";
+//	y_out << YAML::Value << gain_i_;
+//	y_out << YAML::Key << "d_gain";
+//	y_out << YAML::Value << gain_d_;
+//	y_out << YAML::EndMap;
+//	std::ofstream fout(path_.c_str());
+//	fout << y_out.c_str(); // dump it back into the file
 }
 void RosNode::ForcePidGainCommandMsgCallBack (const std_msgs::Float64MultiArray::ConstPtr& msg)
 {
@@ -96,19 +96,19 @@ void RosNode::ForcePidGainCommandMsgCallBack (const std_msgs::Float64MultiArray:
 	force_gain_i_ = msg->data[1];
 	force_gain_d_ = msg->data[2];
 
-	YAML::Emitter y_out;
-	std::string path_ = "../config/force_pid_gain.yaml";
-
-	y_out << YAML::BeginMap;
-	y_out << YAML::Key << "p_gain";
-	y_out << YAML::Value << force_gain_p_;
-	y_out << YAML::Key << "i_gain";
-	y_out << YAML::Value << force_gain_i_;
-	y_out << YAML::Key << "d_gain";
-	y_out << YAML::Value << force_gain_d_;
-	y_out << YAML::EndMap;
-	std::ofstream fout(path_.c_str());
-	fout << y_out.c_str(); // dump it back into the file
+//	YAML::Emitter y_out;
+//	std::string path_ = "../config/force_pid_gain.yaml";
+//
+//	y_out << YAML::BeginMap;
+//	y_out << YAML::Key << "p_gain";
+//	y_out << YAML::Value << force_gain_p_;
+//	y_out << YAML::Key << "i_gain";
+//	y_out << YAML::Value << force_gain_i_;
+//	y_out << YAML::Key << "d_gain";
+//	y_out << YAML::Value << force_gain_d_;
+//	y_out << YAML::EndMap;
+//	std::ofstream fout(path_.c_str());
+//	fout << y_out.c_str(); // dump it back into the file
 }
 void RosNode::TestMsgCallBack (const std_msgs::Bool::ConstPtr& msg)
 {

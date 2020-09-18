@@ -36,14 +36,15 @@ void loop_robot_a_proc(void *arg)
     m.lock();
     ros_state->update_ros_data();
     tstart_A = rt_timer_read();
-
-    //if(finished_insertion == 0)
+/*
+    if(finished_insertion == 0)
       robot_a->tasks("slave");
-    //else
-      //robot_a->tasks("master");
-
+    else
+      robot_a->tasks("master");
+*/
+    robot_a->set_force_controller_x_gain(ros_state->get_force_p_gain(), ros_state->get_force_i_gain(), ros_state->get_force_d_gain());
+    robot_a->set_position_controller_x_gain(ros_state->get_p_gain(), ros_state->get_i_gain(), ros_state->get_d_gain());
     robot_a->hybrid_controller();
-
 
 
     if(gazebo_check)
@@ -92,11 +93,11 @@ void loop_robot_b_proc(void *arg)
     ros_state->update_ros_data();
     tstart_B = rt_timer_read();
 
-    robot_b->tasks("master");
-    robot_b->hybrid_controller();
+    //robot_b->tasks("master");
+    //robot_b->hybrid_controller();
 
-    if(robot_b->get_finish_task())
-      finished_insertion = 1;
+    //if(robot_b->get_finish_task())
+      //finished_insertion = 1;
 
 
     if(gazebo_check)
@@ -178,6 +179,8 @@ int main (int argc, char **argv)
 
   mlockall(MCL_CURRENT | MCL_FUTURE); //Lock the memory to avoid memory swapping for this program
 
+  signal(SIGINT, my_function);
+
   initialize();
   ros::init(argc, argv, "Belt_Task");
   ros::NodeHandle nh;
@@ -197,7 +200,7 @@ int main (int argc, char **argv)
 
   std::cout << COLOR_YELLOW_BOLD << "Simulation On [ yes / no ]" << COLOR_RESET << std::endl;
   //cin >> silmulation_on_off;
-  silmulation_on_off = "y";
+  silmulation_on_off = "n";
 
   if(!silmulation_on_off.compare("yes") || !silmulation_on_off.compare("y"))
     std::cout << COLOR_GREEN_BOLD << "Setting up Simulation " << COLOR_RESET << std::endl;
