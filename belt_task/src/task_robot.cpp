@@ -417,7 +417,7 @@ bool TaskRobot::hybrid_controller()
 
     tf_modified_pose_ = tf_current_ * tf_tcp_desired_pose_;
 
-    tf_modified_pose_.P() = tf_current_.P() - tf_modified_pose_.P();
+    tf_modified_pose_.P() = tf_modified_pose_.P() - tf_current_.P();
 
     pid_compensation_[0] = position_x_controller_->get_final_output();
     pid_compensation_[1] = position_y_controller_->get_final_output();
