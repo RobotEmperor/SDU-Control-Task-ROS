@@ -170,6 +170,9 @@ private:
 	std::vector<double> desired_pose_vector_; //(6);
 	std::vector<double> desired_force_torque_vector_; //(6);
 	std::vector<double> compensated_pose_vector_; //(6);
+	std::vector<double> initial_pose_vector_; //(6);
+	std::vector<double> limit_force_compensation_values_; //(3);
+	std::vector<double> force_compensation_values_; //(3);
 	std::vector<double> error_ee_pose_; //(6);
 
 	std::vector<double> compensated_q_; //(6);
