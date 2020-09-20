@@ -109,13 +109,13 @@ TaskRobot::TaskRobot(std::string robot_name, std::string init_path)
 	desired_pose_vector_ = robot_task_ -> get_current_pose();
 
 	//control
-	force_x_compensator_ = std::make_shared<PID_function>(control_time_, 0.01, -0.01, 0, 0, 0, 0.0000001, -0.0000001);
-	force_y_compensator_ = std::make_shared<PID_function>(control_time_, 0.01, -0.01, 0, 0, 0, 0.0000001, -0.0000001);
-	force_z_compensator_ = std::make_shared<PID_function>(control_time_, 0.01, -0.01, 0, 0, 0, 0.0000001, -0.0000001);
+	force_x_compensator_ = std::make_shared<PID_function>(control_time_, 0.02, -0.02, 0, 0, 0, 0.0000001, -0.0000001, 0.5);
+	force_y_compensator_ = std::make_shared<PID_function>(control_time_, 0.02, -0.02, 0, 0, 0, 0.0000001, -0.0000001, 0.5);
+	force_z_compensator_ = std::make_shared<PID_function>(control_time_, 0.02, -0.02, 0, 0, 0, 0.0000001, -0.0000001, 0.5);
 
-	position_x_controller_ = std::make_shared<PID_function>(control_time_, 0.025, -0.025, 0, 0, 0, 0.0000001, -0.0000001);
-	position_y_controller_ = std::make_shared<PID_function>(control_time_, 0.025, -0.025, 0, 0, 0, 0.0000001, -0.0000001);
-	position_z_controller_ = std::make_shared<PID_function>(control_time_, 0.025, -0.025, 0, 0, 0, 0.0000001, -0.0000001);
+	position_x_controller_ = std::make_shared<PID_function>(control_time_, 0.025, -0.025, 0, 0, 0, 0.0000001, -0.0000001, 0.5);
+	position_y_controller_ = std::make_shared<PID_function>(control_time_, 0.025, -0.025, 0, 0, 0, 0.0000001, -0.0000001, 0.5);
+	position_z_controller_ = std::make_shared<PID_function>(control_time_, 0.025, -0.025, 0, 0, 0, 0.0000001, -0.0000001, 0.5);
 
 	control_check_ = false;
 	joint_vel_limits_ = false;
@@ -234,10 +234,10 @@ bool TaskRobot::tasks(std::string command) // first for only two pulleys
 			if(sub_tasks_ == 1)
 				finish_task_ = 1;
 
-//			for(int num = 0; num < 3; num ++)
-//			{
-//				desired_force_torque_vector_[num] = 0;
-//			}
+			//			for(int num = 0; num < 3; num ++)
+			//			{
+			//				desired_force_torque_vector_[num] = 0;
+			//			}
 			//have to adjust pid configuration
 		}
 
@@ -342,6 +342,15 @@ void TaskRobot::slave_robot() // for robot A
 
 	if(sub_tasks_ == 0 && robot_task_->get_phases_() == slave_way_points_numbers_)
 	{
+		position_x_controller_->set_smooth_gain_time(5);
+		position_y_controller_->set_smooth_gain_time(5);
+		position_z_controller_->set_smooth_gain_time(5);
+		force_x_compensator_->set_smooth_gain_time(5);
+		force_y_compensator_->set_smooth_gain_time(5);
+		force_z_compensator_->set_smooth_gain_time(5);
+
+		cout << desired_force_torque_vector_ << endl;
+
 		sub_tasks_++;
 		return;
 	}

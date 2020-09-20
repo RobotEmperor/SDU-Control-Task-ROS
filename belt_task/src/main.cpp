@@ -37,7 +37,7 @@ void loop_robot_a_proc(void *arg)
 		ros_state->update_ros_data();
 		tstart_A = rt_timer_read();
 
-		//    robot_a->tasks("slave");
+		//		robot_a->tasks("slave");
 
 		if(finished_insertion == 0)
 			robot_a->tasks("slave");
@@ -45,8 +45,21 @@ void loop_robot_a_proc(void *arg)
 		{
 			robot_a->set_force_controller_x_gain(0.00007,0,0);
 			robot_a->set_position_controller_x_gain(0.8,0,0);
+			robot_a->set_force_controller_y_gain(0.00007,0,0);
+			robot_a->set_position_controller_y_gain(0.8,0,0);
+			robot_a->set_force_controller_z_gain(0.00007,0,0);
+			robot_a->set_position_controller_z_gain(0.8,0,0);
+
 			robot_a->tasks("master");
 		}
+
+//		robot_a->set_force_controller_x_gain(ros_state->get_force_p_gain(), ros_state->get_force_i_gain(), ros_state->get_force_d_gain());
+//		robot_a->set_force_controller_x_gain(ros_state->get_force_p_gain(), ros_state->get_force_i_gain(), ros_state->get_force_d_gain());
+//		robot_a->set_force_controller_x_gain(ros_state->get_force_p_gain(), ros_state->get_force_i_gain(), ros_state->get_force_d_gain());
+//
+//		robot_a->set_position_controller_x_gain(ros_state->get_p_gain(), ros_state->get_i_gain(), ros_state->get_d_gain());
+//		robot_a->set_position_controller_x_gain(ros_state->get_p_gain(), ros_state->get_i_gain(), ros_state->get_d_gain());
+//		robot_a->set_position_controller_x_gain(ros_state->get_p_gain(), ros_state->get_i_gain(), ros_state->get_d_gain());
 
 		robot_a->hybrid_controller();
 
