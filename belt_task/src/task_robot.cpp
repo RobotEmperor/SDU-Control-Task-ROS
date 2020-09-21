@@ -233,12 +233,6 @@ bool TaskRobot::tasks(std::string command) // first for only two pulleys
 
 			if(sub_tasks_ == 1)
 				finish_task_ = 1;
-
-			//			for(int num = 0; num < 3; num ++)
-			//			{
-			//				desired_force_torque_vector_[num] = 0;
-			//			}
-			//have to adjust pid configuration
 		}
 
 		if(!command.compare("slave"))
@@ -251,27 +245,6 @@ bool TaskRobot::tasks(std::string command) // first for only two pulleys
 		robot_task_->generate_trajectory();
 		robot_task_->check_phases();
 	}
-
-	//  if(!command.compare("auto"))
-	//  {
-	//    if(!robot_name_.compare("robot_A"))
-	//    {
-	//      robot_task_->set_all_phases_(2);
-	//      slave_robot();
-	//    }
-	//    if(!robot_name_.compare("robot_B"))
-	//    {
-	//      robot_task_->set_all_phases_(5);
-	//      master_robot();
-	//
-	//      if(sub_tasks_ == 1)
-	//        finish_task_ = 1;
-	//    }
-	//    previous_phase_ = robot_task_->get_phases_();
-	//    robot_task_->generate_trajectory();
-	//    robot_task_->check_phases();
-	//  }
-
 	previous_task_command_ = command;
 
 	return true;
@@ -303,36 +276,6 @@ void TaskRobot::master_robot()
 
 			return;
 		}
-		//    if(robot_task_->get_phases_() == 0)
-		//    {
-		//      robot_task_->close_to_pulleys(master_way_points_[0][0],master_way_points_[0][1],master_way_points_[0][2], RPY<>(master_way_points_[0][3],master_way_points_[0][4],master_way_points_[0][5])); //bearing frame
-		//    }
-		//    if(robot_task_->get_phases_() == 1)
-		//    {
-		//      desired_belt_[0] = master_way_points_[1][0];
-		//      desired_belt_[1] = master_way_points_[1][1];
-		//      desired_belt_[2] = master_way_points_[1][2];
-		//
-		//      robot_task_->estimation_of_belt_position(desired_belt_); ////bearing frame
-		//      robot_task_->insert_into_groove(RPY<>(master_way_points_[1][3],master_way_points_[1][4],master_way_points_[1][5]));
-		//    }
-		//    if(robot_task_->get_phases_() == 2)
-		//    {
-		//      robot_task_->up_motion(contact_check_, master_way_points_[2][0], master_way_points_[2][1], master_way_points_[2][2], RPY<>(master_way_points_[2][3],master_way_points_[2][4],master_way_points_[2][5])); //bearing frame
-		//
-		//    }
-		//    if(robot_task_->get_phases_() == 3)
-		//    {
-		//      robot_task_->finish_1(contact_check_, master_way_points_[3][0], master_way_points_[3][1], master_way_points_[3][2], RPY<>(master_way_points_[3][3],master_way_points_[3][4],master_way_points_[3][5])); //bearing frame
-		//    }
-		//    if(robot_task_->get_phases_() == 4)
-		//    {
-		//      robot_task_->finish_2(contact_check_, master_way_points_[4][0], master_way_points_[4][1], master_way_points_[4][2], RPY<>(master_way_points_[4][3],master_way_points_[4][4],master_way_points_[4][5])); //bearing frame
-		//    }
-		//    if(sub_tasks_ == 0 && robot_task_->get_phases_() == 5)
-		//    {
-		//      sub_tasks_++;
-		//    }
 		robot_task_->motion_to_desired_pose(contact_check_, master_way_points_[motion_phases_][0],master_way_points_[motion_phases_][1],master_way_points_[motion_phases_][2], RPY<>(master_way_points_[motion_phases_][3],master_way_points_[motion_phases_][4],master_way_points_[motion_phases_][5]),master_way_points_[motion_phases_][6]); //bearing frame
 	}
 }
@@ -370,19 +313,6 @@ void TaskRobot::slave_robot() // for robot A
 			desired_force_torque_vector_[num] = robust_force_values_[motion_phases_][num];
 		}
 		cout << desired_force_torque_vector_ << endl;
-		//    if(robot_task_->get_phases_() == 0)
-		//    {
-		//      desired_force_torque_vector_[0] = robust_force_value_[0];
-		//      desired_force_torque_vector_[1] = robust_force_value_[1];
-		//      desired_force_torque_vector_[2] = robust_force_value_[2];
-		//      robot_task_-> close_to_pulleys(-0.11,-0.02,-0.005, RPY<>(0,0,0)); //bearing frame
-		//    }
-		//    if(robot_task_->get_phases_() == 1)
-		//    {
-		//      desired_force_torque_vector_[0] = robust_force_value_[0]+5;
-		//      desired_force_torque_vector_[1] = robust_force_value_[1];
-		//      desired_force_torque_vector_[2] = robust_force_value_[2];
-		//    }
 	}
 }
 bool TaskRobot::hybrid_controller()
@@ -425,12 +355,6 @@ bool TaskRobot::hybrid_controller()
 		current_ft_ = Wrench6D<> (contacted_ft_data_[0], contacted_ft_data_[1], contacted_ft_data_[2], contacted_ft_data_[3], contacted_ft_data_[4], contacted_ft_data_[5]);
 		current_ft_ = (tf_current_.R()).inverse()*current_ft_;
 		tf_current_ = Transform3D<> (Vector3D<>(actual_tcp_pose_[0], actual_tcp_pose_[1], actual_tcp_pose_[2]), EAA<>(actual_tcp_pose_[3], actual_tcp_pose_[4], actual_tcp_pose_[5]).toRotation3D());
-
-		//    if(current_ft_.force()[1] > 5  && !contact_check_) // tool frame
-		//    {
-		//      contact_check_ = 1;
-		//      std::cout << "A rubber belt was inserted in a pulley" << std::endl;
-		//    }
 
 		position_x_controller_->PID_calculate(desired_pose_vector_[0], actual_tcp_pose_[0], 0);
 		position_y_controller_->PID_calculate(desired_pose_vector_[1], actual_tcp_pose_[1], 0);

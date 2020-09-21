@@ -8,27 +8,57 @@
 #define SDU_CONTROL_TASK_ROS_BELT_TASK_INCLUDE_BELT_TASK_H_
 #define EIGEN_NO_DEBUG
 #define EIGEN_NO_STATIC_ASSERT
-#define CLOCK_RES 1e-9 //Clock resolution is 1 us by default 1e-9
 #define LOOP_PERIOD 2e6 //Expressed in ticks // 2ms control time
+
+#define TIMESPEC_ADD(A,B) /* A += B */ \
+    do {                                   \
+    (A).tv_sec += (B).tv_sec;          \
+    (A).tv_nsec += (B).tv_nsec;        \
+    if ( (A).tv_nsec >= 1000000000 ) { \
+    (A).tv_sec++;                  \
+    (A).tv_nsec -= 1000000000;     \
+    }                                  \
+    } while (0)
+
+#define TIMESPEC_SUB(A,B) /* A -= B */ \
+    do {                                   \
+    (A).tv_sec -= (B).tv_sec;          \
+    (A).tv_nsec -= (B).tv_nsec;        \
+    if ( (A).tv_nsec < 0 ) {           \
+    (A).tv_sec--;                  \
+    (A).tv_nsec += 1000000000;     \
+    }                                  \
+    } while (0)
+
+
 
 #include "log.h"
 #include "ros_node.h"
 #include "task_robot.h"
 #include <signal.h>
 
-//xenomai rt system
-#include <unistd.h>
-#include <signal.h>
-#include <cstdlib>
+//preempt rt system
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <pthread.h>
 #include <sys/mman.h>
-#include <sys/types.h>
-#include <alchemy/task.h>
-#include <alchemy/timer.h>
+
+//xenomai rt system
+//#include <unistd.h>
+//#include <signal.h>
+//#include <cstdlib>
+//#include <sys/mman.h>
+//#include <sys/types.h>
+//#include <alchemy/task.h>
+//#include <alchemy/timer.h>
+
+//memory lock
 #include <mutex>
 
 //real time task
-RT_TASK loop_robot_a;
-RT_TASK loop_robot_b;
+//RT_TASK loop_robot_a;
+//RT_TASK loop_robot_b;
 
 //cpu set to avoid overlaod
 cpu_set_t cpu_robot;

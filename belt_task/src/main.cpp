@@ -8,158 +8,165 @@
 
 volatile bool exit_program = false;
 
-void loop_robot_a_proc(void *arg)
+
+void *thread_func_robot_a ( void *param )
 {
-	RT_TASK *curtask;
-	RT_TASK_INFO curtaskinfo;
+  struct timespec t_1us;
+  t_1us.tv_sec = 0; t_1us.tv_nsec=1000;
 
-	curtask = rt_task_self();
-	rt_task_inquire(curtask, &curtaskinfo);
 
-	printf("Starting task %s with period of %f ms ....\n", curtaskinfo.name, control_time*1000);
-	//Make the task periodic with a specified loop period
+  long thread_id = (long) param;
+  struct timespec t_next, period, t_now, t_prev, t_diff;
 
-	RTIME tstart_A;
-	rt_task_set_periodic(NULL, TM_NOW, LOOP_PERIOD);
-	tstart_A = rt_timer_read();
+  /* period = 2 ms * thread_id */
+  period.tv_sec = 0;
+  period.tv_nsec = LOOP_PERIOD; // a x ms
 
-	if(gazebo_check)
-	{
-		std::cout << COLOR_GREEN_BOLD << "Gazebo robot A start " << COLOR_RESET << std::endl;
-	}
+  //t_next = t_now;
+  //t_prev = t_now;
 
-	bool task_completed = false;
-	double task_time_A = 0.0;
+  std::cout << COLOR_GREEN_BOLD << "RT linux robot A start! " << COLOR_RESET << std::endl;
 
-	while(!exit_program)
-	{
-		m.lock();
-		ros_state->update_ros_data();
-		tstart_A = rt_timer_read();
+  if(gazebo_check)
+  {
+    std::cout << COLOR_GREEN_BOLD << "Gazebo robot A start " << COLOR_RESET << std::endl;
+  }
 
-		//		robot_a->tasks("slave");
+  bool task_completed = false;
+  double task_time_A = 0.0;
 
-		if(finished_insertion == 0)
-			robot_a->tasks("slave");
-		else
-		{
-			robot_a->set_force_controller_x_gain(0.00007,0,0);
-			robot_a->set_position_controller_x_gain(0.8,0,0);
-			robot_a->set_force_controller_y_gain(0.00007,0,0);
-			robot_a->set_position_controller_y_gain(0.8,0,0);
-			robot_a->set_force_controller_z_gain(0.00007,0,0);
-			robot_a->set_position_controller_z_gain(0.8,0,0);
+  while(!exit_program)
+  {
+    //clock_gettime ( CLOCK_MONOTONIC, &t_now );
 
-			robot_a->tasks("master");
-		}
+    m.lock();
+    ros_state->update_ros_data();
 
-//		robot_a->set_force_controller_x_gain(ros_state->get_force_p_gain(), ros_state->get_force_i_gain(), ros_state->get_force_d_gain());
-//		robot_a->set_force_controller_x_gain(ros_state->get_force_p_gain(), ros_state->get_force_i_gain(), ros_state->get_force_d_gain());
-//		robot_a->set_force_controller_x_gain(ros_state->get_force_p_gain(), ros_state->get_force_i_gain(), ros_state->get_force_d_gain());
-//
-//		robot_a->set_position_controller_x_gain(ros_state->get_p_gain(), ros_state->get_i_gain(), ros_state->get_d_gain());
-//		robot_a->set_position_controller_x_gain(ros_state->get_p_gain(), ros_state->get_i_gain(), ros_state->get_d_gain());
-//		robot_a->set_position_controller_x_gain(ros_state->get_p_gain(), ros_state->get_i_gain(), ros_state->get_d_gain());
+    if(finished_insertion == 0)
+      robot_a->tasks("slave");
+    else
+    {
+      robot_a->set_force_controller_x_gain(0.00007,0,0);
+      robot_a->set_position_controller_x_gain(0.8,0,0);
+      robot_a->set_force_controller_y_gain(0.00007,0,0);
+      robot_a->set_position_controller_y_gain(0.8,0,0);
+      robot_a->set_force_controller_z_gain(0.00007,0,0);
+      robot_a->set_position_controller_z_gain(0.8,0,0);
 
-		robot_a->hybrid_controller();
+      robot_a->tasks("master");
+    }
+    robot_a->hybrid_controller();
 
-		if(gazebo_check)
-		{
-			ros_state->send_gazebo_command(robot_a->get_current_q_());
-		}
+    if(gazebo_check)
+    {
+      ros_state->send_gazebo_command(robot_a->get_current_q_());
+    }
 
-		ros_state->send_raw_ft_data(robot_a->get_raw_ft_data_());
-		ros_state->send_filtered_ft_data(robot_a->get_contacted_ft_data_());
-		//		ros_state->send_error_ee_pose(robot_a->get_error_ee_pose_());
-		//		ros_state->send_ee_velocity(robot_a->get_actual_tcp_speed_());
+    ros_state->send_raw_ft_data(robot_a->get_raw_ft_data_());
+    ros_state->send_filtered_ft_data(robot_a->get_contacted_ft_data_());
 
-		task_time_A = (rt_timer_read() - tstart_A)/1000000.0;
-		if(task_time_A >= 2.0)
-			cout << COLOR_GREEN_BOLD << "Check task's completion A : " << task_completed << " Elapsed time : "<< task_time_A << COLOR_RESET << endl;
-		m.unlock();
-		rt_task_wait_period(NULL);
-	}
+
+    //if(task_time_A >= 2.0)
+    //  cout << COLOR_GREEN_BOLD << "Check task's completion A : " << task_completed << " Elapsed time : "<< task_time_A << COLOR_RESET << endl;
+    m.unlock();
+
+    TIMESPEC_ADD (t_next, period);
+    clock_nanosleep ( CLOCK_MONOTONIC, TIMER_ABSTIME, &t_next, NULL );
+
+  }
+  return NULL;
 }
-void loop_robot_b_proc(void *arg)
+
+void *thread_func_robot_b ( void *param )
 {
-	RT_TASK *curtask;
-	RT_TASK_INFO curtaskinfo;
-
-	curtask = rt_task_self();
-	rt_task_inquire(curtask, &curtaskinfo);
-
-	printf("Starting task %s with period of %f ms ....\n", curtaskinfo.name, control_time*1000);
-	//Make the task periodic with a specified loop period
-
-	RTIME tstart_B;
-	rt_task_set_periodic(NULL, TM_NOW, LOOP_PERIOD);
-	tstart_B = rt_timer_read();
-
-	if(gazebo_check)
-	{
-		std::cout << COLOR_GREEN_BOLD << "Gazebo robot B start " << COLOR_RESET << std::endl;
-	}
-
-	bool task_completed = false;
-	double task_time_B = 0.0;
-
-	while(!exit_program)
-	{
-		m.lock();
-		ros_state->update_ros_data();
-		tstart_B = rt_timer_read();
-
-		robot_b->tasks("master");
-		robot_b->hybrid_controller();
-
-		if(robot_b->get_finish_task())
-			finished_insertion = 1;
+  struct timespec t_1us;
+  t_1us.tv_sec = 0; t_1us.tv_nsec=1000;
 
 
-		if(gazebo_check)
-		{
-			ros_state->send_gazebo_b_command(robot_b->get_current_q_());
-		}
+  long thread_id = (long) param;
+  struct timespec t_next, period, t_now, t_prev, t_diff;
 
-		//    ros_state->send_raw_ft_data(robot_b->get_raw_ft_data_());
-		//    ros_state->send_filtered_ft_data(robot_b->get_contacted_ft_data_());
-		//    ros_state->send_error_ee_pose(robot_b->get_error_ee_pose_());
-		//    ros_state->send_ee_velocity(robot_b->get_actual_tcp_speed_());
+  /* period = 2 ms * thread_id */
+  period.tv_sec = 0;
+  period.tv_nsec = LOOP_PERIOD; // a x ms
 
-		task_time_B = (rt_timer_read() - tstart_B)/1000000.0;
-		if(task_time_B >= 2.0)
-			cout << COLOR_GREEN_BOLD << "Check task's completion B : " << task_completed << "  Elapsed time : "<< task_time_B << COLOR_RESET << endl;
-		m.unlock();
+  //t_next = t_now;
+  //t_prev = t_now;
 
-		rt_task_wait_period(NULL);
-	}
+  std::cout << COLOR_GREEN_BOLD << "RT linux robot B start! " << COLOR_RESET << std::endl;
+
+  if(gazebo_check)
+  {
+    std::cout << COLOR_GREEN_BOLD << "Gazebo robot B start " << COLOR_RESET << std::endl;
+  }
+
+  bool task_completed = false;
+  double task_time_B = 0.0;
+
+  while(!exit_program)
+  {
+    clock_gettime ( CLOCK_MONOTONIC, &t_now );
+    t_prev = t_now;
+
+    m.lock();
+    ros_state->update_ros_data();
+
+    robot_b->tasks("master");
+    robot_b->hybrid_controller();
+
+    if(robot_b->get_finish_task())
+      finished_insertion = 1;
+
+
+    if(gazebo_check)
+    {
+      ros_state->send_gazebo_b_command(robot_b->get_current_q_());
+    }
+
+
+
+    //if(t_diff.tv_nsec >= 2.0)
+    //cout << COLOR_GREEN_BOLD << "Check task's completion B : " << task_completed << "  Elapsed time : "<< (t_diff.tv_sec + t_diff.tv_nsec)*0.000001 << COLOR_RESET << endl;
+    m.unlock();
+
+
+
+    TIMESPEC_ADD (t_next, period);
+    clock_nanosleep ( CLOCK_MONOTONIC, TIMER_ABSTIME, &t_next, NULL );
+    clock_gettime ( CLOCK_MONOTONIC, &t_now );
+    TIMESPEC_SUB(t_now,t_prev);
+    t_diff  = t_now;
+    cout << COLOR_GREEN_BOLD << "Check task's completion B : " << task_completed << "  Elapsed time : "<< (t_diff.tv_sec + t_diff.tv_nsec)*0.000001 << COLOR_RESET << endl;
+
+  }
+  return NULL;
 }
 void initialize()
 {
-	finished_insertion = 0;
+  finished_insertion = 0;
 
-	wait_command = false;
-	gazebo_check = true;
-	control_time = 0.002;
+  wait_command = false;
+  gazebo_check = true;
+  control_time = 0.002;
 
-	robot_a_ip = "192.168.1.130";
-	robot_b_ip = "192.168.1.129";
+  robot_a_ip = "192.168.1.130";
+  robot_b_ip = "192.168.1.129";
 
-	robot_path = "/home/yik/catkin_ws/src/SDU-Control-Task-ROS/belt_task/config";
-	robot_a = std::make_shared<TaskRobot>("robot_A",robot_path);
-	robot_path = robot_path + "/wc/UR10e_2018/UR10e_a.xml";
-	robot_a ->init_model(robot_path, "UR10e");
-	robot_a ->parse_init_data_("/home/yik/catkin_ws/src/SDU-Control-Task-ROS/belt_task/config/robot_A/initialize_robot.yaml");
+  robot_path = "/home/yik/catkin_ws/src/SDU-Control-Task-ROS/belt_task/config";
+  robot_a = std::make_shared<TaskRobot>("robot_A",robot_path);
+  robot_path = robot_path + "/wc/UR10e_2018/UR10e_a.xml";
+  robot_a ->init_model(robot_path, "UR10e");
+  robot_a ->parse_init_data_("/home/yik/catkin_ws/src/SDU-Control-Task-ROS/belt_task/config/robot_A/initialize_robot.yaml");
 
-	robot_path = "/home/yik/catkin_ws/src/SDU-Control-Task-ROS/belt_task/config";
-	robot_b = std::make_shared<TaskRobot>("robot_B",robot_path);
-	robot_path = robot_path + "/wc/UR10e_2018/UR10e_b.xml";
-	robot_b ->init_model(robot_path, "UR10e");
-	robot_b ->parse_init_data_("/home/yik/catkin_ws/src/SDU-Control-Task-ROS/belt_task/config/robot_B/initialize_robot.yaml");
+  robot_path = "/home/yik/catkin_ws/src/SDU-Control-Task-ROS/belt_task/config";
+  robot_b = std::make_shared<TaskRobot>("robot_B",robot_path);
+  robot_path = robot_path + "/wc/UR10e_2018/UR10e_b.xml";
+  robot_b ->init_model(robot_path, "UR10e");
+  robot_b ->parse_init_data_("/home/yik/catkin_ws/src/SDU-Control-Task-ROS/belt_task/config/robot_B/initialize_robot.yaml");
 }
 void my_function(int sig)
 { // can be called asynchronously
-	exit_program = true; // set flag
+  exit_program = true; // set flag
 
 }
 //void executeAction(const belt_task::belt_task_actionGoalConstPtr &start_end, Server* as)
@@ -191,114 +198,157 @@ void my_function(int sig)
 
 int main (int argc, char **argv)
 {
-	CPU_ZERO(&cpu_robot);
+  CPU_ZERO(&cpu_robot);
 
-	mlockall(MCL_CURRENT | MCL_FUTURE); //Lock the memory to avoid memory swapping for this program
+  mlockall(MCL_CURRENT | MCL_FUTURE); //Lock the memory to avoid memory swapping for this program
 
-	signal(SIGINT, my_function);
+  signal(SIGINT, my_function);
 
-	initialize();
-	ros::init(argc, argv, "Belt_Task");
-	ros::NodeHandle nh;
-	ros_state = std::make_shared<RosNode>(argc,argv,"Belt_Task",nh);
-	ros_state->initialize();
+  initialize();
+  ros::init(argc, argv, "Belt_Task");
+  ros::NodeHandle nh;
+  ros_state = std::make_shared<RosNode>(argc,argv,"Belt_Task",nh);
+  ros_state->initialize();
 
-	//  Server server(nh, "belt_task", boost::bind(&executeAction, _1, &server), false);
-	//  server.start();
-	//
-	//  while(!wait_command)
-	//  {
-	//    if(exit_program)
-	//      wait_command = true;
-	//    ros_state->update_ros_data();
-	//    usleep(1);
-	//  }
+  //  Server server(nh, "belt_task", boost::bind(&executeAction, _1, &server), false);
+  //  server.start();
+  //
+  //  while(!wait_command)
+  //  {
+  //    if(exit_program)
+  //      wait_command = true;
+  //    ros_state->update_ros_data();
+  //    usleep(1);
+  //  }
 
-	std::cout << COLOR_YELLOW_BOLD << "Simulation On [ yes / no ]" << COLOR_RESET << std::endl;
-	//cin >> silmulation_on_off;
-	silmulation_on_off = "n";
+  std::cout << COLOR_YELLOW_BOLD << "Simulation On [ yes / no ]" << COLOR_RESET << std::endl;
+  //cin >> silmulation_on_off;
+  silmulation_on_off = "y";
 
-	if(!silmulation_on_off.compare("yes") || !silmulation_on_off.compare("y"))
-		std::cout << COLOR_GREEN_BOLD << "Setting up Simulation " << COLOR_RESET << std::endl;
-	else
-	{
-		std::cout << COLOR_GREEN_BOLD << "REAL Robot, Be careful to run:" << COLOR_RESET << std::endl;
-		std::cout << COLOR_GREEN_BOLD << "Are you sure ? [yes / no]" << COLOR_RESET << std::endl;
-		//cin >> silmulation_on_off;
-		silmulation_on_off = "y";
-		if(silmulation_on_off.compare("y")!=0)
-		{
-			ros_state->shout_down_ros();
+  if(!silmulation_on_off.compare("yes") || !silmulation_on_off.compare("y"))
+    std::cout << COLOR_GREEN_BOLD << "Setting up Simulation " << COLOR_RESET << std::endl;
+  else
+  {
+    std::cout << COLOR_GREEN_BOLD << "REAL Robot, Be careful to run:" << COLOR_RESET << std::endl;
+    std::cout << COLOR_GREEN_BOLD << "Are you sure ? [yes / no]" << COLOR_RESET << std::endl;
+    //cin >> silmulation_on_off;
+    silmulation_on_off = "y";
+    if(silmulation_on_off.compare("y")!=0)
+    {
+      ros_state->shout_down_ros();
 
-			robot_a->terminate_data_log();
-			robot_b->terminate_data_log();
+      robot_a->terminate_data_log();
+      robot_b->terminate_data_log();
 
-			std::cout << COLOR_RED_BOLD << "Terminate program" << COLOR_RESET << std::endl;
-			return 0 ;
-		}
-		gazebo_check = false;
-	}
-
-
-	std::cout << COLOR_GREEN_BOLD << "Program Start:" << COLOR_RESET << std::endl;
-
-	usleep(1000000);
-
-	ros_state->update_ros_data();
-
-	if(gazebo_check)
-	{
-		robot_a->move_to_init_pose();
-		robot_b->move_to_init_pose();
-		ros_state->send_gazebo_command(robot_a->get_current_q_());
-		ros_state->send_gazebo_b_command(robot_b->get_current_q_());
-	}
-	else
-	{
-		robot_a->initialize(robot_a_ip, gazebo_check);
-		robot_a->move_to_init_pose();
-
-		robot_b->initialize(robot_b_ip, gazebo_check);
-		robot_b->move_to_init_pose();
-	}
-
-	//real time task
-	char str[35];
-	sprintf(str, "Belt Task A Start");
-	rt_task_create(&loop_robot_a, str, 0, 50, 0);//Create the real time task
-	rt_task_start(&loop_robot_a, &loop_robot_a_proc,0);//Since task starts in suspended mode, start task
-
-	sprintf(str, "Belt Task B Start");
-	rt_task_create(&loop_robot_b, str, 0, 51, 0);//Create the real time task
-	rt_task_start(&loop_robot_b, &loop_robot_b_proc, 0);//Since task starts in suspended mode, start task
-	std::cout << COLOR_GREEN << "Real time task loop was created!" << COLOR_RESET << std::endl;
+      std::cout << COLOR_RED_BOLD << "Terminate program" << COLOR_RESET << std::endl;
+      return 0 ;
+    }
+    gazebo_check = false;
+  }
 
 
-	signal(SIGINT, my_function);
-	while(!exit_program)
-	{
-		ros_state->update_ros_data();
-		usleep(0.1);
-	}
-	//pause();
+  std::cout << COLOR_GREEN_BOLD << "Program Start:" << COLOR_RESET << std::endl;
 
-	rt_task_delete(&loop_robot_a);
-	rt_task_delete(&loop_robot_b);
+  usleep(1000000);
 
-	// terminate robot
-	if(!gazebo_check)
-	{
-		robot_a->terminate_robot();
-		robot_b->terminate_robot();
-	}
+  ros_state->update_ros_data();
 
-	robot_a->terminate_data_log();
-	robot_b->terminate_data_log();
+  if(gazebo_check)
+  {
+    robot_a->move_to_init_pose();
+    robot_b->move_to_init_pose();
+    ros_state->send_gazebo_command(robot_a->get_current_q_());
+    ros_state->send_gazebo_b_command(robot_b->get_current_q_());
+  }
+  else
+  {
+    robot_a->initialize(robot_a_ip, gazebo_check);
+    robot_a->move_to_init_pose();
+
+    robot_b->initialize(robot_b_ip, gazebo_check);
+    robot_b->move_to_init_pose();
+  }
+
+  //preempt rt
+
+  int policy;
+  struct sched_param prio;
+  pthread_attr_t attr_robot_a;
+  pthread_t loop_robot_a;
+  //  policy = SCHED_OTHER;
+  //  if (pthread_setschedparam( pthread_self(),policy, &prio )){
+  //    perror ("Error: pthread_setschedparam (root permission?)");
+  //    exit(1);
+  //  }
+  pthread_attr_init( &attr_robot_a);
+  pthread_attr_setinheritsched( &attr_robot_a, PTHREAD_EXPLICIT_SCHED);
+  policy = SCHED_RR;
+  pthread_attr_setschedpolicy( &attr_robot_a, policy);
+  prio.sched_priority = 19; // priority range should be btw -20 to +19
+  pthread_attr_setschedparam(&attr_robot_a,&prio);
+  if ( pthread_create(&loop_robot_a, &attr_robot_a, thread_func_robot_a, (void *)(1)) ){
+    perror ( "Error: pthread1_create" );
+    return 1;
+  }
+
+  int policy_b;
+  struct sched_param prio_b;
+  pthread_attr_t attr_robot_b;
+  pthread_t loop_robot_b;
+  //  policy_b = SCHED_OTHER;
+  //  if (pthread_setschedparam( pthread_self(),policy_b, &prio_b )){
+  //    perror ("Error: pthread_setschedparam (root permission?)");
+  //    exit(1);
+  //  }
+  pthread_attr_init( &attr_robot_b);
+  pthread_attr_setinheritsched( &attr_robot_b, PTHREAD_EXPLICIT_SCHED);
+  policy_b = SCHED_RR;
+  pthread_attr_setschedpolicy( &attr_robot_b, policy_b);
+  prio_b.sched_priority = 18; // priority range should be btw -20 to +19
+  pthread_attr_setschedparam(&attr_robot_b,&prio_b);
+  if ( pthread_create(&loop_robot_b, &attr_robot_b, thread_func_robot_b, (void *)(2)) ){
+    perror ( "Error: pthread2_create" );
+    return 1;
+  }
 
 
+  //real time task
+  //char str[35];
+  //sprintf(str, "Belt Task A Start");
+  //rt_task_create(&loop_robot_a, str, 0, 50, 0);//Create the real time task
+  //rt_task_start(&loop_robot_a, &loop_robot_a_proc,0);//Since task starts in suspended mode, start task
+
+  //sprintf(str, "Belt Task B Start");
+  //rt_task_create(&loop_robot_b, str, 0, 51, 0);//Create the real time task
+  //rt_task_start(&loop_robot_b, &loop_robot_b_proc, 0);//Since task starts in suspended mode, start task
+  std::cout << COLOR_GREEN << "Real time task loop was created!" << COLOR_RESET << std::endl;
 
 
-	ros_state->shout_down_ros();
+  signal(SIGINT, my_function);
+  while(!exit_program)
+  {
+    ros_state->update_ros_data();
+    usleep(0.1);
+  }
+  //pause();
 
-	return 0;
+  /* wait for threads to finish */
+  pthread_join ( loop_robot_a, NULL );
+  pthread_join ( loop_robot_b, NULL );
+
+
+  // terminate robot
+  if(!gazebo_check)
+  {
+    robot_a->terminate_robot();
+    robot_b->terminate_robot();
+  }
+
+  robot_a->terminate_data_log();
+  robot_b->terminate_data_log();
+
+
+  ros_state->shout_down_ros();
+
+  return 0;
 }
