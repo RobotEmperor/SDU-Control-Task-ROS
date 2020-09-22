@@ -77,5 +77,5 @@ link_directories(${CMAKE_SOURCE_DIR}/lib
 
 
 add_executable(belt_task ${SOURCE_FILES})
-target_link_libraries(belt_task sdu_math actionlib rtde sensor_filter rt roscpp rosconsole roscpp_serialization boost_system rostime ${ROBWORK_LIBRARIES} ${yaml_cpp_LIBRARIES})
+target_link_libraries(belt_task  pthread sdu_math actionlib rtde sensor_filter rt roscpp rosconsole roscpp_serialization boost_system rostime ${ROBWORK_LIBRARIES} ${yaml_cpp_LIBRARIES})
 #add_dependencies(belt_task belt_task_generate_messages_cpp)

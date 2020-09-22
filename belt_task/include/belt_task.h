@@ -8,7 +8,7 @@
 #define SDU_CONTROL_TASK_ROS_BELT_TASK_INCLUDE_BELT_TASK_H_
 #define EIGEN_NO_DEBUG
 #define EIGEN_NO_STATIC_ASSERT
-#define LOOP_PERIOD 2e6 //Expressed in ticks // 2ms control time
+#define LOOP_PERIOD 1.9e6 //Expressed in ticks // 2ms control time
 
 #define TIMESPEC_ADD(A,B) /* A += B */ \
     do {                                   \
@@ -43,6 +43,9 @@
 #include <time.h>
 #include <pthread.h>
 #include <sys/mman.h>
+#include <limits.h>
+#include <sched.h>
+
 
 //xenomai rt system
 //#include <unistd.h>

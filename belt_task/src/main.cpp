@@ -11,12 +11,7 @@ volatile bool exit_program = false;
 
 void *thread_func_robot_a ( void *param )
 {
-  struct timespec t_1us;
-  t_1us.tv_sec = 0; t_1us.tv_nsec=1000;
-
-
-  long thread_id = (long) param;
-  struct timespec t_next, period, t_now, t_prev, t_diff;
+  struct timespec t_next, period, t_now, t_prev, t_diff, t_all, t_all_pre;
 
   /* period = 2 ms * thread_id */
   period.tv_sec = 0;
@@ -32,14 +27,17 @@ void *thread_func_robot_a ( void *param )
     std::cout << COLOR_GREEN_BOLD << "Gazebo robot A start " << COLOR_RESET << std::endl;
   }
 
-  bool task_completed = false;
-  double task_time_A = 0.0;
-
   while(!exit_program)
   {
-    //clock_gettime ( CLOCK_MONOTONIC, &t_now );
-
+    clock_gettime ( CLOCK_MONOTONIC, &t_now );
+    t_all_pre = t_now;
     m.lock();
+
+    clock_gettime ( CLOCK_MONOTONIC, &t_now );
+    t_next = t_now;
+    t_prev = t_now;
+
+    //to do
     ros_state->update_ros_data();
 
     if(finished_insertion == 0)
@@ -65,26 +63,29 @@ void *thread_func_robot_a ( void *param )
     ros_state->send_raw_ft_data(robot_a->get_raw_ft_data_());
     ros_state->send_filtered_ft_data(robot_a->get_contacted_ft_data_());
 
+    clock_gettime ( CLOCK_MONOTONIC, &t_now );
+    TIMESPEC_SUB(t_now,t_prev);
+    t_diff  = t_now;
+    //if((t_diff.tv_sec + t_diff.tv_nsec)*0.000001 >= 2)
+    //cout << COLOR_GREEN_BOLD << "  Elapsed time A : "<< (t_diff.tv_sec + t_diff.tv_nsec)*0.000001 << COLOR_RESET << endl;
 
-    //if(task_time_A >= 2.0)
-    //  cout << COLOR_GREEN_BOLD << "Check task's completion A : " << task_completed << " Elapsed time : "<< task_time_A << COLOR_RESET << endl;
     m.unlock();
 
     TIMESPEC_ADD (t_next, period);
     clock_nanosleep ( CLOCK_MONOTONIC, TIMER_ABSTIME, &t_next, NULL );
 
+    clock_gettime ( CLOCK_MONOTONIC, &t_now );
+    t_all = t_now;
+
+    if(((t_all.tv_sec - t_all_pre.tv_sec) + (t_all.tv_nsec - t_all_pre.tv_nsec))*0.000001  >= 2.01)
+    cout << COLOR_GREEN_BOLD << "  Elapsed time A : "<< ((t_all.tv_sec - t_all_pre.tv_sec) + (t_all.tv_nsec - t_all_pre.tv_nsec))*0.000001 << COLOR_RESET << endl;
   }
   return NULL;
 }
 
 void *thread_func_robot_b ( void *param )
 {
-  struct timespec t_1us;
-  t_1us.tv_sec = 0; t_1us.tv_nsec=1000;
-
-
-  long thread_id = (long) param;
-  struct timespec t_next, period, t_now, t_prev, t_diff;
+  struct timespec t_next, period, t_now, t_prev, t_diff, t_all, t_all_pre;;
 
   /* period = 2 ms * thread_id */
   period.tv_sec = 0;
@@ -100,15 +101,17 @@ void *thread_func_robot_b ( void *param )
     std::cout << COLOR_GREEN_BOLD << "Gazebo robot B start " << COLOR_RESET << std::endl;
   }
 
-  bool task_completed = false;
-  double task_time_B = 0.0;
-
   while(!exit_program)
   {
     clock_gettime ( CLOCK_MONOTONIC, &t_now );
-    t_prev = t_now;
+    t_all_pre = t_now;
 
     m.lock();
+    clock_gettime ( CLOCK_MONOTONIC, &t_now );
+    t_next = t_now;
+    t_prev = t_now;
+
+    //to do
     ros_state->update_ros_data();
 
     robot_b->tasks("master");
@@ -123,21 +126,22 @@ void *thread_func_robot_b ( void *param )
       ros_state->send_gazebo_b_command(robot_b->get_current_q_());
     }
 
-
-
-    //if(t_diff.tv_nsec >= 2.0)
-    //cout << COLOR_GREEN_BOLD << "Check task's completion B : " << task_completed << "  Elapsed time : "<< (t_diff.tv_sec + t_diff.tv_nsec)*0.000001 << COLOR_RESET << endl;
-    m.unlock();
-
-
-
-    TIMESPEC_ADD (t_next, period);
-    clock_nanosleep ( CLOCK_MONOTONIC, TIMER_ABSTIME, &t_next, NULL );
     clock_gettime ( CLOCK_MONOTONIC, &t_now );
     TIMESPEC_SUB(t_now,t_prev);
     t_diff  = t_now;
-    cout << COLOR_GREEN_BOLD << "Check task's completion B : " << task_completed << "  Elapsed time : "<< (t_diff.tv_sec + t_diff.tv_nsec)*0.000001 << COLOR_RESET << endl;
+    //if((t_diff.tv_sec + t_diff.tv_nsec)*0.000001 >= 2)
+    //cout << COLOR_GREEN_BOLD << "  Elapsed time B : "<< (t_diff.tv_sec + t_diff.tv_nsec)*0.000001 << COLOR_RESET << endl;
 
+    m.unlock();
+
+    TIMESPEC_ADD (t_next, period);
+    clock_nanosleep ( CLOCK_MONOTONIC, TIMER_ABSTIME, &t_next, NULL );
+
+    clock_gettime ( CLOCK_MONOTONIC, &t_now );
+    t_all = t_now;
+
+    if(((t_all.tv_sec - t_all_pre.tv_sec) + (t_all.tv_nsec - t_all_pre.tv_nsec))*0.000001  >= 2.01)
+    cout << COLOR_GREEN_BOLD << "  Elapsed time B : "<< ((t_all.tv_sec - t_all_pre.tv_sec) + (t_all.tv_nsec - t_all_pre.tv_nsec))*0.000001 << COLOR_RESET << endl;
   }
   return NULL;
 }
@@ -198,7 +202,7 @@ void my_function(int sig)
 
 int main (int argc, char **argv)
 {
-  CPU_ZERO(&cpu_robot);
+  // CPU_ZERO(&cpu_robot);
 
   mlockall(MCL_CURRENT | MCL_FUTURE); //Lock the memory to avoid memory swapping for this program
 
@@ -281,11 +285,16 @@ int main (int argc, char **argv)
   //    exit(1);
   //  }
   pthread_attr_init( &attr_robot_a);
-  pthread_attr_setinheritsched( &attr_robot_a, PTHREAD_EXPLICIT_SCHED);
-  policy = SCHED_RR;
+
+  pthread_attr_setstacksize(&attr_robot_a, PTHREAD_STACK_MIN);
+
+  policy = SCHED_FIFO;
   pthread_attr_setschedpolicy( &attr_robot_a, policy);
-  prio.sched_priority = 19; // priority range should be btw -20 to +19
+
+  prio.sched_priority = 90; // priority range should be btw -20 to +19
   pthread_attr_setschedparam(&attr_robot_a,&prio);
+  pthread_attr_setinheritsched( &attr_robot_a, PTHREAD_EXPLICIT_SCHED);
+
   if ( pthread_create(&loop_robot_a, &attr_robot_a, thread_func_robot_a, (void *)(1)) ){
     perror ( "Error: pthread1_create" );
     return 1;
@@ -301,11 +310,16 @@ int main (int argc, char **argv)
   //    exit(1);
   //  }
   pthread_attr_init( &attr_robot_b);
-  pthread_attr_setinheritsched( &attr_robot_b, PTHREAD_EXPLICIT_SCHED);
-  policy_b = SCHED_RR;
+
+  pthread_attr_setstacksize(&attr_robot_b, PTHREAD_STACK_MIN);
+
+  policy_b = SCHED_FIFO;
   pthread_attr_setschedpolicy( &attr_robot_b, policy_b);
-  prio_b.sched_priority = 18; // priority range should be btw -20 to +19
+
+  prio_b.sched_priority = 89; // priority range should be btw -20 to +19
   pthread_attr_setschedparam(&attr_robot_b,&prio_b);
+  pthread_attr_setinheritsched( &attr_robot_b, PTHREAD_EXPLICIT_SCHED);
+
   if ( pthread_create(&loop_robot_b, &attr_robot_b, thread_func_robot_b, (void *)(2)) ){
     perror ( "Error: pthread2_create" );
     return 1;
