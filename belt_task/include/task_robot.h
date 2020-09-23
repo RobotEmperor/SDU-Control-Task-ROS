@@ -88,6 +88,8 @@ public:
 	rw::math::Transform3D<> get_tf_current_();
 	rw::math::Transform3D<> get_tf_base_to_bearing_();
 
+	double get_gripper_move_values();
+
 	bool get_finish_task();
 
 private:
@@ -247,6 +249,9 @@ private:
 	//roboust force values
 	std::map<int, std::vector<double>> robust_force_values_;
 	int robust_force_values_numbers_;
+
+	//grippers
+	double gripper_move_values;
 
 
 };

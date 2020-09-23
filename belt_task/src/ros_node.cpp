@@ -34,6 +34,9 @@ void RosNode::initialize()
 	ee_velocity_pub_ = nh.advertise<std_msgs::Float64MultiArray>("/sdu/ur10e/ee_velocity", 10);
 	satefy_violation_pub_ = nh.advertise<std_msgs::Bool>("/sdu/ur10e/safety_violation", 10);
 
+	gripper_a_pub_ =nh.advertise<std_msgs::Float64>("/sdu/ur10e/gripper_a", 10);
+	gripper_b_pub_ =nh.advertise<std_msgs::Float64>("/sdu/ur10e/gripper_b", 10);
+
 	gazebo_shoulder_pan_position_pub_ = nh.advertise<std_msgs::Float64>("/ur10e_robot/shoulder_pan_position/command", 10);
 	gazebo_shoulder_lift_position_pub_ = nh.advertise<std_msgs::Float64>("/ur10e_robot/shoulder_lift_position/command", 10);
 	gazebo_elbow_position_pub_ = nh.advertise<std_msgs::Float64>("/ur10e_robot/elbow_position/command", 10);
@@ -218,6 +221,16 @@ void RosNode::send_satefy_violation (bool satefy_violation)
 {
 	satefy_violation_msg_.data = satefy_violation;
 	satefy_violation_pub_.publish(satefy_violation_msg_);
+}
+void RosNode::send_gripper_a_move (double values)
+{
+  gripper_a_msg_.data = values;
+  gripper_a_pub_.publish(gripper_a_msg_);
+}
+void RosNode::send_gripper_b_move (double values)
+{
+  gripper_b_msg_.data = values;
+  gripper_b_pub_.publish(gripper_b_msg_);
 }
 void RosNode::update_ros_data()
 {

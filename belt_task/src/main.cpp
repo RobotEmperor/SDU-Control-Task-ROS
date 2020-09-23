@@ -62,6 +62,7 @@ void *thread_func_robot_a ( void *param )
 
     ros_state->send_raw_ft_data(robot_a->get_raw_ft_data_());
     ros_state->send_filtered_ft_data(robot_a->get_contacted_ft_data_());
+    ros_state->send_gripper_a_move(robot_a->get_gripper_move_values());
 
     clock_gettime ( CLOCK_MONOTONIC, &t_now );
     TIMESPEC_SUB(t_now,t_prev);
@@ -77,8 +78,8 @@ void *thread_func_robot_a ( void *param )
     clock_gettime ( CLOCK_MONOTONIC, &t_now );
     t_all = t_now;
 
-    if(((t_all.tv_sec - t_all_pre.tv_sec) + (t_all.tv_nsec - t_all_pre.tv_nsec))*0.000001  >= 2.01)
-    cout << COLOR_GREEN_BOLD << "  Elapsed time A : "<< ((t_all.tv_sec - t_all_pre.tv_sec) + (t_all.tv_nsec - t_all_pre.tv_nsec))*0.000001 << COLOR_RESET << endl;
+    //if(((t_all.tv_sec - t_all_pre.tv_sec) + (t_all.tv_nsec - t_all_pre.tv_nsec))*0.000001  >= 2.01)
+    //cout << COLOR_GREEN_BOLD << "  Elapsed time A : "<< ((t_all.tv_sec - t_all_pre.tv_sec) + (t_all.tv_nsec - t_all_pre.tv_nsec))*0.000001 << COLOR_RESET << endl;
   }
   return NULL;
 }
@@ -126,6 +127,8 @@ void *thread_func_robot_b ( void *param )
       ros_state->send_gazebo_b_command(robot_b->get_current_q_());
     }
 
+    //ros_state->send_gripper_b_move(robot_b->get_gripper_move_values());
+
     clock_gettime ( CLOCK_MONOTONIC, &t_now );
     TIMESPEC_SUB(t_now,t_prev);
     t_diff  = t_now;
@@ -140,8 +143,8 @@ void *thread_func_robot_b ( void *param )
     clock_gettime ( CLOCK_MONOTONIC, &t_now );
     t_all = t_now;
 
-    if(((t_all.tv_sec - t_all_pre.tv_sec) + (t_all.tv_nsec - t_all_pre.tv_nsec))*0.000001  >= 2.01)
-    cout << COLOR_GREEN_BOLD << "  Elapsed time B : "<< ((t_all.tv_sec - t_all_pre.tv_sec) + (t_all.tv_nsec - t_all_pre.tv_nsec))*0.000001 << COLOR_RESET << endl;
+    //if(((t_all.tv_sec - t_all_pre.tv_sec) + (t_all.tv_nsec - t_all_pre.tv_nsec))*0.000001  >= 2.01)
+    //cout << COLOR_GREEN_BOLD << "  Elapsed time B : "<< ((t_all.tv_sec - t_all_pre.tv_sec) + (t_all.tv_nsec - t_all_pre.tv_nsec))*0.000001 << COLOR_RESET << endl;
   }
   return NULL;
 }
