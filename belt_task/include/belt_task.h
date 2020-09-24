@@ -76,6 +76,9 @@ std::string robot_a_ip;
 std::string robot_b_ip;
 std::string robot_path;
 
+std::vector<double> reference_frame_a;
+std::vector<double> reference_frame_b;
+
 std::string silmulation_on_off;
 //ros
 std::shared_ptr<RosNode> ros_state;
@@ -85,7 +88,6 @@ void executeAction(const belt_task::belt_task_actionGoalConstPtr &start_end, Ser
 bool program_on_off_;
 bool done_check_;
 belt_task::belt_task_actionResult result_;
-
 
 
 double control_time;

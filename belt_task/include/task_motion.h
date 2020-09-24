@@ -37,7 +37,7 @@ public:
   ~TaskMotion();
   //setup
   void initialize(double control_time_, std::string load_path_);
-  void robot_initialize(); // joint space
+  void initialize_reference_frame(std::vector<double> reference_frame);
   void load_task_motion(std::string path_, std::string motion_);
 
 

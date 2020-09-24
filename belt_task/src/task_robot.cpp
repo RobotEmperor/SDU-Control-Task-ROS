@@ -42,6 +42,8 @@ TaskRobot::TaskRobot(std::string robot_name, std::string init_path)
   data_desired_belt_.assign(3,0);
   data_bearing_tcp_belt_.assign(3,0);
 
+  bigger_pulley_bearing_position_.assign(6,0);
+
   force_controller_gain_.x_kp = 0;
   force_controller_gain_.x_ki = 0;
   force_controller_gain_.x_kd = 0;
@@ -140,6 +142,15 @@ TaskRobot::TaskRobot(std::string robot_name, std::string init_path)
 TaskRobot::~TaskRobot()
 {
 
+}
+void TaskRobot::initialize_reference_frame(std::vector<double> reference_frame)
+{
+  robot_task_->initialize_reference_frame(reference_frame);
+  bigger_pulley_bearing_position_ = reference_frame;
+  tf_base_to_bearing_ = Transform3D<> (Vector3D<>(bigger_pulley_bearing_position_[0], bigger_pulley_bearing_position_[1], bigger_pulley_bearing_position_[2]), EAA<>(bigger_pulley_bearing_position_[3], bigger_pulley_bearing_position_[4], bigger_pulley_bearing_position_[5]).toRotation3D());
+  desired_pose_vector_ = robot_task_ -> get_current_pose();
+
+  std::cout << robot_name_ <<"::  NEW initialize !! " << std::endl;
 }
 void TaskRobot::init_model(std::string wc_file, std::string robot_model)
 {
@@ -345,7 +356,7 @@ bool TaskRobot::hybrid_controller()
     actual_tcp_pose_ = rtde_receive_->getActualTCPPose();
     actual_tcp_speed_ = rtde_receive_->getActualTCPSpeed();
     joint_positions_ = rtde_receive_->getActualQ();
-    //current_q_ = rtde_receive_->getActualQ();
+    current_q_ = rtde_receive_->getActualQ();
 
     robot_task_->set_current_pose_eaa(actual_tcp_pose_[0], actual_tcp_pose_[1], actual_tcp_pose_[2],actual_tcp_pose_[3], actual_tcp_pose_[4], actual_tcp_pose_[5]);
 
@@ -478,13 +489,18 @@ bool TaskRobot::hybrid_controller()
   //check velocity
   for(int num = 0; num <6 ; num ++)
   {
-    if(fabs((compensated_q_[num] - current_q_[num])/control_time_) > 270*DEGREE2RADIAN)
-    {
-      std::cout << robot_name_ << "::" << num << "::" << fabs((compensated_q_[num] - current_q_[num])/control_time_) << std::endl;
-      std::cout << COLOR_RED_BOLD << "Robot speed is so FAST" << COLOR_RESET << std::endl;
-      joint_vel_limits_ = true;
-      control_check_ = false;
-    }
+      if(fabs((compensated_q_[num] - current_q_[num])/control_time_) > 270*DEGREE2RADIAN)
+      {
+        std::cout << robot_name_ << "::" << num << "::" << fabs((compensated_q_[num] - current_q_[num])/control_time_) << std::endl;
+        std::cout << COLOR_RED_BOLD << "Robot speed is so FAST" << COLOR_RESET << std::endl;
+        if(!gazebo_check_)
+        {
+          joint_vel_limits_ = true;
+          control_check_ = false;
+        }
+        else
+          joint_vel_limits_ = false;
+      }
   }
 
   //send command in joint space to ur robot or gazebo
@@ -543,23 +559,23 @@ void TaskRobot::parse_init_data_(const std::string &path)
 
   preferred_solution_number_ =  doc["preferred_solution_number"].as<double>();
   YAML::Node initial_joint_states = doc["initial_joint_states"];
-  YAML::Node bigger_pulley_bearing_position_node = doc["pulley_bearing_position"];
+  //YAML::Node bigger_pulley_bearing_position_node = doc["pulley_bearing_position"];
   YAML::Node robust_force_value_node = doc["robust_force_value"];
   YAML::Node master_pulley_0_node = doc["master_pulley_0"];
   YAML::Node slave_0_node = doc["slave_0"];
 
-  std::vector<double> bigger_pulley_bearing_position;
+  //std::vector<double> bigger_pulley_bearing_position;
   std::vector<double> temp_points_;
   int temp_points_numbers_ = 0;
 
-  for(int num = 0; num < 6; num ++)
-  {
-    bigger_pulley_bearing_position.push_back(bigger_pulley_bearing_position_node[num].as<double>());
-  }
+  //  for(int num = 0; num < 6; num ++)
+  //  {
+  //    bigger_pulley_bearing_position_.push_back(bigger_pulley_bearing_position_node[num].as<double>());
+  //  }
 
-  tf_base_to_bearing_ = Transform3D<> (Vector3D<>(bigger_pulley_bearing_position[0], bigger_pulley_bearing_position[1], bigger_pulley_bearing_position[2]), EAA<>(bigger_pulley_bearing_position[3], bigger_pulley_bearing_position[4], bigger_pulley_bearing_position[5]).toRotation3D());
+  //tf_base_to_bearing_ = Transform3D<> (Vector3D<>(bigger_pulley_bearing_position_[0], bigger_pulley_bearing_position_[1], bigger_pulley_bearing_position_[2]), EAA<>(bigger_pulley_bearing_position_[3], bigger_pulley_bearing_position_[4], bigger_pulley_bearing_position_[5]).toRotation3D());
 
-  bigger_pulley_bearing_position.clear();
+  //bigger_pulley_bearing_position.clear();
 
   master_way_points_numbers_ = 0;
 
@@ -582,7 +598,7 @@ void TaskRobot::parse_init_data_(const std::string &path)
 
     temp_points_.clear();
 
-    cout <<  temp_points_numbers_ <<"::"<< master_way_points_[temp_points_numbers_]  << endl;
+    //cout <<  temp_points_numbers_ <<"::"<< master_way_points_[temp_points_numbers_]  << endl;
   }
 
   temp_points_.clear();
@@ -601,7 +617,7 @@ void TaskRobot::parse_init_data_(const std::string &path)
 
     temp_points_.clear();
 
-    cout <<  temp_points_numbers_ <<"::"<< robust_force_values_[temp_points_numbers_]  << endl;
+    //cout <<  temp_points_numbers_ <<"::"<< robust_force_values_[temp_points_numbers_]  << endl;
   }
 
   temp_points_.clear();
@@ -626,7 +642,7 @@ void TaskRobot::parse_init_data_(const std::string &path)
 
     temp_points_.clear();
 
-    cout <<  temp_points_numbers_ <<"::"<< slave_way_points_[temp_points_numbers_]  << endl;
+    //cout <<  temp_points_numbers_ <<"::"<< slave_way_points_[temp_points_numbers_]  << endl;
   }
 
   force_controller_gain_.x_kp = doc["f_x_kp"].as<double>();
@@ -667,6 +683,7 @@ void TaskRobot::parse_init_data_(const std::string &path)
   position_controller_gain_.eaa_z_ki = doc["p_eaa_z_ki"].as<double>();
   position_controller_gain_.eaa_z_kd = doc["p_eaa_z_kd"].as<double>();
 
+  //for gazebo
   current_q_[0] = initial_joint_states[0].as<double>();
   current_q_[1] = initial_joint_states[1].as<double>();
   current_q_[2] = initial_joint_states[2].as<double>();
