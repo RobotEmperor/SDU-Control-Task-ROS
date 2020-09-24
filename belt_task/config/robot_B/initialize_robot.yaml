@@ -1,8 +1,8 @@
 preferred_solution_number: 3
 tool_mass: 3.44
-pulley_bearing_position: [-0.6654834316385497, -0.0844570012960042, 0.2551901723057327, -1.484318068681165, 0.6191402790204206, -0.6254296057933952] # big pulley
-initial_joint_states : [3.87083, -2.28049, -1.3507, -2.64271, 1.08987, 3.12731] # for gazebo
-task_initial_position: [0.03, 0, -0.02, 0,-25,0] # in relative to bigger pulley bearing's frame.
+pulley_bearing_position: [-0.551993749632271,-0.529728889411369,0.346920083856877,2.21736083534608,2.21742568842914,-0.008956260162584] #small pulley
+initial_joint_states : [4.13489745417039, -1.813354511407, -1.90787359434795, -0.984819869958454, 1.57212364774687, 0.995873430829061] # for gazebo
+task_initial_position: [0.03, 0, -0.02, 0,0,0] # in relative to bigger pulley bearing's frame.
 pulley_radious: [0.03,0.015]
 
 #force controller gain

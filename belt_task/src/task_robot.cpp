@@ -454,9 +454,9 @@ bool TaskRobot::hybrid_controller()
   //solve ik problem
   solutions_ = solver_->solve(tf_desired_, state_);
 
-  //	for(std::size_t i = 0; i < solutions_.size(); i++) {
-  //		std::cout << i << " : " << solutions_[i] << std::endl;
-  //	}
+//  for(std::size_t i = 0; i < solutions_.size(); i++) {
+//    std::cout << robot_name_ << "    :  " << i << " : " << solutions_[i] << std::endl;
+//  }
 
   for(int num = 0; num <6 ; num ++)
   {
@@ -486,21 +486,23 @@ bool TaskRobot::hybrid_controller()
     }
   }
 
+  //std::cout << robot_name_ << "::" << compensated_q_ << "  "  << current_q_<< std::endl;
+
   //check velocity
   for(int num = 0; num <6 ; num ++)
   {
-      if(fabs((compensated_q_[num] - current_q_[num])/control_time_) > 270*DEGREE2RADIAN)
+    if(fabs((compensated_q_[num] - current_q_[num])/control_time_) > 270*DEGREE2RADIAN)
+    {
+      std::cout << robot_name_ << "::" << num << "::" << fabs((compensated_q_[num] - current_q_[num])/control_time_) << std::endl;
+      std::cout << COLOR_RED_BOLD << "Robot speed is so FAST" << COLOR_RESET << std::endl;
+      if(!gazebo_check_)
       {
-        std::cout << robot_name_ << "::" << num << "::" << fabs((compensated_q_[num] - current_q_[num])/control_time_) << std::endl;
-        std::cout << COLOR_RED_BOLD << "Robot speed is so FAST" << COLOR_RESET << std::endl;
-        if(!gazebo_check_)
-        {
-          joint_vel_limits_ = true;
-          control_check_ = false;
-        }
-        else
-          joint_vel_limits_ = false;
+        joint_vel_limits_ = true;
+        control_check_ = false;
       }
+      else
+        joint_vel_limits_ = false;
+    }
   }
 
   //send command in joint space to ur robot or gazebo

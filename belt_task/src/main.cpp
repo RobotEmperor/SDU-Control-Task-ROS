@@ -165,19 +165,19 @@ void initialize()
   robot_b_ip = "192.168.1.129";
 
   //example
-  reference_frame_a[0] = -0.647206;
-  reference_frame_a[1] = -0.0113528;
-  reference_frame_a[2] =  0.24501;
-  reference_frame_a[3] = -0.7217029684216122;
-  reference_frame_a[4] = -1.7591780460014375;
-  reference_frame_a[5] = 1.7685571865188172;
+  reference_frame_a[0] = -0.387151602138435;
+  reference_frame_a[1] = 0.542698016520246;
+  reference_frame_a[2] = 0.366637489776256;
+  reference_frame_a[3] = -2.22142708752267;
+  reference_frame_a[4] = -2.22142706545;
+  reference_frame_a[5] = 0.0000141743083872454;
 
-  reference_frame_b[0] = -0.6654834316385497;
-  reference_frame_b[1] = -0.0844570012960042;
-  reference_frame_b[2] =  0.2551901723057327;
-  reference_frame_b[3] = -1.484318068681165;
-  reference_frame_b[4] = 0.6191402790204206;
-  reference_frame_b[5] = -0.6254296057933952;
+  reference_frame_b[0] = -0.551984494049336;
+  reference_frame_b[1] = -0.529723677571036;
+  reference_frame_b[2] = 0.346883471255243;
+  reference_frame_b[3] = 2.21736419901745;
+  reference_frame_b[4] = 2.21751150736451;
+  reference_frame_b[5] = -0.00888003853366454;
   //
 
   robot_path = "/home/yik/catkin_ws/src/SDU-Control-Task-ROS/belt_task/config";
@@ -279,19 +279,19 @@ int main (int argc, char **argv)
   //initialize new frames
 
   //example
-  reference_frame_a[0] = -0.647206;
-  reference_frame_a[1] = -0.0113528;
-  reference_frame_a[2] =  0.24501;
-  reference_frame_a[3] = -0.7217029684216122;
-  reference_frame_a[4] = -1.7591780460014375;
-  reference_frame_a[5] = 1.7685571865188172;
+  reference_frame_a[0] = -0.387151602138435;
+  reference_frame_a[1] = 0.542698016520246;
+  reference_frame_a[2] = 0.366637489776256;
+  reference_frame_a[3] = -2.22142708752267;
+  reference_frame_a[4] = -2.22142706545;
+  reference_frame_a[5] = 0.0000141743083872454;
 
-  reference_frame_b[0] = -0.6654834316385497;
-  reference_frame_b[1] = -0.0844570012960042;
-  reference_frame_b[2] =  0.2551901723057327;
-  reference_frame_b[3] = -1.484318068681165;
-  reference_frame_b[4] = 0.6191402790204206;
-  reference_frame_b[5] = -0.6254296057933952;
+  reference_frame_b[0] = -0.551993749632271;
+  reference_frame_b[1] = -0.529728889411369;
+  reference_frame_b[2] = 0.346920083856877;
+  reference_frame_b[3] = 2.21736083534608;
+  reference_frame_b[4] = 2.21742568842914;
+  reference_frame_b[5] = -0.008956260162584;
 
 
   robot_a ->initialize_reference_frame(reference_frame_a);
