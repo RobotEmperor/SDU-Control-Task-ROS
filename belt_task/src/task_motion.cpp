@@ -69,8 +69,7 @@ void TaskMotion::initialize(double control_time_, std::string load_path_)
 
   for(int num = 0; num < 6; num ++)
   {
-    bigger_pulley_bearing_position.push_back(bigger_pulley_bearing_position_node[num].as<double>());
-    smaller_pulley_bearing_position.push_back(0);
+    bigger_pulley_bearing_position[num] = bigger_pulley_bearing_position_node[num].as<double>();
   }
 
   for(int num = 0; num < 3; num ++)

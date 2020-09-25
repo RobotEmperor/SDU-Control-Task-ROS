@@ -356,7 +356,7 @@ bool TaskRobot::hybrid_controller()
     actual_tcp_pose_ = rtde_receive_->getActualTCPPose();
     actual_tcp_speed_ = rtde_receive_->getActualTCPSpeed();
     joint_positions_ = rtde_receive_->getActualQ();
-    current_q_ = rtde_receive_->getActualQ();
+    //current_q_ = rtde_receive_->getActualQ();
 
     robot_task_->set_current_pose_eaa(actual_tcp_pose_[0], actual_tcp_pose_[1], actual_tcp_pose_[2],actual_tcp_pose_[3], actual_tcp_pose_[4], actual_tcp_pose_[5]);
 
@@ -486,7 +486,7 @@ bool TaskRobot::hybrid_controller()
     }
   }
 
-  //std::cout << robot_name_ << "::" << compensated_q_ << "  "  << current_q_<< std::endl;
+  std::cout << robot_name_ << "::" << compensated_q_ << "  "  << current_q_<< std::endl;
 
   //check velocity
   for(int num = 0; num <6 ; num ++)
@@ -561,7 +561,7 @@ void TaskRobot::parse_init_data_(const std::string &path)
 
   preferred_solution_number_ =  doc["preferred_solution_number"].as<double>();
   YAML::Node initial_joint_states = doc["initial_joint_states"];
-  //YAML::Node bigger_pulley_bearing_position_node = doc["pulley_bearing_position"];
+  YAML::Node bigger_pulley_bearing_position_node = doc["pulley_bearing_position"];
   YAML::Node robust_force_value_node = doc["robust_force_value"];
   YAML::Node master_pulley_0_node = doc["master_pulley_0"];
   YAML::Node slave_0_node = doc["slave_0"];
@@ -570,14 +570,12 @@ void TaskRobot::parse_init_data_(const std::string &path)
   std::vector<double> temp_points_;
   int temp_points_numbers_ = 0;
 
-  //  for(int num = 0; num < 6; num ++)
-  //  {
-  //    bigger_pulley_bearing_position_.push_back(bigger_pulley_bearing_position_node[num].as<double>());
-  //  }
+    for(int num = 0; num < 6; num ++)
+    {
+      bigger_pulley_bearing_position_[num] = bigger_pulley_bearing_position_node[num].as<double>();
+    }
 
-  //tf_base_to_bearing_ = Transform3D<> (Vector3D<>(bigger_pulley_bearing_position_[0], bigger_pulley_bearing_position_[1], bigger_pulley_bearing_position_[2]), EAA<>(bigger_pulley_bearing_position_[3], bigger_pulley_bearing_position_[4], bigger_pulley_bearing_position_[5]).toRotation3D());
-
-  //bigger_pulley_bearing_position.clear();
+  tf_base_to_bearing_ = Transform3D<> (Vector3D<>(bigger_pulley_bearing_position_[0], bigger_pulley_bearing_position_[1], bigger_pulley_bearing_position_[2]), EAA<>(bigger_pulley_bearing_position_[3], bigger_pulley_bearing_position_[4], bigger_pulley_bearing_position_[5]).toRotation3D());
 
   master_way_points_numbers_ = 0;
 

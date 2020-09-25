@@ -165,12 +165,12 @@ void initialize()
   robot_b_ip = "192.168.1.129";
 
   //example
-  reference_frame_a[0] = -0.387151602138435;
-  reference_frame_a[1] = 0.542698016520246;
-  reference_frame_a[2] = 0.366637489776256;
-  reference_frame_a[3] = -2.22142708752267;
-  reference_frame_a[4] = -2.22142706545;
-  reference_frame_a[5] = 0.0000141743083872454;
+//  reference_frame_a[0] = -0.387151602138435;
+//  reference_frame_a[1] = 0.542698016520246;
+//  reference_frame_a[2] = 0.366637489776256;
+//  reference_frame_a[3] = -2.22142708752267;
+//  reference_frame_a[4] = -2.22142706545;
+//  reference_frame_a[5] = 0.0000141743083872454;
 
   reference_frame_b[0] = -0.551984494049336;
   reference_frame_b[1] = -0.529723677571036;
@@ -184,7 +184,7 @@ void initialize()
   robot_a = std::make_shared<TaskRobot>("robot_A",robot_path);
   robot_path = robot_path + "/wc/UR10e_2018/UR10e_a.xml";
   robot_a ->init_model(robot_path, "UR10e");
-  robot_a ->initialize_reference_frame(reference_frame_a);
+ // robot_a ->initialize_reference_frame(reference_frame_a);
   robot_a ->parse_init_data_("/home/yik/catkin_ws/src/SDU-Control-Task-ROS/belt_task/config/robot_A/initialize_robot.yaml");
 
   robot_path = "/home/yik/catkin_ws/src/SDU-Control-Task-ROS/belt_task/config";
@@ -279,22 +279,22 @@ int main (int argc, char **argv)
   //initialize new frames
 
   //example
-  reference_frame_a[0] = -0.387151602138435;
-  reference_frame_a[1] = 0.542698016520246;
-  reference_frame_a[2] = 0.366637489776256;
-  reference_frame_a[3] = -2.22142708752267;
-  reference_frame_a[4] = -2.22142706545;
-  reference_frame_a[5] = 0.0000141743083872454;
+//  reference_frame_a[0] = -0.438719456804066;
+//  reference_frame_a[1] = 0.270205036701779;
+//  reference_frame_a[2] = 0.324309390542325;
+//  reference_frame_a[3] = 2.19700957926864;
+//  reference_frame_a[4] = 2.21948080204964;
+//  reference_frame_a[5] = 0.0144145923312306;
 
-  reference_frame_b[0] = -0.551993749632271;
-  reference_frame_b[1] = -0.529728889411369;
-  reference_frame_b[2] = 0.346920083856877;
-  reference_frame_b[3] = 2.21736083534608;
-  reference_frame_b[4] = 2.21742568842914;
-  reference_frame_b[5] = -0.008956260162584;
+  reference_frame_b[0] = -0.457459182712105;
+  reference_frame_b[1] = -0.302978202982455;
+  reference_frame_b[2] = 0.298919760014571;
+  reference_frame_b[3] = 2.21632243861128;
+  reference_frame_b[4] = 2.21940107852587;
+  reference_frame_b[5] = 0.0222339502909505;
 
 
-  robot_a ->initialize_reference_frame(reference_frame_a);
+  //robot_a ->initialize_reference_frame(reference_frame_a);
   robot_b ->initialize_reference_frame(reference_frame_b);
 
   std::cout << COLOR_GREEN_BOLD << "Program Start:" << COLOR_RESET << std::endl;
@@ -325,11 +325,6 @@ int main (int argc, char **argv)
   struct sched_param prio;
   pthread_attr_t attr_robot_a;
   pthread_t loop_robot_a;
-  //  policy = SCHED_OTHER;
-  //  if (pthread_setschedparam( pthread_self(),policy, &prio )){
-  //    perror ("Error: pthread_setschedparam (root permission?)");
-  //    exit(1);
-  //  }
   pthread_attr_init( &attr_robot_a);
 
   pthread_attr_setstacksize(&attr_robot_a, PTHREAD_STACK_MIN);
@@ -350,11 +345,6 @@ int main (int argc, char **argv)
   struct sched_param prio_b;
   pthread_attr_t attr_robot_b;
   pthread_t loop_robot_b;
-  //  policy_b = SCHED_OTHER;
-  //  if (pthread_setschedparam( pthread_self(),policy_b, &prio_b )){
-  //    perror ("Error: pthread_setschedparam (root permission?)");
-  //    exit(1);
-  //  }
   pthread_attr_init( &attr_robot_b);
 
   pthread_attr_setstacksize(&attr_robot_b, PTHREAD_STACK_MIN);
@@ -370,17 +360,6 @@ int main (int argc, char **argv)
     perror ( "Error: pthread2_create" );
     return 1;
   }
-
-
-  //real time task
-  //char str[35];
-  //sprintf(str, "Belt Task A Start");
-  //rt_task_create(&loop_robot_a, str, 0, 50, 0);//Create the real time task
-  //rt_task_start(&loop_robot_a, &loop_robot_a_proc,0);//Since task starts in suspended mode, start task
-
-  //sprintf(str, "Belt Task B Start");
-  //rt_task_create(&loop_robot_b, str, 0, 51, 0);//Create the real time task
-  //rt_task_start(&loop_robot_b, &loop_robot_b_proc, 0);//Since task starts in suspended mode, start task
   std::cout << COLOR_GREEN << "Real time task loop was created!" << COLOR_RESET << std::endl;
 
 
