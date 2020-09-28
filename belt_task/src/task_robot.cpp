@@ -454,9 +454,9 @@ bool TaskRobot::hybrid_controller()
   //solve ik problem
   solutions_ = solver_->solve(tf_desired_, state_);
 
-//  for(std::size_t i = 0; i < solutions_.size(); i++) {
-//    std::cout << robot_name_ << "    :  " << i << " : " << solutions_[i] << std::endl;
-//  }
+  //for(std::size_t i = 0; i < solutions_.size(); i++) {
+  //  std::cout << robot_name_ << "    :  " << i << " : " << solutions_[i] << std::endl;
+  // }
 
   for(int num = 0; num <6 ; num ++)
   {
@@ -486,7 +486,7 @@ bool TaskRobot::hybrid_controller()
     }
   }
 
-  std::cout << robot_name_ << "::" << compensated_q_ << "  "  << current_q_<< std::endl;
+  //std::cout << robot_name_ << "::" << compensated_q_ << "  "  << current_q_<< std::endl;
 
   //check velocity
   for(int num = 0; num <6 ; num ++)

@@ -40,20 +40,28 @@ void *thread_func_robot_a ( void *param )
     //to do
     ros_state->update_ros_data();
 
-//    if(finished_insertion == 0)
-//      robot_a->tasks("slave");
-//    else
-//    {
-//      robot_a->set_force_controller_x_gain(0.00007,0,0);
-//      robot_a->set_position_controller_x_gain(0.8,0,0);
-//      robot_a->set_force_controller_y_gain(0.00007,0,0);
-//      robot_a->set_position_controller_y_gain(0.8,0,0);
-//      robot_a->set_force_controller_z_gain(0.00007,0,0);
-//      robot_a->set_position_controller_z_gain(0.8,0,0);
-//
-//      robot_a->tasks("master");
-//    }
-    robot_a->tasks("1");
+    //    if(finished_insertion == 0)
+    //      robot_a->tasks("slave");
+    //    else
+    //    {
+    //      robot_a->set_force_controller_x_gain(0.00007,0,0);
+    //      robot_a->set_position_controller_x_gain(0.8,0,0);
+    //      robot_a->set_force_controller_y_gain(0.00007,0,0);
+    //      robot_a->set_position_controller_y_gain(0.8,0,0);
+    //      robot_a->set_force_controller_z_gain(0.00007,0,0);
+    //      robot_a->set_position_controller_z_gain(0.8,0,0);
+    //
+    //      robot_a->tasks("master");
+    //    }
+    //robot_a->tasks("1");
+
+    robot_a->set_force_controller_x_gain(0.00007,0,0);
+    robot_a->set_position_controller_x_gain(0.8,0,0);
+    robot_a->set_force_controller_y_gain(0.00007,0,0);
+    robot_a->set_position_controller_y_gain(0.8,0,0);
+    robot_a->set_force_controller_z_gain(0.00007,0,0);
+    robot_a->set_position_controller_z_gain(0.8,0,0);
+    robot_a->tasks("master");
     robot_a->hybrid_controller();
 
     if(gazebo_check)
@@ -116,8 +124,8 @@ void *thread_func_robot_b ( void *param )
     //to do
     ros_state->update_ros_data();
 
-    //robot_b->tasks("master");
-    robot_b->tasks("1");
+    robot_b->tasks("master");
+    //robot_b->tasks("1");
     robot_b->hybrid_controller();
 
     if(robot_b->get_finish_task())
@@ -165,12 +173,12 @@ void initialize()
   robot_b_ip = "192.168.1.129";
 
   //example
-//  reference_frame_a[0] = -0.387151602138435;
-//  reference_frame_a[1] = 0.542698016520246;
-//  reference_frame_a[2] = 0.366637489776256;
-//  reference_frame_a[3] = -2.22142708752267;
-//  reference_frame_a[4] = -2.22142706545;
-//  reference_frame_a[5] = 0.0000141743083872454;
+  //  reference_frame_a[0] = -0.387151602138435;
+  //  reference_frame_a[1] = 0.542698016520246;
+  //  reference_frame_a[2] = 0.366637489776256;
+  //  reference_frame_a[3] = -2.22142708752267;
+  //  reference_frame_a[4] = -2.22142706545;
+  //  reference_frame_a[5] = 0.0000141743083872454;
 
   reference_frame_b[0] = -0.551984494049336;
   reference_frame_b[1] = -0.529723677571036;
@@ -184,7 +192,7 @@ void initialize()
   robot_a = std::make_shared<TaskRobot>("robot_A",robot_path);
   robot_path = robot_path + "/wc/UR10e_2018/UR10e_a.xml";
   robot_a ->init_model(robot_path, "UR10e");
- // robot_a ->initialize_reference_frame(reference_frame_a);
+  // robot_a ->initialize_reference_frame(reference_frame_a);
   robot_a ->parse_init_data_("/home/yik/catkin_ws/src/SDU-Control-Task-ROS/belt_task/config/robot_A/initialize_robot.yaml");
 
   robot_path = "/home/yik/catkin_ws/src/SDU-Control-Task-ROS/belt_task/config";
@@ -278,13 +286,15 @@ int main (int argc, char **argv)
 
   //initialize new frames
 
+  //big pulley and small pulley
+
   //example
-//  reference_frame_a[0] = -0.438719456804066;
-//  reference_frame_a[1] = 0.270205036701779;
-//  reference_frame_a[2] = 0.324309390542325;
-//  reference_frame_a[3] = 2.19700957926864;
-//  reference_frame_a[4] = 2.21948080204964;
-//  reference_frame_a[5] = 0.0144145923312306;
+  //  reference_frame_a[0] = -0.438719456804066;
+  //  reference_frame_a[1] = 0.270205036701779;
+  //  reference_frame_a[2] = 0.324309390542325;
+  //  reference_frame_a[3] = 2.19700957926864;
+  //  reference_frame_a[4] = 2.21948080204964;
+  //  reference_frame_a[5] = 0.0144145923312306;
 
   reference_frame_b[0] = -0.457459182712105;
   reference_frame_b[1] = -0.302978202982455;
