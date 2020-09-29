@@ -80,6 +80,8 @@ std::vector<double> reference_frame_a;
 std::vector<double> reference_frame_b;
 
 std::string silmulation_on_off;
+std::string selection_robot_a;
+std::string selection_robot_b;
 //ros
 std::shared_ptr<RosNode> ros_state;
 typedef actionlib::SimpleActionServer<belt_task::belt_task_actionAction> Server;

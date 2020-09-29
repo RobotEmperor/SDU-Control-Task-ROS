@@ -42,7 +42,7 @@ TaskRobot::TaskRobot(std::string robot_name, std::string init_path)
   data_desired_belt_.assign(3,0);
   data_bearing_tcp_belt_.assign(3,0);
 
-  bigger_pulley_bearing_position_.assign(6,0);
+  pulley_bearing_position_.assign(6,0);
 
   force_controller_gain_.x_kp = 0;
   force_controller_gain_.x_ki = 0;
@@ -146,8 +146,8 @@ TaskRobot::~TaskRobot()
 void TaskRobot::initialize_reference_frame(std::vector<double> reference_frame)
 {
   robot_task_->initialize_reference_frame(reference_frame);
-  bigger_pulley_bearing_position_ = reference_frame;
-  tf_base_to_bearing_ = Transform3D<> (Vector3D<>(bigger_pulley_bearing_position_[0], bigger_pulley_bearing_position_[1], bigger_pulley_bearing_position_[2]), EAA<>(bigger_pulley_bearing_position_[3], bigger_pulley_bearing_position_[4], bigger_pulley_bearing_position_[5]).toRotation3D());
+  pulley_bearing_position_ = reference_frame;
+  tf_base_to_bearing_ = Transform3D<> (Vector3D<>(pulley_bearing_position_[0], pulley_bearing_position_[1], pulley_bearing_position_[2]), EAA<>(pulley_bearing_position_[3], pulley_bearing_position_[4], pulley_bearing_position_[5]).toRotation3D());
   desired_pose_vector_ = robot_task_ -> get_current_pose();
 
   std::cout << robot_name_ <<"::  NEW initialize !! " << std::endl;
@@ -305,7 +305,7 @@ void TaskRobot::slave_robot() // for robot A
     force_y_compensator_->set_smooth_gain_time(5);
     force_z_compensator_->set_smooth_gain_time(5);
 
-    cout << desired_force_torque_vector_ << endl;
+    cout << desired_force_torque_vector_ << "finished " << endl;
 
     gripper_move_values = 10;
 
@@ -327,7 +327,6 @@ void TaskRobot::slave_robot() // for robot A
     {
       desired_force_torque_vector_[num] = robust_force_values_[motion_phases_][num];
     }
-    cout << desired_force_torque_vector_ << endl;
   }
 }
 bool TaskRobot::hybrid_controller()
@@ -451,12 +450,15 @@ bool TaskRobot::hybrid_controller()
   tf_desired_ = Transform3D<> (Vector3D<>(compensated_pose_vector_[0], compensated_pose_vector_[1], compensated_pose_vector_[2]),
       EAA<>(compensated_pose_vector_[3], compensated_pose_vector_[4], compensated_pose_vector_[5]).toRotation3D());
 
+  target_tcp_pose_ = compensated_pose_vector_;
   //solve ik problem
   solutions_ = solver_->solve(tf_desired_, state_);
 
   //for(std::size_t i = 0; i < solutions_.size(); i++) {
   //  std::cout << robot_name_ << "    :  " << i << " : " << solutions_[i] << std::endl;
   // }
+
+  //std::cout << robot_name_  << " : " << solutions_[3] << std::endl;
 
   for(int num = 0; num <6 ; num ++)
   {
@@ -493,7 +495,7 @@ bool TaskRobot::hybrid_controller()
   {
     if(fabs((compensated_q_[num] - current_q_[num])/control_time_) > 270*DEGREE2RADIAN)
     {
-      std::cout << robot_name_ << "::" << num << "::" << fabs((compensated_q_[num] - current_q_[num])/control_time_) << std::endl;
+      //std::cout << robot_name_ << "::" << num << "::" << fabs((compensated_q_[num] - current_q_[num])/control_time_) << std::endl;
       std::cout << COLOR_RED_BOLD << "Robot speed is so FAST" << COLOR_RESET << std::endl;
       if(!gazebo_check_)
       {
@@ -561,10 +563,10 @@ void TaskRobot::parse_init_data_(const std::string &path)
 
   preferred_solution_number_ =  doc["preferred_solution_number"].as<double>();
   YAML::Node initial_joint_states = doc["initial_joint_states"];
-  YAML::Node bigger_pulley_bearing_position_node = doc["pulley_bearing_position"];
+  YAML::Node pulley_bearing_position_node = doc["pulley_bearing_position"];
   YAML::Node robust_force_value_node = doc["robust_force_value"];
-  YAML::Node master_pulley_0_node = doc["master_pulley_0"];
-  YAML::Node slave_0_node = doc["slave_0"];
+  YAML::Node master_pulley_node = doc["master_pulley_big"];
+  YAML::Node slave_node = doc["slave_pulley_big"];
 
   //std::vector<double> bigger_pulley_bearing_position;
   std::vector<double> temp_points_;
@@ -572,14 +574,14 @@ void TaskRobot::parse_init_data_(const std::string &path)
 
     for(int num = 0; num < 6; num ++)
     {
-      bigger_pulley_bearing_position_[num] = bigger_pulley_bearing_position_node[num].as<double>();
+      pulley_bearing_position_[num] = pulley_bearing_position_node[num].as<double>();
     }
 
-  tf_base_to_bearing_ = Transform3D<> (Vector3D<>(bigger_pulley_bearing_position_[0], bigger_pulley_bearing_position_[1], bigger_pulley_bearing_position_[2]), EAA<>(bigger_pulley_bearing_position_[3], bigger_pulley_bearing_position_[4], bigger_pulley_bearing_position_[5]).toRotation3D());
+  tf_base_to_bearing_ = Transform3D<> (Vector3D<>(pulley_bearing_position_[0], pulley_bearing_position_[1], pulley_bearing_position_[2]), EAA<>(pulley_bearing_position_[3], pulley_bearing_position_[4], pulley_bearing_position_[5]).toRotation3D());
 
   master_way_points_numbers_ = 0;
 
-  for (YAML::iterator it = master_pulley_0_node.begin(); it != master_pulley_0_node.end(); ++it)
+  for (YAML::iterator it = master_pulley_node.begin(); it != master_pulley_node.end(); ++it)
   {
     master_way_points_numbers_ ++;
     temp_points_numbers_ = it->first.as<int>();
@@ -622,7 +624,7 @@ void TaskRobot::parse_init_data_(const std::string &path)
 
   temp_points_.clear();
 
-  for (YAML::iterator it = slave_0_node.begin(); it != slave_0_node.end(); ++it)
+  for (YAML::iterator it = slave_node.begin(); it != slave_node.end(); ++it)
   {
     slave_way_points_numbers_ ++;
     temp_points_numbers_ = it->first.as<int>();
@@ -691,6 +693,100 @@ void TaskRobot::parse_init_data_(const std::string &path)
   current_q_[3] = initial_joint_states[3].as<double>();
   current_q_[4] = initial_joint_states[4].as<double>();
   current_q_[5] = initial_joint_states[5].as<double>();
+}
+void TaskRobot::assign_pulley(const std::string &path, std::string master, std::string slave)
+{
+  YAML::Node doc; //
+    try
+    {
+      // load yaml
+      doc = YAML::LoadFile(path.c_str()); //
+
+    }catch(const std::exception& e) //
+    {
+      cout << "Fail to load yaml file! assign_pulley" << endl;
+      return;
+    }
+
+    YAML::Node robust_force_value_node = doc["robust_force_value"];
+    YAML::Node master_pulley_node = doc[master];
+    YAML::Node slave_node = doc[slave];
+
+
+    std::vector<double> temp_points_;
+    int temp_points_numbers_ = 0;
+
+    master_way_points_numbers_ = 0;
+
+    for (YAML::iterator it = master_pulley_node.begin(); it != master_pulley_node.end(); ++it)
+    {
+      master_way_points_numbers_ ++;
+      temp_points_numbers_ = it->first.as<int>();
+
+      for(int num = 0; num < 3; num++)
+      {
+        temp_points_.push_back(it->second[num].as<double>());
+      }
+      for(int num = 3; num < 6; num++)
+      {
+        temp_points_.push_back(it->second[num].as<double>()*DEGREE2RADIAN);
+      }
+      temp_points_.push_back(it->second[6].as<double>());
+
+      master_way_points_[temp_points_numbers_] = temp_points_;
+
+      temp_points_.clear();
+
+      cout << robot_name_ << " " << temp_points_numbers_ <<"::"<< master_way_points_[temp_points_numbers_]  << endl;
+    }
+
+    temp_points_.clear();
+
+    robust_force_values_numbers_ = 0;
+
+    for (YAML::iterator it = robust_force_value_node.begin(); it != robust_force_value_node.end(); ++it)
+    {
+      robust_force_values_numbers_ ++;
+      temp_points_numbers_ = it->first.as<int>();
+
+      for(int num = 0; num < 3; num++)
+      {
+        temp_points_.push_back(it->second[num].as<double>());
+      }
+
+      robust_force_values_[temp_points_numbers_] = temp_points_;
+
+      temp_points_.clear();
+
+      cout << robot_name_ << " " <<  temp_points_numbers_ <<"::"<< robust_force_values_[temp_points_numbers_]  << endl;
+    }
+
+    temp_points_.clear();
+
+    slave_way_points_numbers_ = 0;
+
+    for (YAML::iterator it = slave_node.begin(); it != slave_node.end(); ++it)
+    {
+      slave_way_points_numbers_ ++;
+      temp_points_numbers_ = it->first.as<int>();
+
+      for(int num = 0; num < 3; num++)
+      {
+        temp_points_.push_back(it->second[num].as<double>());
+      }
+      for(int num = 3; num < 6; num++)
+      {
+        temp_points_.push_back(it->second[num].as<double>()*DEGREE2RADIAN);
+      }
+
+      temp_points_.push_back(it->second[6].as<double>());
+
+      slave_way_points_[temp_points_numbers_] = temp_points_;
+
+      temp_points_.clear();
+
+      cout << robot_name_ << " " <<  temp_points_numbers_ <<"::"<< slave_way_points_[temp_points_numbers_]  << endl;
+    }
 }
 void TaskRobot::set_force_controller_x_gain(double kp,double ki,double kd)
 {
@@ -816,6 +912,10 @@ void TaskRobot::terminate_data_log()
 bool TaskRobot::get_finish_task()
 {
   return finish_task_;
+}
+std::vector<double> TaskRobot::get_target_tcp_pose_data_()
+{
+  return target_tcp_pose_;
 }
 
 

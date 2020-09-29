@@ -152,6 +152,8 @@ private:
 
   rw::math::Vector3D<> desired_groove_position_;
 
+  rw::math::EAA<> initial_value;
+
 
 
   bool flag_;

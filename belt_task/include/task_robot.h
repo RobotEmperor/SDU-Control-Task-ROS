@@ -80,8 +80,10 @@ public:
 
 	void set_tf_static_robot(rw::math::Transform3D<> tf_base_to_staric_robot, rw::math::Transform3D<> tf_base_to_bearing_staric_robot);
 	void initialize_reference_frame(std::vector<double> reference_frame);
+	void assign_pulley(const std::string &path, std::string master, std::string slave);
 
 	std::vector<double> get_raw_ft_data_();
+	std::vector<double> get_target_tcp_pose_data_();
 	std::vector<double> get_contacted_ft_data_();
 	std::vector<double> get_error_ee_pose_();
 	std::vector<double> get_actual_tcp_speed_();
@@ -204,7 +206,7 @@ private:
 	rw::math::Transform3D<> tf_base_to_static_robot_;
 	rw::math::Transform3D<> tf_base_to_bearing_static_robot_;
 
-	std::vector<double> bigger_pulley_bearing_position_;
+	std::vector<double> pulley_bearing_position_;
 
 	//control
 	double control_time_;

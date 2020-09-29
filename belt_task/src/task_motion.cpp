@@ -86,7 +86,7 @@ void TaskMotion::initialize(double control_time_, std::string load_path_)
   for(int num = 0; num < 3; num ++)
     initial_robot_ee_position.push_back(tf_base_to_init_task_.P()[num]);
   for(int num = 0; num < 3; num ++)
-    initial_robot_ee_position.push_back(EAA<>(tf_base_to_init_task_.R())[num]);
+    initial_robot_ee_position.push_back(EAA <>(tf_base_to_init_task_.R())[num]);
 
   set_initial_pose(initial_robot_ee_position[0], initial_robot_ee_position[1], initial_robot_ee_position[2], initial_robot_ee_position[3], initial_robot_ee_position[4], initial_robot_ee_position[5]); // set to be robot initial values
 
@@ -94,10 +94,10 @@ void TaskMotion::initialize(double control_time_, std::string load_path_)
   {
     radious_.push_back(pulley_radious_node[num].as<double>());
   }
-  std::cout << "tf_base_to_init_task : " << tf_base_to_init_task_ << std::endl;
+  std::cout << "tf_base_to_init_task : " << tf_base_to_init_task_ << initial_robot_ee_position << std::endl;
   std::cout << "initial_robot_ee_position : "<<initial_robot_ee_position << std::endl;
 }
-void TaskMotion::initialize_reference_frame(std::vector<double> reference_frame) // joint space
+void TaskMotion::initialize_reference_frame(std::vector<double> reference_frame) //
 {
   initial_robot_ee_position.clear();
   bigger_pulley_bearing_position = reference_frame;

@@ -49,7 +49,7 @@ void RosNode::initialize()
 	gazebo_elbow_position_b_pub_= nh.advertise<std_msgs::Float64>("/robot_b/ur10e_robot_b/elbow_position/command", 10);
 	gazebo_wrist_1_position_b_pub_= nh.advertise<std_msgs::Float64>("/robot_b/ur10e_robot_b/wrist_1_position/command", 10);
 	gazebo_wrist_2_position_b_pub_= nh.advertise<std_msgs::Float64>("/robot_b/ur10e_robot_b/wrist_2_position/command", 10);
-	gazebo_wrist_3_position_b_pub_= nh.advertise<std_msgs::Float64>("robot_b/ur10e_robot_b/wrist_3_position/command", 10);
+	gazebo_wrist_3_position_b_pub_= nh.advertise<std_msgs::Float64>("/robot_b/ur10e_robot_b/wrist_3_position/command", 10);
 
 
 	ee_command_sub_ = nh.subscribe("/sdu/ur10e/ee_command", 10, &RosNode::EeCommandDataMsgCallBack, this);
