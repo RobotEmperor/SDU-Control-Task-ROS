@@ -275,7 +275,7 @@ void TaskRobot::move_to_init_pose()
 
     std::cout << COLOR_RED_BOLD << robot_name_ <<": Send" << COLOR_RESET << std::endl;
 
-    usleep(3000000);
+    usleep(1000000);
 
     std::cout << COLOR_GREEN_BOLD << robot_name_ << ": Adjust Accelerometer Sensor and compensate gravity term" << COLOR_RESET << std::endl;
     //getting sensor values sensor filter
