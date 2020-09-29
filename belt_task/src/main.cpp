@@ -187,8 +187,10 @@ void *thread_func_robot_b ( void *param )
 }
 void initialize()
 {
-  reference_frame_a.assign(6,0);
-  reference_frame_b.assign(6,0);
+  reference_frame_a_start.assign(6,0);
+  reference_frame_a_end.assign(6,0);
+  reference_frame_b_start.assign(6,0);
+  reference_frame_b_end.assign(6,0);
 
   finished_insertion = 0;
 
@@ -236,32 +238,141 @@ void my_function(int sig)
   exit_program = true; // set flag
 
 }
-//void executeAction(const belt_task::belt_task_actionGoalConstPtr &start_end, Server* as)
-//{
-//  std::cout << "program_on_!!!!!!!!" << std::endl;
-//
-//  if(start_end->on_off_)
-//  {
-//    wait_command = true;
-//
-//    while(!robot_a->get_finish_task() && !exit_program)
-//    {
-//      usleep(0.1);
-//    }
-//
-//    //result_.sequence = 1;
-//
-//    exit_program = true;
-//
-//    as->setSucceeded();
-//  }
-//  else
-//  {
-//    return;
-//  }
-//
-//  //real time task
-//}
+void executeAction(const belt_task::belt_task_actionGoalConstPtr &start_end, Server* as)
+{
+  double robot_big_pulley = 0;
+  double robot_small_pulley = 0;
+  double temp_big_x = 0;
+  double temp_big_y = 0;
+  double temp_big_z = 0;
+
+  double temp_small_x = 0;
+  double temp_small_y = 0;
+  double temp_small_z = 0;
+
+  std::cout << "program_on_!!!!!!!!" << std::endl;
+
+  if(start_end->on_off)
+  {
+    wait_command = true;
+
+    temp_big_x = start_end->transform_a_big_pulley[0];
+    temp_big_y = start_end->transform_a_big_pulley[1];
+    temp_big_z = start_end->transform_a_big_pulley[2];
+
+    temp_small_x = start_end->transform_a_small_pulley[0];
+    temp_small_y = start_end->transform_a_small_pulley[1];
+    temp_small_z = start_end->transform_a_small_pulley[2];
+
+    temp_big_x = start_end->transform_a_big_pulley[0];
+    temp_big_y = start_end->transform_a_big_pulley[1];
+    temp_big_z = start_end->transform_a_big_pulley[2];
+
+    temp_small_x = start_end->transform_a_small_pulley[0];
+    temp_small_y = start_end->transform_a_small_pulley[1];
+    temp_small_z = start_end->transform_a_small_pulley[2];
+
+    robot_big_pulley = sqrt(pow(temp_big_x,2) + pow(temp_big_y,2) + pow(temp_big_z,2));
+    robot_small_pulley = sqrt(pow(temp_small_x,2) + pow(temp_small_y,2) + pow(temp_small_z,2));
+
+    if(robot_big_pulley >= robot_small_pulley)
+    {
+      selection_robot_a = "slave";
+      selection_robot_b = "master";
+
+      reference_frame_a_start[0] = start_end->transform_a_small_pulley[0];
+      reference_frame_a_start[1] = start_end->transform_a_small_pulley[1];
+      reference_frame_a_start[2] = start_end->transform_a_small_pulley[2];
+
+      reference_frame_a_end[0] = start_end->transform_a_big_pulley[0];
+      reference_frame_a_end[1] = start_end->transform_a_big_pulley[1];
+      reference_frame_a_end[2] = start_end->transform_a_big_pulley[2];
+
+      reference_frame_b_start[0] = start_end->transform_b_big_pulley[0];
+      reference_frame_b_start[1] = start_end->transform_b_big_pulley[1];
+      reference_frame_b_start[2] = start_end->transform_b_big_pulley[2];
+
+      reference_frame_b_end[0] = start_end->transform_b_small_pulley[0];
+      reference_frame_b_end[1] = start_end->transform_b_small_pulley[1];
+      reference_frame_b_end[2] = start_end->transform_b_small_pulley[2];
+    }
+    else
+    {
+      selection_robot_a = "master";
+      selection_robot_b = "slave";
+
+      reference_frame_a_start[0] = start_end->transform_a_big_pulley[0];
+      reference_frame_a_start[1] = start_end->transform_a_big_pulley[1];
+      reference_frame_a_start[2] = start_end->transform_a_big_pulley[2];
+
+      reference_frame_a_end[0] = start_end->transform_a_small_pulley[0];
+      reference_frame_a_end[1] = start_end->transform_a_small_pulley[1];
+      reference_frame_a_end[2] = start_end->transform_a_small_pulley[2];
+
+
+      reference_frame_b_start[0] = start_end->transform_b_small_pulley[0];
+      reference_frame_b_start[1] = start_end->transform_b_small_pulley[1];
+      reference_frame_b_start[2] = start_end->transform_b_small_pulley[2];
+
+      reference_frame_b_end[0] = start_end->transform_b_big_pulley[0];
+      reference_frame_b_end[1] = start_end->transform_b_big_pulley[1];
+      reference_frame_b_end[2] = start_end->transform_b_big_pulley[2];
+    }
+
+    reference_frame_a_start[0] = 0;
+    reference_frame_a_start[1] = 0;
+    reference_frame_a_start[2] = 0;
+
+    reference_frame_a_start[3] = 0;
+    reference_frame_a_start[4] = 0;
+    reference_frame_a_start[5] = 0;
+
+    reference_frame_a_end[0] = 0;
+    reference_frame_a_end[1] = 0;
+    reference_frame_a_end[2] = 0;
+
+    reference_frame_a_end[3] = 0;
+    reference_frame_a_end[4] = 0;
+    reference_frame_a_end[5] = 0;
+
+
+    reference_frame_b_start[0] = 0;
+    reference_frame_b_start[1] = 0;
+    reference_frame_b_start[2] = 0;
+
+    reference_frame_b_start[3] = 0;
+    reference_frame_b_start[4] = 0;
+    reference_frame_b_start[5] = 0;
+
+    reference_frame_b_end[0] = 0;
+    reference_frame_b_end[1] = 0;
+    reference_frame_b_end[2] = 0;
+
+    reference_frame_b_end[3] = 0;
+    reference_frame_b_end[4] = 0;
+    reference_frame_b_end[5] = 0;
+
+    robot_a ->initialize_reference_frame(reference_frame_a_start,reference_frame_a_end);
+    robot_b ->initialize_reference_frame(reference_frame_b_start,reference_frame_b_end);
+
+    while(!robot_a->get_finish_task() && !exit_program)
+    {
+      usleep(0.1);
+    }
+
+    //result_.sequence = 1;
+
+    exit_program = true;
+
+    as->setSucceeded();
+  }
+  else
+  {
+    return;
+  }
+
+  //real time task
+}
 
 int main (int argc, char **argv)
 {
@@ -277,16 +388,16 @@ int main (int argc, char **argv)
   ros_state = std::make_shared<RosNode>(argc,argv,"Belt_Task",nh);
   ros_state->initialize();
 
-  //  Server server(nh, "belt_task", boost::bind(&executeAction, _1, &server), false);
-  //  server.start();
-  //
-  //  while(!wait_command)
-  //  {
-  //    if(exit_program)
-  //      wait_command = true;
-  //    ros_state->update_ros_data();
-  //    usleep(1);
-  //  }
+  Server server(nh, "belt_task", boost::bind(&executeAction, _1, &server), false);
+  server.start();
+
+  while(!wait_command)
+  {
+    if(exit_program)
+      wait_command = true;
+    ros_state->update_ros_data();
+    usleep(1);
+  }
 
   std::cout << COLOR_YELLOW_BOLD << "Simulation On [ yes / no ]" << COLOR_RESET << std::endl;
   //cin >> silmulation_on_off;
@@ -313,36 +424,10 @@ int main (int argc, char **argv)
     gazebo_check = false;
   }
 
-  //initialize new frames
 
-  //big pulley and small pulley
+  std::cout << COLOR_RED_BOLD << "ROBOT A  " << selection_robot_a << COLOR_RESET << std::endl;
+  std::cout << COLOR_RED_BOLD << "ROBOT B  " << selection_robot_b << COLOR_RESET << std::endl;
 
-  //example
-  //reference_frame_a[0] = -0.438719456804066;
-  //reference_frame_a[1] = 0.270205036701779;
-  //reference_frame_a[2] = 0.324309390542325;
-  //reference_frame_a[3] = 2.19700957926864;
-  //reference_frame_a[4] = 2.21948080204964;
-  //reference_frame_a[5] = 0.0144145923312306;
-
-  //reference_frame_b[0] = -0.457459182712105;
-  //reference_frame_b[1] = -0.302978202982455;
-  //reference_frame_b[2] = 0.298919760014571;
-  //reference_frame_b[3] = 2.21632243861128;
-  //reference_frame_b[4] = 2.21940107852587;
-  //reference_frame_b[5] = 0.0222339502909505;
-
-
-  //robot_a ->initialize_reference_frame(reference_frame_a);
-  //robot_b ->initialize_reference_frame(reference_frame_b);
-
-  // to do :: selection master slave
-  //if()
-
-  selection_robot_a = "slave";
-  selection_robot_b = "master";
-
-  //
 
   if(!selection_robot_a.compare("master"))
   {

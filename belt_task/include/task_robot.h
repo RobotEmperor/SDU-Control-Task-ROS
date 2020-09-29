@@ -79,7 +79,7 @@ public:
 	void set_position_controller_eaa_z_gain(double kp,double ki,double kd);
 
 	void set_tf_static_robot(rw::math::Transform3D<> tf_base_to_staric_robot, rw::math::Transform3D<> tf_base_to_bearing_staric_robot);
-	void initialize_reference_frame(std::vector<double> reference_frame);
+	void initialize_reference_frame(std::vector<double> temp_reference_frame_start, std::vector<double> temp_reference_frame_end);
 	void assign_pulley(const std::string &path, std::string master, std::string slave);
 
 	std::vector<double> get_raw_ft_data_();
@@ -205,8 +205,12 @@ private:
 	rw::math::Wrench6D<> tf_tcp_current_force_;
 	rw::math::Transform3D<> tf_base_to_static_robot_;
 	rw::math::Transform3D<> tf_base_to_bearing_static_robot_;
+	rw::math::Transform3D<> tf_base_to_tcp_;
+	rw::math::Transform3D<> tf_base_to_start_;
+	rw::math::Transform3D<> tf_base_to_end_;
 
 	std::vector<double> pulley_bearing_position_;
+	std::vector<double> robot_initial_pose_;
 
 	//control
 	double control_time_;
@@ -257,6 +261,7 @@ private:
 
 	//grippers
 	double gripper_move_values;
+
 
 
 };

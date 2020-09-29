@@ -76,8 +76,10 @@ std::string robot_a_ip;
 std::string robot_b_ip;
 std::string robot_path;
 
-std::vector<double> reference_frame_a;
-std::vector<double> reference_frame_b;
+std::vector<double> reference_frame_a_start;
+std::vector<double> reference_frame_a_end;
+std::vector<double> reference_frame_b_start;
+std::vector<double> reference_frame_b_end;
 
 std::string silmulation_on_off;
 std::string selection_robot_a;
