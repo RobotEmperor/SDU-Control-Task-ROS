@@ -50,6 +50,7 @@ void TaskMotion::initialize(double control_time_, std::string load_path_)
 
   current_pose_vector.resize(6);
   current_force_torque_vector.resize(6);
+  initial_robot_ee_position.assign(6, 0);
 
   YAML::Node doc; //
   try
@@ -64,8 +65,14 @@ void TaskMotion::initialize(double control_time_, std::string load_path_)
 
   // motion data load initialize//
   YAML::Node bigger_pulley_bearing_position_node = doc["pulley_bearing_position"];
+  YAML::Node robot_initial_pose_node = doc["robot_initial_pose"];
   YAML::Node task_initial_position_node = doc["task_initial_position"];
   YAML::Node pulley_radious_node = doc["pulley_radious"];
+
+  for(int num = 0; num < 6; num ++)
+  {
+    initial_robot_ee_position[num] = robot_initial_pose_node[num].as<double>();
+  }
 
   for(int num = 0; num < 6; num ++)
   {
@@ -78,15 +85,15 @@ void TaskMotion::initialize(double control_time_, std::string load_path_)
     task_initial_position.push_back(task_initial_position_node[num].as<double>()*DEGREE2RADIAN);
 
 
-  tf_base_to_bearing_ = Transform3D<> (Vector3D<>(bigger_pulley_bearing_position[0], bigger_pulley_bearing_position[1], bigger_pulley_bearing_position[2]), EAA<>(bigger_pulley_bearing_position[3], bigger_pulley_bearing_position[4], bigger_pulley_bearing_position[5]).toRotation3D());
-  tf_bearing_to_init_ = Transform3D<> (Vector3D<>(task_initial_position[0], task_initial_position[1], task_initial_position[2]), RPY<>(task_initial_position[3],task_initial_position[4], task_initial_position[5]).toRotation3D());
+  //tf_base_to_bearing_ = Transform3D<> (Vector3D<>(bigger_pulley_bearing_position[0], bigger_pulley_bearing_position[1], bigger_pulley_bearing_position[2]), EAA<>(bigger_pulley_bearing_position[3], bigger_pulley_bearing_position[4], bigger_pulley_bearing_position[5]).toRotation3D());
+  //tf_bearing_to_init_ = Transform3D<> (Vector3D<>(task_initial_position[0], task_initial_position[1], task_initial_position[2]), RPY<>(task_initial_position[3],task_initial_position[4], task_initial_position[5]).toRotation3D());
 
-  tf_base_to_init_task_ = tf_base_to_bearing_*tf_bearing_to_init_;
+  //tf_base_to_init_task_ = tf_base_to_bearing_*tf_bearing_to_init_;
 
-  for(int num = 0; num < 3; num ++)
-    initial_robot_ee_position.push_back(tf_base_to_init_task_.P()[num]);
-  for(int num = 0; num < 3; num ++)
-    initial_robot_ee_position.push_back(EAA <>(tf_base_to_init_task_.R())[num]);
+  //for(int num = 0; num < 3; num ++)
+  //  initial_robot_ee_position.push_back(tf_base_to_init_task_.P()[num]);
+  //for(int num = 0; num < 3; num ++)
+  //  initial_robot_ee_position.push_back(EAA <>(tf_base_to_init_task_.R())[num]);
 
   set_initial_pose(initial_robot_ee_position[0], initial_robot_ee_position[1], initial_robot_ee_position[2], initial_robot_ee_position[3], initial_robot_ee_position[4], initial_robot_ee_position[5]); // set to be robot initial values
 
@@ -99,7 +106,7 @@ void TaskMotion::initialize(double control_time_, std::string load_path_)
 }
 void TaskMotion::initialize_reference_frame(std::vector<double> reference_frame) //
 {
-  initial_robot_ee_position.clear();
+  //initial_robot_ee_position.clear();
   bigger_pulley_bearing_position = reference_frame;
 
   tf_base_to_bearing_ = Transform3D<> (Vector3D<>(bigger_pulley_bearing_position[0], bigger_pulley_bearing_position[1], bigger_pulley_bearing_position[2]), EAA<>(bigger_pulley_bearing_position[3], bigger_pulley_bearing_position[4], bigger_pulley_bearing_position[5]).toRotation3D());
@@ -107,12 +114,12 @@ void TaskMotion::initialize_reference_frame(std::vector<double> reference_frame)
 
   tf_base_to_init_task_ = tf_base_to_bearing_*tf_bearing_to_init_;
 
-  for(int num = 0; num < 3; num ++)
-    initial_robot_ee_position.push_back(tf_base_to_init_task_.P()[num]);
-  for(int num = 0; num < 3; num ++)
-    initial_robot_ee_position.push_back(EAA<>(tf_base_to_init_task_.R())[num]);
+//  for(int num = 0; num < 3; num ++)
+//    initial_robot_ee_position.push_back(tf_base_to_init_task_.P()[num]);
+//  for(int num = 0; num < 3; num ++)
+//    initial_robot_ee_position.push_back(EAA<>(tf_base_to_init_task_.R())[num]);
 
-  set_initial_pose(initial_robot_ee_position[0], initial_robot_ee_position[1], initial_robot_ee_position[2], initial_robot_ee_position[3], initial_robot_ee_position[4], initial_robot_ee_position[5]); // set to be robot initial values
+//  set_initial_pose(initial_robot_ee_position[0], initial_robot_ee_position[1], initial_robot_ee_position[2], initial_robot_ee_position[3], initial_robot_ee_position[4], initial_robot_ee_position[5]); // set to be robot initial values
 
   std::cout << "NEW tf_base_to_init_task : " << tf_base_to_init_task_ << std::endl;
   std::cout << "NEW initial_robot_ee_position : "<<initial_robot_ee_position << std::endl;

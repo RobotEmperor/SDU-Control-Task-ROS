@@ -181,19 +181,31 @@ void TaskRobot::initialize_reference_frame(std::vector<double> temp_reference_fr
   tf_tcp_to_start_ = temp_inv_;
 
   temp_inv_ = tf_base_to_tcp_;
-  temp_inv_.invMult(temp_inv_, tf_tcp_to_end_);
+  temp_inv_.invMult(temp_inv_, tf_base_to_end_);
   tf_tcp_to_end_ = temp_inv_;
 
-  tf_tcp_to_direction_.P() = tf_tcp_to_end_.P() - tf_tcp_to_start_.P();
+  tf_tcp_to_direction_.P() = -(tf_tcp_to_end_.P() - tf_tcp_to_start_.P());
 
   align_angle_z_ = atan2(tf_tcp_to_direction_.P()[1],tf_tcp_to_direction_.P()[0]);
 
   std::cout << robot_name_ <<"::  align_angle_z_  :: " << align_angle_z_ << std::endl;
 
+  std::cout << robot_name_ <<"::  tf_tcp_to_direction_.P() :: " << tf_tcp_to_direction_.P() << std::endl;
+
   if(align_angle_z_ > 89*DEGREE2RADIAN)
     align_angle_z_ = 89*DEGREE2RADIAN;
   if(align_angle_z_ < -89*DEGREE2RADIAN)
     align_angle_z_ = -89*DEGREE2RADIAN;
+
+//  if(!robot_name_.compare("robot_B"))
+//  {
+//    if(align_angle_z_ > 0)
+//      align_angle_z_ = align_angle_z_ + 90*DEGREE2RADIAN;
+//    if(align_angle_z_ < 0)
+//      align_angle_z_ = align_angle_z_ - 90*DEGREE2RADIAN;
+//    if(align_angle_z_ == 0)
+//      align_angle_z_ = align_angle_z_ + 90*DEGREE2RADIAN;
+//  }
 
   tf_tcp_to_rotate_ =  Transform3D<> (Vector3D<>(0,0,0), RPY<>(align_angle_z_,0,0).toRotation3D());
 
@@ -259,7 +271,7 @@ void TaskRobot::move_to_init_pose()
 
     usleep(1000000);
 
-    rtde_control_->moveL(desired_pose_vector_, 0.08, 0.08);
+    rtde_control_->moveL(initial_pose_vector_, 0.08, 0.08);
 
     std::cout << COLOR_RED_BOLD << robot_name_ <<": Send" << COLOR_RESET << std::endl;
 
@@ -276,7 +288,6 @@ void TaskRobot::move_to_init_pose()
     tool_estimation_->set_gravity_input_data(acutal_tcp_acc_);
 
     //initialize
-    initial_pose_vector_ = actual_tcp_pose_;
     compensated_pose_vector_ = actual_tcp_pose_;
 
     std::cout << robot_name_ << ": Compensated gravity terms " << acutal_tcp_acc_ << std::endl;
@@ -284,7 +295,7 @@ void TaskRobot::move_to_init_pose()
   }
   else
   {
-    compensated_pose_vector_ = desired_pose_vector_;
+    compensated_pose_vector_ = initial_pose_vector_;
     tf_current_ = Transform3D<> (Vector3D<>(compensated_pose_vector_[0], compensated_pose_vector_[1], compensated_pose_vector_[2]), EAA<>(compensated_pose_vector_[3], compensated_pose_vector_[4], compensated_pose_vector_[5]).toRotation3D());
   }
 }
@@ -340,8 +351,15 @@ void TaskRobot::master_robot()
   {
     motion_phases_ = robot_task_->get_phases_();
 
+  if(robot_task_->get_phases_() == 3)
+    {
+      gripper_move_values = 12;
+    }
+
     if(robot_task_->get_phases_() == 1)
     {
+      gripper_move_values = 6;
+
       desired_belt_[0] = master_way_points_[1][0];
       desired_belt_[1] = master_way_points_[1][1];
       desired_belt_[2] = master_way_points_[1][2];
@@ -350,11 +368,6 @@ void TaskRobot::master_robot()
       robot_task_->insert_into_groove(RPY<>(master_way_points_[1][3],master_way_points_[1][4],master_way_points_[1][5]));
 
       return;
-    }
-
-    if(robot_task_->get_phases_() == 4)
-    {
-      gripper_move_values = 10;
     }
     robot_task_->motion_to_desired_pose(contact_check_, master_way_points_[motion_phases_][0],master_way_points_[motion_phases_][1],master_way_points_[motion_phases_][2], RPY<>(master_way_points_[motion_phases_][3],master_way_points_[motion_phases_][4],master_way_points_[motion_phases_][5]),master_way_points_[motion_phases_][6]); //bearing frame
   }
@@ -647,6 +660,8 @@ void TaskRobot::parse_init_data_(const std::string &path)
   {
     robot_initial_pose_[num] = robot_initial_pose_node[num].as<double>();
   }
+
+  initial_pose_vector_ = robot_initial_pose_;
 
   tf_base_to_bearing_ = Transform3D<> (Vector3D<>(pulley_bearing_position_[0], pulley_bearing_position_[1], pulley_bearing_position_[2]), EAA<>(pulley_bearing_position_[3], pulley_bearing_position_[4], pulley_bearing_position_[5]).toRotation3D());
 
