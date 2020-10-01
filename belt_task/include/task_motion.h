@@ -37,7 +37,7 @@ public:
   ~TaskMotion();
   //setup
   void initialize(double control_time_, std::string load_path_);
-  void initialize_reference_frame(std::vector<double> reference_frame);
+  void initialize_reference_frame(std::vector<double> reference_frame_major, std::vector<double> reference_frame_minor);
   void load_task_motion(std::string path_, std::string motion_);
 
 
@@ -51,6 +51,7 @@ public:
   void rotate(double theta_);
 
   void motion_to_desired_pose(bool contact_, double x, double y, double z,RPY<> tcp_rpy_, double time);
+  void motion_to_desired_pose_big(bool contact_, double x, double y, double z,RPY<> tcp_rpy_, double time);
 
 
   void estimation_of_belt_position(rw::math::Vector3D<> desired_groove_position);
@@ -102,7 +103,7 @@ private:
   //robot's ee position
   std::vector<double> initial_robot_ee_position;
   std::vector<double> bigger_pulley_bearing_position;
-  std::vector<double> smaller_pulley_bearing_position;
+  std::vector<double> minor_pulley_bearing_position;
   std::vector<double> task_initial_position;
   std::vector<double> radious_;
   std::vector<double> set_point_;
@@ -129,6 +130,7 @@ private:
   Transform3D<> tf_bearing_to_init_;
   Transform3D<> tf_base_to_init_task_;
   Transform3D<> tf_static_frame_;
+  Transform3D<> tf_base_to_bearing_big;
 
   Transform3D<> tf_tcp_desired_pose_;
   Transform3D<> tf_current_pose_;

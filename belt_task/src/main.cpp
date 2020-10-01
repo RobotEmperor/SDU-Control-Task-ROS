@@ -280,48 +280,15 @@ void executeAction(const belt_task::belt_task_actionGoalConstPtr &start_end, Ser
     std::cout << "robot_big_pulley   :  " << robot_big_pulley << std::endl;
     std::cout << "robot_small_pulley   :  " << robot_small_pulley << std::endl;
 
-    if(fabs(temp_big_y) < fabs(temp_small_y) && fabs(temp_big_x) > fabs(temp_small_x))
+    if( temp_big_y > temp_small_y)
     {
       selection_robot_a = "slave"; // small
       selection_robot_b = "master"; // big
     }
-    if(fabs(temp_big_y) > fabs(temp_small_y) && fabs(temp_big_x) < fabs(temp_small_x))
+    if(temp_big_y < temp_small_y)
     {
       selection_robot_a = "master";// big
       selection_robot_b = "slave";// small
-    }
-
-    if(fabs(temp_big_y) > fabs(temp_small_y) && fabs(temp_big_x) > fabs(temp_small_x))
-    {
-      selection_robot_a = "slave"; // small
-      selection_robot_b = "master"; // big
-    }
-    if(fabs(temp_big_y) < fabs(temp_small_y) && fabs(temp_big_x) < fabs(temp_small_x))
-    {
-      selection_robot_a = "master";// big
-      selection_robot_b = "slave";// small
-    }
-
-    if(fabs(temp_big_y) == fabs(temp_small_y) && fabs(temp_big_x) > fabs(temp_small_x))
-    {
-      selection_robot_a = "slave";// small
-      selection_robot_b = "master";// big
-    }
-    if(fabs(temp_big_y) == fabs(temp_small_y) && fabs(temp_big_x) < fabs(temp_small_x))
-    {
-      selection_robot_a = "master";// big
-      selection_robot_b = "slave";// small
-
-    }
-    if(fabs(temp_big_y) > fabs(temp_small_y) && fabs(temp_big_x) == fabs(temp_small_x))
-    {
-      selection_robot_a = "master";// big
-      selection_robot_b = "slave";// small
-    }
-    if(fabs(temp_big_y) < fabs(temp_small_y) && fabs(temp_big_x) == fabs(temp_small_x))
-    {
-      selection_robot_a = "slave";// small
-      selection_robot_b = "master";//big
     }
     //
     //  if(fabs(temp_big_y) == fabs(temp_small_y) && fabs(temp_big_x) == fabs(temp_small_x))
@@ -463,8 +430,8 @@ int main (int argc, char **argv)
   }
 
   std::cout << COLOR_YELLOW_BOLD << "Simulation On [ yes / no ]" << COLOR_RESET << std::endl;
-  //cin >> silmulation_on_off;
-  silmulation_on_off = "y";
+  cin >> silmulation_on_off;
+  //silmulation_on_off = "y";
 
   if(!silmulation_on_off.compare("yes") || !silmulation_on_off.compare("y"))
     std::cout << COLOR_GREEN_BOLD << "Setting up Simulation " << COLOR_RESET << std::endl;
@@ -472,8 +439,8 @@ int main (int argc, char **argv)
   {
     std::cout << COLOR_GREEN_BOLD << "REAL Robot, Be careful to run:" << COLOR_RESET << std::endl;
     std::cout << COLOR_GREEN_BOLD << "Are you sure ? [yes / no]" << COLOR_RESET << std::endl;
-    //cin >> silmulation_on_off;
-    silmulation_on_off = "y";
+    cin >> silmulation_on_off;
+    //silmulation_on_off = "y";
     if(silmulation_on_off.compare("y")!=0)
     {
       ros_state->shout_down_ros();
@@ -669,9 +636,21 @@ int main (int argc, char **argv)
     robot_b->move_to_init_pose();
   }
 
-  robot_a ->initialize_reference_frame(reference_frame_a_start,reference_frame_a_end);
-  robot_b ->initialize_reference_frame(reference_frame_b_start,reference_frame_b_end);
+  robot_a ->initialize_reference_frame(reference_frame_a_start,reference_frame_a_end,selection_robot_a);
+  robot_b ->initialize_reference_frame(reference_frame_b_start,reference_frame_b_end,selection_robot_b);
 
+  std::string go_stop;
+  cin >> go_stop;
+  //silmulation_on_off = "y";
+  if(go_stop.compare("y")!=0)
+  {
+    ros_state->shout_down_ros();
+    robot_a->terminate_data_log();
+    robot_b->terminate_data_log();
+
+    std::cout << COLOR_RED_BOLD << "Terminate program" << COLOR_RESET << std::endl;
+    return 0 ;
+  }
 
   std::cout << COLOR_RED_BOLD << "ROBOT A  " << selection_robot_a << COLOR_RESET << std::endl;
   std::cout << COLOR_RED_BOLD << "ROBOT B  " << selection_robot_b << COLOR_RESET << std::endl;
