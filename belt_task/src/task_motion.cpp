@@ -302,7 +302,7 @@ void TaskMotion::insert_belt_into_pulley(bool contact_, double change_x, double 
 
   for(int num = 0; num <6 ; num ++)
   {
-    desired_pose_matrix(num,7) = 1;
+    desired_pose_matrix(num,7) = 5;
   }
 }
 void TaskMotion::rotate(double theta_)

@@ -112,9 +112,9 @@ TaskRobot::TaskRobot(std::string robot_name, std::string init_path)
   desired_pose_vector_ = robot_task_ -> get_current_pose();
 
   //control
-  force_x_compensator_ = std::make_shared<PID_function>(control_time_, 0.02, -0.02, 0, 0, 0, 0.0000001, -0.0000001, 0.5);
-  force_y_compensator_ = std::make_shared<PID_function>(control_time_, 0.02, -0.02, 0, 0, 0, 0.0000001, -0.0000001, 0.5);
-  force_z_compensator_ = std::make_shared<PID_function>(control_time_, 0.02, -0.02, 0, 0, 0, 0.0000001, -0.0000001, 0.5);
+  force_x_compensator_ = std::make_shared<PID_function>(control_time_, 0.04, -0.04, 0, 0, 0, 0.0000001, -0.0000001, 0.5);
+  force_y_compensator_ = std::make_shared<PID_function>(control_time_, 0.04, -0.04, 0, 0, 0, 0.0000001, -0.0000001, 0.5);
+  force_z_compensator_ = std::make_shared<PID_function>(control_time_, 0.04, -0.04, 0, 0, 0, 0.0000001, -0.0000001, 0.5);
 
   position_x_controller_ = std::make_shared<PID_function>(control_time_, 0.025, -0.025, 0, 0, 0, 0.0000001, -0.0000001, 0.5);
   position_y_controller_ = std::make_shared<PID_function>(control_time_, 0.025, -0.025, 0, 0, 0, 0.0000001, -0.0000001, 0.5);
@@ -139,12 +139,12 @@ TaskRobot::TaskRobot(std::string robot_name, std::string init_path)
 
   gripper_move_values = 0;
 
-  position_x_controller_->set_smooth_gain_time(3);
-  position_y_controller_->set_smooth_gain_time(3);
-  position_z_controller_->set_smooth_gain_time(3);
-  force_x_compensator_->set_smooth_gain_time(3);
-  force_y_compensator_->set_smooth_gain_time(3);
-  force_z_compensator_->set_smooth_gain_time(3);
+  position_x_controller_->set_smooth_gain_time(0.5);
+  position_y_controller_->set_smooth_gain_time(0.5);
+  position_z_controller_->set_smooth_gain_time(0.5);
+  force_x_compensator_->set_smooth_gain_time(2);
+  force_y_compensator_->set_smooth_gain_time(2);
+  force_z_compensator_->set_smooth_gain_time(2);
 
 }
 TaskRobot::~TaskRobot()
