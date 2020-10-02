@@ -377,6 +377,10 @@ void TaskRobot::master_robot()
 
     if(robot_task_->get_phases_() == 1)
     {
+      for(int num = 0; num < 3; num ++)
+      {
+        desired_force_torque_vector_[num] = 0;
+      }
       gripper_move_values = 6;
 
       desired_belt_[0] = master_way_points_[1][0];
@@ -397,12 +401,12 @@ void TaskRobot::slave_robot() // for robot A
 
   if(sub_tasks_ == 0 && robot_task_->get_phases_() == slave_way_points_numbers_)
   {
-    position_x_controller_->set_smooth_gain_time(5);
-    position_y_controller_->set_smooth_gain_time(5);
-    position_z_controller_->set_smooth_gain_time(5);
-    force_x_compensator_->set_smooth_gain_time(5);
-    force_y_compensator_->set_smooth_gain_time(5);
-    force_z_compensator_->set_smooth_gain_time(5);
+    position_x_controller_->set_smooth_gain_time(2.5);
+    position_y_controller_->set_smooth_gain_time(2.5);
+    position_z_controller_->set_smooth_gain_time(2.5);
+    force_x_compensator_->set_smooth_gain_time(2.5);
+    force_y_compensator_->set_smooth_gain_time(2.5);
+    force_z_compensator_->set_smooth_gain_time(2.5);
 
     cout << desired_force_torque_vector_ << "finished " << endl;
 
