@@ -225,6 +225,7 @@ private:
 	int preferred_solution_number_;
 	bool joint_vel_limits_;
 	std::vector<rw::math::Q> solutions_;
+	//rw::math::Q confStart;
 
 	//model identification
 	std::string wc_file_;
@@ -256,8 +257,10 @@ private:
 	int slave_way_points_numbers_;
 
 	//roboust force values
-	std::map<int, std::vector<double>> robust_force_values_;
-	int robust_force_values_numbers_;
+	std::map<int, std::vector<double>> tighten_force_values_;
+	std::map<int, std::vector<double>> force_vector_;
+
+	int tighten_force_values_numbers_;
 
 	//grippers
 	double gripper_move_values;

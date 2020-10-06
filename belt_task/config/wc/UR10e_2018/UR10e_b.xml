@@ -14,7 +14,7 @@
 	<PosLimit refjoint="Joint3" min="-360" max="360" />
 	<PosLimit refjoint="Joint4" min="-360" max="360" /> <!-- 360 -->
 	<PosLimit refjoint="Joint5" min="-360" max="360" /> <!-- 360 -->
-	<PosLimit refjoint="Joint6" min="-1080" max="1080" /> <!-- Unlimited! 1080-->
+	<PosLimit refjoint="Joint6" min="-360" max="360" /> <!-- Unlimited! 1080-->
 
 	<VelLimit refjoint="Joint1" max="180" /> <!-- 180 -->
 	<VelLimit refjoint="Joint2" max="180" /> <!-- 180 -->
@@ -74,6 +74,6 @@
 
 	<ProximitySetup file="ProximitySetup.xml" />
 
-	<Q name="Home">1.57 -2.4 2.4 -1.57 -1.57 0</Q>
+	 <Q name="Home">1.57 -2.4 2.4 -1.57 -1.57 0</Q> 
 
 </SerialDevice>

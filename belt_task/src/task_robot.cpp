@@ -135,7 +135,7 @@ TaskRobot::TaskRobot(std::string robot_name, std::string init_path)
   finish_task_ = false;
   master_way_points_numbers_ = 0;
   slave_way_points_numbers_ = 0;
-  robust_force_values_numbers_ = 0;
+  tighten_force_values_numbers_ = 0;
 
   gripper_move_values = 0;
 
@@ -195,20 +195,35 @@ void TaskRobot::initialize_reference_frame(std::vector<double> temp_reference_fr
 
   std::cout << robot_name_ <<"::  tf_tcp_to_direction_.P() :: " << tf_tcp_to_direction_.P() << std::endl;
 
+  if(align_angle_z_ > 0)
+  {
+    for(int num = 0; num < tighten_force_values_numbers_; num ++)
+    {
+      force_vector_[num][0] = sin(45*DEGREE2RADIAN) * tighten_force_values_[num][0];
+      force_vector_[num][1] = -1*(-cos(45*DEGREE2RADIAN) * tighten_force_values_[num][0]);
+      force_vector_[num][2] = tighten_force_values_[num][2];
+    }
+  }
+  if(align_angle_z_ < 0)
+  {
+    for(int num = 0; num < tighten_force_values_numbers_; num ++)
+    {
+      force_vector_[num][0] = sin(45*DEGREE2RADIAN) * tighten_force_values_[num][0];
+      force_vector_[num][1] = cos(45*DEGREE2RADIAN) * tighten_force_values_[num][0];
+      force_vector_[num][2] = tighten_force_values_[num][2];
+    }
+  }
+
+  std::cout << robot_name_ <<"  force_vector_ 0::"<< force_vector_[0] << std::endl;
+  std::cout << robot_name_ <<"  force_vector_ 1::"<< force_vector_[1] << std::endl;
+  std::cout << robot_name_ <<"  tighten_force_values_ 0::"<< tighten_force_values_[0]<< std::endl;
+  std::cout << robot_name_ <<"  tighten_force_values_ 1::"<< tighten_force_values_[1]<< std::endl;
+
   if(align_angle_z_ > 89*DEGREE2RADIAN)
     align_angle_z_ = 89*DEGREE2RADIAN;
   if(align_angle_z_ < -89*DEGREE2RADIAN)
     align_angle_z_ = -89*DEGREE2RADIAN;
 
-//  if(!robot_name_.compare("robot_B"))
-//  {
-//    if(align_angle_z_ > 0)
-//      align_angle_z_ = align_angle_z_ + 90*DEGREE2RADIAN;
-//    if(align_angle_z_ < 0)
-//      align_angle_z_ = align_angle_z_ - 90*DEGREE2RADIAN;
-//    if(align_angle_z_ == 0)
-//      align_angle_z_ = align_angle_z_ + 90*DEGREE2RADIAN;
-//  }
 
   tf_tcp_to_rotate_ =  Transform3D<> (Vector3D<>(0,0,0), RPY<>(align_angle_z_,0,0).toRotation3D());
 
@@ -232,9 +247,9 @@ void TaskRobot::initialize_reference_frame(std::vector<double> temp_reference_fr
     reference_frame[5] = EAA<>(tf_base_to_start_.R())[2];
   }
 
-  reference_frame_minor[3] = EAA<>(tf_base_to_tcp_.R())[0];
-  reference_frame_minor[4] = EAA<>(tf_base_to_tcp_.R())[1];
-  reference_frame_minor[5] = EAA<>(tf_base_to_tcp_.R())[2];
+  reference_frame_minor[3] = EAA<>(tf_base_to_start_.R())[0];
+  reference_frame_minor[4] = EAA<>(tf_base_to_start_.R())[1];
+  reference_frame_minor[5] = EAA<>(tf_base_to_start_.R())[2];
 
   std::cout << robot_name_ <<"::  reference_frame  :: " << reference_frame << std::endl;
 
@@ -428,7 +443,7 @@ void TaskRobot::slave_robot() // for robot A
 
     for(int num = 0; num < 3; num ++)
     {
-      desired_force_torque_vector_[num] = robust_force_values_[motion_phases_][num];
+      desired_force_torque_vector_[num] = force_vector_[motion_phases_][num];
     }
   }
 }
@@ -563,33 +578,39 @@ bool TaskRobot::hybrid_controller()
 
   //std::cout << robot_name_  << " : " << solutions_[3] << std::endl;
 
-  for(int num = 0; num <6 ; num ++)
+  const rw::math::Q confStart(6, current_q_[0], current_q_[1], current_q_[2], current_q_[3], current_q_[4], current_q_[5]);
+
+  for (unsigned int i = 0; i < solutions_.size(); i++)
   {
-    compensated_q_[num] = solutions_[preferred_solution_number_].toStdVector()[num];
-  }
-
-  //from covid - robot
-  for (unsigned int num = 0; num < 6; num ++)
-  {
-    // LOG_DEBUG("[%s]", "Wrapping for joint");
-    const double diffOrig = fabs(current_q_[num] - compensated_q_[num]);
-    // LOG_DEBUG("[diffOrig: %e , %e]", (solutions[i][j])/rw::math::Pi*180.0, diffOrig );
-
-    const double diffAdd = fabs(current_q_[num] - (compensated_q_[num] + 2 * rw::math::Pi));
-    // LOG_DEBUG("[diffAdd: %e , %e]", (solutions[i][j]+2*rw::math::Pi)/rw::math::Pi*180.0, diffAdd );
-
-    const double diffSub = fabs(current_q_[num] - (compensated_q_[num] - 2 * rw::math::Pi));
-    // LOG_DEBUG("[diffSub: %e , %e]", (solutions[i][j]-2*rw::math::Pi)/rw::math::Pi*180.0, diffSub );
-
-    if (diffAdd < diffOrig && diffAdd < diffSub)
+    for (unsigned int j = 0; j < solutions_[i].size(); j++)
     {
-      compensated_q_[num] += 2 * rw::math::Pi;
-    }
-    else if (diffSub < diffOrig && diffSub < diffAdd)
-    {
-      compensated_q_[num] -= 2 * rw::math::Pi;
+      const double diffOrig = fabs(confStart[j] - solutions_[i][j]);
+
+      const double diffAdd = fabs(confStart[j] - (solutions_[i][j] + 2 * rw::math::Pi));
+
+      const double diffSub = fabs(confStart[j] - (solutions_[i][j] - 2 * rw::math::Pi));
+
+      if (diffAdd < diffOrig && diffAdd < diffSub)
+      {
+        solutions_[i][j] += 2 * rw::math::Pi;
+      }
+      else if (diffSub < diffOrig && diffSub < diffAdd)
+      {
+        solutions_[i][j] -= 2 * rw::math::Pi;
+      }
     }
   }
+
+  rw::math::Q confBest = solutions_[preferred_solution_number_];
+    for (unsigned int i = 1; i < solutions_.size(); i++)
+      if ((confStart - solutions_[i]).norm2() < (confStart - confBest).norm2())
+        confBest = solutions_[i];
+
+    for(int num = 0; num <6 ; num ++)
+     {
+       compensated_q_[num] = confBest.toStdVector()[num];
+     }
+
 
   //std::cout << robot_name_ << "::" << compensated_q_ << "  "  << current_q_<< std::endl;
 
@@ -668,7 +689,7 @@ void TaskRobot::parse_init_data_(const std::string &path)
   YAML::Node initial_joint_states = doc["initial_joint_states"];
   YAML::Node pulley_bearing_position_node = doc["pulley_bearing_position"];
   YAML::Node robot_initial_pose_node = doc["robot_initial_pose"];
-  YAML::Node robust_force_value_node = doc["robust_force_value"];
+  YAML::Node tighten_force_value_node = doc["tighten_force_value"];
   YAML::Node master_pulley_node = doc["master_pulley_big"];
   YAML::Node slave_node = doc["slave_pulley_big"];
 
@@ -716,9 +737,9 @@ void TaskRobot::parse_init_data_(const std::string &path)
 
   temp_points_.clear();
 
-  for (YAML::iterator it = robust_force_value_node.begin(); it != robust_force_value_node.end(); ++it)
+  for (YAML::iterator it = tighten_force_value_node.begin(); it != tighten_force_value_node.end(); ++it)
   {
-    robust_force_values_numbers_ ++;
+    tighten_force_values_numbers_ ++;
     temp_points_numbers_ = it->first.as<int>();
 
     for(int num = 0; num < 3; num++)
@@ -726,11 +747,12 @@ void TaskRobot::parse_init_data_(const std::string &path)
       temp_points_.push_back(it->second[num].as<double>());
     }
 
-    robust_force_values_[temp_points_numbers_] = temp_points_;
+    tighten_force_values_[temp_points_numbers_] = temp_points_;
+    force_vector_[temp_points_numbers_] = temp_points_;
 
     temp_points_.clear();
 
-    //cout <<  temp_points_numbers_ <<"::"<< robust_force_values_[temp_points_numbers_]  << endl;
+    //cout <<  temp_points_numbers_ <<"::"<< tighten_force_values_[temp_points_numbers_]  << endl;
   }
 
   temp_points_.clear();
@@ -853,11 +875,11 @@ void TaskRobot::assign_pulley(const std::string &path, std::string master, std::
 
   temp_points_.clear();
 
-  robust_force_values_numbers_ = 0;
+  tighten_force_values_numbers_ = 0;
 
   for (YAML::iterator it = robust_force_value_node.begin(); it != robust_force_value_node.end(); ++it)
   {
-    robust_force_values_numbers_ ++;
+    tighten_force_values_numbers_ ++;
     temp_points_numbers_ = it->first.as<int>();
 
     for(int num = 0; num < 3; num++)
@@ -865,11 +887,12 @@ void TaskRobot::assign_pulley(const std::string &path, std::string master, std::
       temp_points_.push_back(it->second[num].as<double>());
     }
 
-    robust_force_values_[temp_points_numbers_] = temp_points_;
+    tighten_force_values_[temp_points_numbers_] = temp_points_;
+    force_vector_[temp_points_numbers_] = temp_points_;
 
     temp_points_.clear();
 
-    cout << robot_name_ << " " <<  temp_points_numbers_ <<"::"<< robust_force_values_[temp_points_numbers_]  << endl;
+    cout << robot_name_ << " " <<  temp_points_numbers_ <<"::"<< tighten_force_values_[temp_points_numbers_]  << endl;
   }
 
   temp_points_.clear();

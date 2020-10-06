@@ -160,6 +160,9 @@ void *thread_func_robot_b ( void *param )
       ros_state->send_gazebo_b_command(robot_b->get_current_q_());
     }
 
+    //ros_state->send_raw_ft_data(robot_b->get_current_q_());
+    //ros_state->send_filtered_ft_data(robot_b->get_target_tcp_pose_data_());
+
 
 
     clock_gettime ( CLOCK_MONOTONIC, &t_now );
@@ -203,21 +206,6 @@ void initialize()
   selection_robot_a = "";
   selection_robot_b = "";
 
-  //example
-  //reference_frame_a[0] = -0.387151602138435;
-  //reference_frame_a[1] = 0.542698016520246;
-  //reference_frame_a[2] = 0.366637489776256;
-  //reference_frame_a[3] = -2.22142708752267;
-  //reference_frame_a[4] = -2.22142706545;
-  //reference_frame_a[5] = 0.0000141743083872454;
-  //
-  //reference_frame_b[0] = -0.551984494049336;
-  //reference_frame_b[1] = -0.529723677571036;
-  //reference_frame_b[2] = 0.346883471255243;
-  //reference_frame_b[3] = 2.21736419901745;
-  //reference_frame_b[4] = 2.21751150736451;
-  //reference_frame_b[5] = -0.00888003853366454;
-
   robot_path = "/home/yik/catkin_ws/src/SDU-Control-Task-ROS/belt_task/config";
   robot_a = std::make_shared<TaskRobot>("robot_A",robot_path);
   robot_path = robot_path + "/wc/UR10e_2018/UR10e_a.xml";
@@ -237,7 +225,7 @@ void my_function(int sig)
   exit_program = true; // set flag
 
 }
-
+/*
 void executeAction(const belt_task::belt_task_actionGoalConstPtr &start_end, Server* as)
 {
   double robot_big_pulley = 0;
@@ -257,10 +245,11 @@ void executeAction(const belt_task::belt_task_actionGoalConstPtr &start_end, Ser
   std::cout << "transform_b_big_pulley   :  " << start_end->transform_b_big_pulley << std::endl;
   std::cout << "transform_b_small_pulley   :  " << start_end->transform_b_small_pulley << std::endl;
 
-  //  transform_a_big_pulley   :  Q[6]{-0.583351, -0.13724, -0.0739517, -0.251051, 1.54811, 0.245534}
-  //  transform_a_small_pulley   :  Q[6]{-0.538989, -0.26275, -0.0737925, 0.282234, 1.54316, -0.283079}
-  //  transform_b_big_pulley   :  Q[6]{-0.821479, 0.128642, -0.0682389, 2.05038, 0.318182, -2.06026}
-  //  transform_b_small_pulley   :  Q[6]{-0.864708, 0.254546, -0.0686999, -2.01597, 0.379944, 2.0248}
+//  transform_a_big_pulley   :  Q[6]{-0.57389, 0.376311, 0.0549096, -1.58493, 0.914809, 1.57408}
+//  transform_a_small_pulley   :  Q[6]{-0.459831, 0.444951, 0.0550761, -1.09482, 1.27564, 1.08678}
+//  transform_b_big_pulley   :  Q[6]{-0.836103, -0.384349, 0.0623581, 0.823434, 1.40879, -0.828878}
+//  transform_b_small_pulley   :  Q[6]{-0.950775, -0.451959, 0.0622844, 1.32863, 1.1246, -1.33446}
+
 
   if(start_end->on_off)
   {
@@ -273,6 +262,14 @@ void executeAction(const belt_task::belt_task_actionGoalConstPtr &start_end, Ser
     temp_small_x = start_end->transform_a_small_pulley[0];
     temp_small_y = start_end->transform_a_small_pulley[1];
     temp_small_z = start_end->transform_a_small_pulley[2];
+
+    //    temp_big_x = -0.57389;
+    //    temp_big_y = 0.376311;
+    //    temp_big_z = 0.0549096;
+    //
+    //    temp_small_x = -0.459831;
+    //    temp_small_y = 0.444951;
+    //    temp_small_z = 0.0550761;
 
     robot_big_pulley = sqrt(pow(temp_big_x,2) + pow(temp_big_y,2) + pow(temp_big_z,2));
     robot_small_pulley = sqrt(pow(temp_small_x,2) + pow(temp_small_y,2) + pow(temp_small_z,2));
@@ -335,6 +332,8 @@ void executeAction(const belt_task::belt_task_actionGoalConstPtr &start_end, Ser
       reference_frame_b_end[0] = start_end->transform_b_small_pulley[0];
       reference_frame_b_end[1] = start_end->transform_b_small_pulley[1];
       reference_frame_b_end[2] = start_end->transform_b_small_pulley[2];
+
+
     }
 
     //    reference_frame_a_start[0] = 0;
@@ -403,7 +402,7 @@ void executeAction(const belt_task::belt_task_actionGoalConstPtr &start_end, Ser
 
   //real time task
 }
-
+ */
 int main (int argc, char **argv)
 {
   // CPU_ZERO(&cpu_robot);
@@ -418,16 +417,16 @@ int main (int argc, char **argv)
   ros_state = std::make_shared<RosNode>(argc,argv,"Belt_Task",nh);
   ros_state->initialize();
 
-  Server server(nh, "belt_task", boost::bind(&executeAction, _1, &server), false);
-  server.start();
-
-  while(!wait_command)
-  {
-    if(exit_program)
-      wait_command = true;
-    ros_state->update_ros_data();
-    usleep(1);
-  }
+  //  Server server(nh, "belt_task", boost::bind(&executeAction, _1, &server), false);
+  //  server.start();
+  //
+  //  while(!wait_command)
+  //  {
+  //    if(exit_program)
+  //      wait_command = true;
+  //    ros_state->update_ros_data();
+  //    usleep(1);
+  //  }
 
   std::cout << COLOR_YELLOW_BOLD << "Simulation On [ yes / no ]" << COLOR_RESET << std::endl;
   cin >> silmulation_on_off;
@@ -456,163 +455,140 @@ int main (int argc, char **argv)
 
   std::cout << "program_on_!!!!!!!!" << std::endl;
 
+  double robot_big_pulley = 0;
+  double robot_small_pulley = 0;
+  double temp_big_x = 0;
+  double temp_big_y = 0;
+  double temp_big_z = 0;
 
-  //  double robot_big_pulley = 0;
-  //  double robot_small_pulley = 0;
-  //  double temp_big_x = 0;
-  //  double temp_big_y = 0;
-  //  double temp_big_z = 0;
-  //
-  //  double temp_small_x = 0;
-  //  double temp_small_y = 0;
-  //  double temp_small_z = 0;
+  double temp_small_x = 0;
+  double temp_small_y = 0;
+  double temp_small_z = 0;
 
-  //  //std::cout << "transform_a_big_pulley   :  " << start_end->transform_a_big_pulley << std::endl;
-  //  //std::cout << "transform_a_small_pulley   :  " << start_end->transform_a_small_pulley << std::endl;
-  //  //std::cout << "transform_b_big_pulley   :  " << start_end->transform_b_big_pulley << std::endl;
-  //  //std::cout << "transform_b_small_pulley   :  " << start_end->transform_b_small_pulley << std::endl;
+  std::cout << "program_on_!!!!!!!!" << std::endl;
+
+
+
+  //  transform_a_big_pulley   :  Q[6]{-0.57389, 0.376311, 0.0549096, -1.58493, 0.914809, 1.57408}
+  //  transform_a_small_pulley   :  Q[6]{-0.459831, 0.444951, 0.0550761, -1.09482, 1.27564, 1.08678}
+  //  transform_b_big_pulley   :  Q[6]{-0.836103, -0.384349, 0.0623581, 0.823434, 1.40879, -0.828878}
+  //  transform_b_small_pulley   :  Q[6]{-0.950775, -0.451959, 0.0622844, 1.32863, 1.1246, -1.33446}
+
+
+  temp_big_x = -0.57389;
+  temp_big_y = 0.376311;
+  temp_big_z = 0.0549096;
+
+  temp_small_x = -0.459831;
+  temp_small_y = 0.444951;
+  temp_small_z = 0.0550761;
+
+  //    -0.836103
+  //    -0.384349
+  //    0.0623581
   //
-  //  //  transform_a_big_pulley   :  Q[6]{-0.583351, -0.13724, -0.0739517, -0.251051, 1.54811, 0.245534}
-  //  //  transform_a_small_pulley   :  Q[6]{-0.538989, -0.26275, -0.0737925, 0.282234, 1.54316, -0.283079}
-  //  //  transform_b_big_pulley   :  Q[6]{-0.821479, 0.128642, -0.0682389, 2.05038, 0.318182, -2.06026}
-  //  //  transform_b_small_pulley   :  Q[6]{-0.864708, 0.254546, -0.0686999, -2.01597, 0.379944, 2.0248}
+  //    -0.950775
+  //    -0.451959
+  //    0.0622844
+
+  robot_big_pulley = sqrt(pow(temp_big_x,2) + pow(temp_big_y,2) + pow(temp_big_z,2));
+  robot_small_pulley = sqrt(pow(temp_small_x,2) + pow(temp_small_y,2) + pow(temp_small_z,2));
+
+  std::cout << "robot_big_pulley   :  " << robot_big_pulley << std::endl;
+  std::cout << "robot_small_pulley   :  " << robot_small_pulley << std::endl;
+
+  if( temp_big_y > temp_small_y)
+  {
+    selection_robot_a = "slave"; // small
+    selection_robot_b = "master"; // big
+  }
+  if(temp_big_y < temp_small_y)
+  {
+    selection_robot_a = "master";// big
+    selection_robot_b = "slave";// small
+  }
   //
-  //  temp_big_x = -0.583351;
-  //  temp_big_y = -0.13724;
-  //  temp_big_z = -0.0739517;
-  //
-  //  temp_small_x = -0.538989;
-  //  temp_small_y = -0.26275;
-  //  temp_small_z = -0.0737925;
-  //
-  //  robot_big_pulley = sqrt(pow(temp_big_x,2) + pow(temp_big_y,2) + pow(temp_big_z,2));
-  //  robot_small_pulley = sqrt(pow(temp_small_x,2) + pow(temp_small_y,2) + pow(temp_small_z,2));
-  //
-  //  std::cout << "robot_big_pulley   :  " << robot_big_pulley << std::endl;
-  //  std::cout << "robot_small_pulley   :  " << robot_small_pulley << std::endl;
-  //
-  //  if(fabs(temp_big_y) < fabs(temp_small_y) && fabs(temp_big_x) > fabs(temp_small_x))
-  //  {
-  //    selection_robot_a = "slave"; // small
-  //    selection_robot_b = "master"; // big
-  //  }
-  //  if(fabs(temp_big_y) > fabs(temp_small_y) && fabs(temp_big_x) < fabs(temp_small_x))
-  //  {
-  //    selection_robot_a = "master";// big
-  //    selection_robot_b = "slave";// small
-  //  }
-  //
-  //  if(fabs(temp_big_y) > fabs(temp_small_y) && fabs(temp_big_x) > fabs(temp_small_x))
-  //  {
-  //    selection_robot_a = "slave"; // small
-  //    selection_robot_b = "master"; // big
-  //  }
-  //  if(fabs(temp_big_y) < fabs(temp_small_y) && fabs(temp_big_x) < fabs(temp_small_x))
-  //  {
-  //    selection_robot_a = "master";// big
-  //    selection_robot_b = "slave";// small
-  //  }
-  //
-  //  if(fabs(temp_big_y) == fabs(temp_small_y) && fabs(temp_big_x) > fabs(temp_small_x))
-  //  {
-  //    selection_robot_a = "slave";// small
-  //    selection_robot_b = "master";// big
-  //  }
-  //  if(fabs(temp_big_y) == fabs(temp_small_y) && fabs(temp_big_x) < fabs(temp_small_x))
-  //  {
-  //    selection_robot_a = "master";// big
-  //    selection_robot_b = "slave";// small
-  //
-  //  }
-  //  if(fabs(temp_big_y) > fabs(temp_small_y) && fabs(temp_big_x) == fabs(temp_small_x))
-  //  {
-  //    selection_robot_a = "master";// big
-  //    selection_robot_b = "slave";// small
-  //  }
-  //  if(fabs(temp_big_y) < fabs(temp_small_y) && fabs(temp_big_x) == fabs(temp_small_x))
+  //  if(fabs(temp_big_y) == fabs(temp_small_y) && fabs(temp_big_x) == fabs(temp_small_x))
   //  {
   //    selection_robot_a = "slave";// small
   //    selection_robot_b = "master";//big
   //  }
-  ////
-  ////  if(fabs(temp_big_y) == fabs(temp_small_y) && fabs(temp_big_x) == fabs(temp_small_x))
-  ////  {
-  ////    selection_robot_a = "slave";// small
-  ////    selection_robot_b = "master";//big
-  ////  }
-  //
-  //
-  //  if(!selection_robot_a.compare("master") && !selection_robot_b.compare("slave"))
-  //  {
-  //    reference_frame_a_start[0] = -0.583351;
-  //    reference_frame_a_start[1] = -0.13724;
-  //    reference_frame_a_start[2] = -0.0739517;
-  //
-  //    reference_frame_a_end[0] = -0.538989;
-  //    reference_frame_a_end[1] = -0.26275;
-  //    reference_frame_a_end[2] = -0.0737925;
-  //
-  //
-  //    reference_frame_b_start[0] = -0.864708;
-  //    reference_frame_b_start[1] = 0.254546;
-  //    reference_frame_b_start[2] = -0.0686999;
-  //
-  //    reference_frame_b_end[0] = -0.821479;
-  //    reference_frame_b_end[1] = 0.128642;
-  //    reference_frame_b_end[2] = -0.0682389;
-  //  }
-  //
-  //  if(!selection_robot_a.compare("slave") && !selection_robot_b.compare("master"))
-  //  {
-  //    reference_frame_a_start[0] = -0.538989;
-  //    reference_frame_a_start[1] = -0.26275;
-  //    reference_frame_a_start[2] = -0.0737925;
-  //
-  //    reference_frame_a_end[0] = -0.583351;
-  //    reference_frame_a_end[1] = -0.13724;
-  //    reference_frame_a_end[2] = -0.0739517;
-  //
-  //    reference_frame_b_start[0] = -0.821479;
-  //    reference_frame_b_start[1] = 0.128642;
-  //    reference_frame_b_start[2] = -0.0682389;
-  //
-  //    reference_frame_b_end[0] = -0.864708;
-  //    reference_frame_b_end[1] = 0.254546;
-  //    reference_frame_b_end[2] = -0.0686999;
-  //  }
-  //
-  //  //    reference_frame_a_start[0] = 0;
-  //  //    reference_frame_a_start[1] = 0;
-  //  //    reference_frame_a_start[2] = 0;
-  //
-  //  reference_frame_a_start[3] = 0;
-  //  reference_frame_a_start[4] = 0;
-  //  reference_frame_a_start[5] = 0;
-  //
-  //  //    reference_frame_a_end[0] = 0;
-  //  //    reference_frame_a_end[1] = 0;
-  //  //    reference_frame_a_end[2] = 0;
-  //
-  //  reference_frame_a_end[3] = 0;
-  //  reference_frame_a_end[4] = 0;
-  //  reference_frame_a_end[5] = 0;
-  //
-  //
-  //  //    reference_frame_b_start[0] = 0;
-  //  //    reference_frame_b_start[1] = 0;
-  //  //    reference_frame_b_start[2] = 0;
-  //
-  //  reference_frame_b_start[3] = 0;
-  //  reference_frame_b_start[4] = 0;
-  //  reference_frame_b_start[5] = 0;
-  //
-  //  //    reference_frame_b_end[0] = 0;
-  //  //    reference_frame_b_end[1] = 0;
-  //  //    reference_frame_b_end[2] = 0;
-  //
-  //  reference_frame_b_end[3] = 0;
-  //  reference_frame_b_end[4] = 0;
-  //  reference_frame_b_end[5] = 0;
+
+
+  if(!selection_robot_a.compare("master") && !selection_robot_b.compare("slave"))
+  {
+    reference_frame_a_start[0] = -0.57389;
+    reference_frame_a_start[1] = 0.376311;
+    reference_frame_a_start[2] = 0.0549096;
+
+    reference_frame_a_end[0] = -0.459831;
+    reference_frame_a_end[1] = 0.444951;
+    reference_frame_a_end[2] = 0.0550761;
+
+
+    reference_frame_b_start[0] = -0.950775;
+    reference_frame_b_start[1] = -0.451959;
+    reference_frame_b_start[2] = 0.0622844;
+
+    reference_frame_b_end[0] = -0.836103;
+    reference_frame_b_end[1] = -0.384349;
+    reference_frame_b_end[2] = 0.0623581;
+  }
+
+  if(!selection_robot_a.compare("slave") && !selection_robot_b.compare("master"))
+  {
+    reference_frame_a_start[0] =  -0.459831;
+    reference_frame_a_start[1] =  0.444951;
+    reference_frame_a_start[2] =  0.0550761;
+
+    reference_frame_a_end[0] = -0.57389;
+    reference_frame_a_end[1] = 0.376311;
+    reference_frame_a_end[2] = 0.0549096;
+
+    reference_frame_b_start[0] = -0.836103;
+    reference_frame_b_start[1] = -0.384349;
+    reference_frame_b_start[2] = 0.0623581;
+
+    reference_frame_b_end[0] = -0.950775;
+    reference_frame_b_end[1] = -0.451959;
+    reference_frame_b_end[2] = 0.0622844;
+
+
+  }
+
+  //    reference_frame_a_start[0] = 0;
+  //    reference_frame_a_start[1] = 0;
+  //    reference_frame_a_start[2] = 0;
+
+  reference_frame_a_start[3] = 0;
+  reference_frame_a_start[4] = 0;
+  reference_frame_a_start[5] = 0;
+
+  //    reference_frame_a_end[0] = 0;
+  //    reference_frame_a_end[1] = 0;
+  //    reference_frame_a_end[2] = 0;
+
+  reference_frame_a_end[3] = 0;
+  reference_frame_a_end[4] = 0;
+  reference_frame_a_end[5] = 0;
+
+
+  //    reference_frame_b_start[0] = 0;
+  //    reference_frame_b_start[1] = 0;
+  //    reference_frame_b_start[2] = 0;
+
+  reference_frame_b_start[3] = 0;
+  reference_frame_b_start[4] = 0;
+  reference_frame_b_start[5] = 0;
+
+  //    reference_frame_b_end[0] = 0;
+  //    reference_frame_b_end[1] = 0;
+  //    reference_frame_b_end[2] = 0;
+
+  reference_frame_b_end[3] = 0;
+  reference_frame_b_end[4] = 0;
+  reference_frame_b_end[5] = 0;
+
 
   std::cout << COLOR_GREEN_BOLD << "Program Start:" << COLOR_RESET << std::endl;
 

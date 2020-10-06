@@ -76,10 +76,10 @@ slave_pulley_big: #
 
 master_pulley_small: # roll -40< <0 pitch -40< <0 yaw -35< <35
   0: [0.037,0,0.0135,0,0,0,3] # close to the pulley
-  1: [0,-0.02,0.0135,0,0,0,1] # a desired belt point ## 0.008
-  2: [0.037,0.025,0.0135,0,0,0,1] # up motion
-  3: [-0.01,0.025,-0.003,15,0,0,1]  # finish1
-  4: [-0.01,0.025,-0.008,15,0,0,1]  # finish1
+  1: [0,-0.02,0.0135,0,0,0,5] # a desired belt point ## 0.008
+  2: [0.037,0.025,0.0135,0,0,0,5] # up motion
+  3: [-0.01,0.025,-0.003,15,0,0,5]  # finish1
+  4: [-0.01,0.025,-0.008,15,0,0,5]  # finish1
   
 #  0: [0.045,0,-0.12,0,0,0,7] # close to the pulley
 #  1: [0,-0.0005,-0.12,0,0,0,5] # a desired belt point
@@ -94,7 +94,7 @@ slave_pulley_small: #
   1: [0.14,0,-0.03,0,0,0,5] # close to the pulley
   
 
-robust_force_value:
+tighten_force_value:
   0: [-14,0,2]
   1: [-16,0,2]
 

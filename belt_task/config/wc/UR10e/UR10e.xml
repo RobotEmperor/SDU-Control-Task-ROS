@@ -7,9 +7,9 @@
 	<PosLimit refjoint="Joint1" min="-360" max="360" />
 	<PosLimit refjoint="Joint2" min="-360" max="360" />
 	<PosLimit refjoint="Joint3" min="-360" max="360" />
-	<PosLimit refjoint="Joint4" min="-180" max="180" /> <!-- 360 -->
-	<PosLimit refjoint="Joint5" min="-180" max="180" /> <!-- 360 -->
-	<PosLimit refjoint="Joint6" min="-180" max="180" /> <!-- Unlimited! 1080-->
+	<PosLimit refjoint="Joint4" min="-360" max="360" /> <!-- 360 -->
+	<PosLimit refjoint="Joint5" min="-360" max="360" /> <!-- 360 -->
+	<PosLimit refjoint="Joint6" min="-360" max="360" /> <!-- Unlimited! 1080-->
 
 	<VelLimit refjoint="Joint1" max="90" /> <!-- 180 -->
 	<VelLimit refjoint="Joint2" max="90" /> <!-- 180 -->
