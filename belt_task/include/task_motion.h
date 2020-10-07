@@ -37,7 +37,7 @@ public:
   ~TaskMotion();
   //setup
   void initialize(double control_time_, std::string load_path_);
-  void initialize_reference_frame(std::vector<double> reference_frame_major, std::vector<double> reference_frame_minor);
+  void initialize_reference_frame(Transform3D<> reference_frame_major, Transform3D<> reference_frame_minor);
   void load_task_motion(std::string path_, std::string motion_);
 
 

@@ -154,6 +154,7 @@ TaskRobot::~TaskRobot()
 void TaskRobot::initialize_reference_frame(std::vector<double> temp_reference_frame_start, std::vector<double> temp_reference_frame_end, std::string command)
 {
   rw::math::Transform3D<> tf_base_to_tcp_;
+  rw::math::Transform3D<> tf_base_to_tcp_rotated_;
   rw::math::Transform3D<> tf_base_to_start_;
   rw::math::Transform3D<> tf_base_to_end_;
 
@@ -175,8 +176,8 @@ void TaskRobot::initialize_reference_frame(std::vector<double> temp_reference_fr
   double align_angle_z_ = 0;
 
   tf_base_to_tcp_ = Transform3D<> (Vector3D<>(robot_initial_pose_[0], robot_initial_pose_[1], robot_initial_pose_[2]), EAA<>(robot_initial_pose_[3], robot_initial_pose_[4], robot_initial_pose_[5]).toRotation3D());
-  tf_base_to_start_ = Transform3D<> (Vector3D<>(temp_reference_frame_start[0], temp_reference_frame_start[1], temp_reference_frame_start[2]), EAA<>(temp_reference_frame_start[3], temp_reference_frame_start[4], temp_reference_frame_start[5]).toRotation3D());
-  tf_base_to_end_ = Transform3D<> (Vector3D<>(temp_reference_frame_end[0], temp_reference_frame_end[1], temp_reference_frame_end[2]), EAA<>(temp_reference_frame_end[3], temp_reference_frame_end[4], temp_reference_frame_end[5]).toRotation3D());
+  tf_base_to_start_ = Transform3D<> (Vector3D<>(temp_reference_frame_start[0], temp_reference_frame_start[1], temp_reference_frame_start[2]), EAA<>(robot_initial_pose_[3], robot_initial_pose_[4], robot_initial_pose_[5]).toRotation3D());
+  tf_base_to_end_ = Transform3D<> (Vector3D<>(temp_reference_frame_end[0], temp_reference_frame_end[1], temp_reference_frame_end[2]), EAA<>(robot_initial_pose_[3], robot_initial_pose_[4], robot_initial_pose_[5]).toRotation3D());
 
 
   temp_inv_ = tf_base_to_tcp_;
@@ -195,67 +196,71 @@ void TaskRobot::initialize_reference_frame(std::vector<double> temp_reference_fr
 
   std::cout << robot_name_ <<"::  tf_tcp_to_direction_.P() :: " << tf_tcp_to_direction_.P() << std::endl;
 
-  if(align_angle_z_ > 0)
-  {
-    for(int num = 0; num < tighten_force_values_numbers_; num ++)
-    {
-      force_vector_[num][0] = sin(45*DEGREE2RADIAN) * tighten_force_values_[num][0];
-      force_vector_[num][1] = -1*(-cos(45*DEGREE2RADIAN) * tighten_force_values_[num][0]);
-      force_vector_[num][2] = tighten_force_values_[num][2];
-    }
-  }
-  if(align_angle_z_ < 0)
-  {
-    for(int num = 0; num < tighten_force_values_numbers_; num ++)
-    {
-      force_vector_[num][0] = sin(45*DEGREE2RADIAN) * tighten_force_values_[num][0];
-      force_vector_[num][1] = cos(45*DEGREE2RADIAN) * tighten_force_values_[num][0];
-      force_vector_[num][2] = tighten_force_values_[num][2];
-    }
-  }
+//  if(align_angle_z_ > 0)
+//  {
+//    for(int num = 0; num < tighten_force_values_numbers_; num ++)
+//    {
+//      force_vector_[num][0] = sin(45*DEGREE2RADIAN) * tighten_force_values_[num][0];
+//      force_vector_[num][1] = -1*(-cos(45*DEGREE2RADIAN) * tighten_force_values_[num][0]);
+//      force_vector_[num][2] = tighten_force_values_[num][2];
+//    }
+//  }
+//  if(align_angle_z_ < 0)
+//  {
+//    for(int num = 0; num < tighten_force_values_numbers_; num ++)
+//    {
+//      force_vector_[num][0] = sin(45*DEGREE2RADIAN) * tighten_force_values_[num][0];
+//      force_vector_[num][1] = cos(45*DEGREE2RADIAN) * tighten_force_values_[num][0];
+//      force_vector_[num][2] = tighten_force_values_[num][2];
+//    }
+//  }
 
   std::cout << robot_name_ <<"  force_vector_ 0::"<< force_vector_[0] << std::endl;
   std::cout << robot_name_ <<"  force_vector_ 1::"<< force_vector_[1] << std::endl;
   std::cout << robot_name_ <<"  tighten_force_values_ 0::"<< tighten_force_values_[0]<< std::endl;
   std::cout << robot_name_ <<"  tighten_force_values_ 1::"<< tighten_force_values_[1]<< std::endl;
 
-  if(align_angle_z_ > 89*DEGREE2RADIAN)
-    align_angle_z_ = 89*DEGREE2RADIAN;
-  if(align_angle_z_ < -89*DEGREE2RADIAN)
-    align_angle_z_ = -89*DEGREE2RADIAN;
-
+  if(align_angle_z_ > 69*DEGREE2RADIAN)
+    align_angle_z_ = 69*DEGREE2RADIAN;
+  if(align_angle_z_ < -69*DEGREE2RADIAN)
+    align_angle_z_ = -69*DEGREE2RADIAN;
 
   tf_tcp_to_rotate_ =  Transform3D<> (Vector3D<>(0,0,0), RPY<>(align_angle_z_,0,0).toRotation3D());
 
   reference_frame = temp_reference_frame_start; // main
 
-  tf_base_to_start_ = tf_base_to_tcp_*tf_tcp_to_rotate_;
+  tf_base_to_tcp_rotated_ = tf_base_to_tcp_*tf_tcp_to_rotate_;
 
   reference_frame_minor = temp_reference_frame_end;
 
   if(!command.compare("master"))
   {
-    reference_frame[3] = EAA<>(tf_base_to_tcp_.R())[0];
-    reference_frame[4] = EAA<>(tf_base_to_tcp_.R())[1];
-    reference_frame[5] = EAA<>(tf_base_to_tcp_.R())[2];
+    tf_base_to_start_.R() = tf_base_to_tcp_.R();
+    robot_task_->initialize_reference_frame(tf_base_to_start_, tf_base_to_end_);
+    //reference_frame[3] = EAA<>(tf_base_to_tcp_.R())[0];
+    //reference_frame[4] = EAA<>(tf_base_to_tcp_.R())[1];
+    //reference_frame[5] = EAA<>(tf_base_to_tcp_.R())[2];
 
   }
   else
   {
-    reference_frame[3] = EAA<>(tf_base_to_start_.R())[0];
-    reference_frame[4] = EAA<>(tf_base_to_start_.R())[1];
-    reference_frame[5] = EAA<>(tf_base_to_start_.R())[2];
+    tf_base_to_start_.R() = tf_base_to_tcp_rotated_.R();
+    tf_base_to_end_.R() = tf_base_to_tcp_.R();
+    robot_task_->initialize_reference_frame(tf_base_to_start_, tf_base_to_end_);
+    //reference_frame[3] = EAA<>(tf_base_to_start_.R())[0];
+    //reference_frame[4] = EAA<>(tf_base_to_start_.R())[1];
+    //reference_frame[5] = EAA<>(tf_base_to_start_.R())[2];
   }
 
-  reference_frame_minor[3] = EAA<>(tf_base_to_start_.R())[0];
-  reference_frame_minor[4] = EAA<>(tf_base_to_start_.R())[1];
-  reference_frame_minor[5] = EAA<>(tf_base_to_start_.R())[2];
+  //reference_frame_minor[3] = EAA<>(tf_base_to_tcp_.R())[0];
+  //reference_frame_minor[4] = EAA<>(tf_base_to_tcp_.R())[1];
+  //reference_frame_minor[5] = EAA<>(tf_base_to_tcp_.R())[2];
 
-  std::cout << robot_name_ <<"::  reference_frame  :: " << reference_frame << std::endl;
+  std::cout << robot_name_ <<"::  reference_frame  :: " << EAA<> (tf_base_to_start_.R())[0] << std::endl;
+  std::cout << robot_name_ <<"::  reference_frame  tf_base_to_tcp_rotated_ :: " <<EAA<>( tf_base_to_tcp_rotated_.R())[0] << std::endl;
 
-  robot_task_->initialize_reference_frame(reference_frame, reference_frame_minor);
-  pulley_bearing_position_ = reference_frame;
-  tf_base_to_bearing_ = Transform3D<> (Vector3D<>(pulley_bearing_position_[0], pulley_bearing_position_[1], pulley_bearing_position_[2]), EAA<>(pulley_bearing_position_[3], pulley_bearing_position_[4], pulley_bearing_position_[5]).toRotation3D());
+  //pulley_bearing_position_ = reference_frame;
+  //tf_base_to_bearing_ = Transform3D<> (Vector3D<>(pulley_bearing_position_[0], pulley_bearing_position_[1], pulley_bearing_position_[2]), EAA<>(pulley_bearing_position_[3], pulley_bearing_position_[4], pulley_bearing_position_[5]).toRotation3D());
   desired_pose_vector_ = robot_task_ -> get_current_pose();
 
   std::cout << robot_name_ <<"::  NEW initialize !! " << std::endl;
