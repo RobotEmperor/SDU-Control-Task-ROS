@@ -256,7 +256,7 @@ void TaskRobot::initialize_reference_frame(std::vector<double> temp_reference_fr
   //reference_frame_minor[4] = EAA<>(tf_base_to_tcp_.R())[1];
   //reference_frame_minor[5] = EAA<>(tf_base_to_tcp_.R())[2];
 
-  std::cout << robot_name_ <<"::  reference_frame  :: " << EAA<> (tf_base_to_start_.R())[0] << std::endl;
+  std::cout << robot_name_ <<"::  reference_frame  :: " << tf_base_to_end_ << std::endl;
   std::cout << robot_name_ <<"::  reference_frame  tf_base_to_tcp_rotated_ :: " <<EAA<>( tf_base_to_tcp_rotated_.R())[0] << std::endl;
 
   //pulley_bearing_position_ = reference_frame;
