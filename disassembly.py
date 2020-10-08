@@ -27,11 +27,8 @@ def disassembly_place_belt(self, obj: Object, fingers: Tool):
                       pick_frame, 0.01, 0.002, self._persistence)
 
     taskboard_frame = self._taskboard.find_frame(obj.get_name())
-
-
-    self._robot_a_control.move_home(self._speed_a, self._acc_a)
-    self.check_frame(obj, self._kitlayout.find_frame(obj.get_name()))
     pick.pick(0.2)
+    #small pulley frame and path planning
 
     release_width = pick.get_release_width()
     self._gripper_a.release(release_width, 255, 255)
