@@ -42,13 +42,7 @@ public:
 
 
   //a variety of motions all of things are with respect to TCP frame
-  void make_belt_robust(double radious);
-  void close_to_pulleys(double x,double y,double depth,RPY<> tcp_rpy_);
   void insert_belt_into_pulley(bool contact_, double change_x, double change_y, double change_z,RPY<> tcp_rpy_);
-  void up_motion(bool contact_, double x, double y, double z,RPY<> tcp_rpy_);
-  void finish_1(bool contact_, double x, double y, double z,RPY<> tcp_rpy_);
-  void finish_2(bool contact_, double x, double y, double z,RPY<> tcp_rpy_);
-  void rotate(double theta_);
 
   void motion_to_desired_pose(bool contact_, double x, double y, double z,RPY<> tcp_rpy_, double time);
   void motion_to_desired_pose_big(bool contact_, double x, double y, double z,RPY<> tcp_rpy_, double time);
@@ -65,6 +59,7 @@ public:
 
   void set_initial_pose(double x, double y, double z, double axis_x, double axis_y, double axis_z);
   void set_current_pose_eaa(double x, double y, double z, double axis_x, double axis_y, double axis_z);
+  void set_current_pose_rpy(double x, double y, double z, double yaw, double pitch, double roll);
   void set_all_phases_(int all_phases_);
 
   void load_data_initialize();

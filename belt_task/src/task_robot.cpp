@@ -335,7 +335,7 @@ void TaskRobot::move_to_init_pose()
   else
   {
     compensated_pose_vector_ = initial_pose_vector_;
-    tf_current_ = Transform3D<> (Vector3D<>(compensated_pose_vector_[0], compensated_pose_vector_[1], compensated_pose_vector_[2]), EAA<>(compensated_pose_vector_[3], compensated_pose_vector_[4], compensated_pose_vector_[5]).toRotation3D());
+    tf_current_ = Transform3D<> (Vector3D<>(compensated_pose_vector_[0], compensated_pose_vector_[1], compensated_pose_vector_[2]), RPY<>(compensated_pose_vector_[3], compensated_pose_vector_[4], compensated_pose_vector_[5]).toRotation3D());
   }
 }
 bool TaskRobot::tasks(std::string command) // first for only two pulleys
@@ -558,8 +558,8 @@ bool TaskRobot::hybrid_controller()
     compensated_pose_vector_[5] = desired_pose_vector_[5]; //+ force_x_compensator->get_final_output();
 
 
-    robot_task_->set_current_pose_eaa(compensated_pose_vector_[0], compensated_pose_vector_[1], compensated_pose_vector_[2],compensated_pose_vector_[3], compensated_pose_vector_[4], compensated_pose_vector_[5]);
-    tf_current_ = Transform3D<> (Vector3D<>(compensated_pose_vector_[0], compensated_pose_vector_[1], compensated_pose_vector_[2]), EAA<>(compensated_pose_vector_[3], compensated_pose_vector_[4], compensated_pose_vector_[5]).toRotation3D());
+    robot_task_->set_current_pose_rpy(compensated_pose_vector_[0], compensated_pose_vector_[1], compensated_pose_vector_[2],compensated_pose_vector_[3], compensated_pose_vector_[4], compensated_pose_vector_[5]);
+    tf_current_ = Transform3D<> (Vector3D<>(compensated_pose_vector_[0], compensated_pose_vector_[1], compensated_pose_vector_[2]), RPY<>(compensated_pose_vector_[3], compensated_pose_vector_[4], compensated_pose_vector_[5]).toRotation3D()); // EAA
   }
 
   error_ee_pose_[0] = position_x_controller_->get_error();
@@ -571,9 +571,9 @@ bool TaskRobot::hybrid_controller()
 
 
   tf_desired_ = Transform3D<> (Vector3D<>(compensated_pose_vector_[0], compensated_pose_vector_[1], compensated_pose_vector_[2]),
-      EAA<>(compensated_pose_vector_[3], compensated_pose_vector_[4], compensated_pose_vector_[5]).toRotation3D());
+      RPY<>(compensated_pose_vector_[3], compensated_pose_vector_[4], compensated_pose_vector_[5]).toRotation3D()); // // EAA
 
-  target_tcp_pose_ = compensated_pose_vector_;
+  target_tcp_pose_ = desired_pose_vector_;
   //solve ik problem
   solutions_ = solver_->solve(tf_desired_, state_);
 
