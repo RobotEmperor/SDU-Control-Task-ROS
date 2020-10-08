@@ -59,10 +59,10 @@ p_eaa_z_kd : 0
 
 #everyting is with respect to own pulley's frame 
 master_pulley_big: # roll -40< <0 pitch -40< <0 yaw -35< <35
-  0: [0.039,0,0.0165,0,0,0,5] # close to the pulley
-  1: [0,0.0295,0.0165,20,0,0,1] # a desired belt point
-  2: [0.039,-0.04,0.0165,20,0,0,1] # up motion
-  3: [-0.025,-0.04,0.0165,20,0,0,1] # finish1
+  0: [0.039,0,0.0168,0,0,0,5] # close to the pulley
+  1: [0,0.0295,0.0168,20,0,0,1] # a desired belt point
+  2: [0.039,-0.04,0.0168,20,0,0,1] # up motion
+  3: [-0.025,-0.04,0.0168,20,0,0,1] # finish1
   4: [0.15,-0.04,-0.5,20,0,0,2]  # finish1
 
 slave_pulley_big: # 
@@ -70,8 +70,8 @@ slave_pulley_big: #
 #  1: [0.02,-0.02,-0.005,0,0,0,2.5] # keep the previous position
 
 master_pulley_small: # roll -40< <0 pitch -40< <0 yaw -35< <35
-  0: [0.037,0,0.0135,0,0,0,3] # close to the pulley
-  1: [0,-0.02,0.0135,0,0,0,1] # a desired belt point ## 0.008
+  0: [0.037,0,0.01,0,0,0,3] # close to the pulley
+  1: [0,-0.01,0.0135,0,0,0,1] # a desired belt point ## 0.008
   2: [0.037,0.025,0.0135,0,0,0,1] # up motion
   3: [-0.01,0.025,-0.003,15,0,0,1]  # finish1
   4: [-0.01,0.025,-0.008,15,0,0,1]  # finish1
@@ -90,8 +90,8 @@ slave_pulley_small: #
   
 
 tighten_force_value:
-  0: [-14,0,2]
-  1: [-16,0,2]
+  0: [-14,0,1.8]
+  1: [-16,0,1.8]
 
 
 
