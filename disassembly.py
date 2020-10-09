@@ -9,19 +9,6 @@ from gripper import get_gripper
 r_a = RTDEControlInterface("192.168.1.129")
 r_a.ctrl.moveL(r_a.base_t_tcp() @ Transform(rotvec=(0, 0, 0)))
 
-pulley_frame = [0, 0, 0, 0, 0, 0]
-
-big_pulley = self._taskboard.find_frame("big_pulley")
-small_pulley = self._taskboard.find_frame("small_pulley")
-
-gripper = get_gripper()
-gripper.open()
-
-r = Robot.from_ip('192.168.1.130')
-r.ctrl.moveL(r.base_t_tcp() @ Transform(p=(0, 0, -0.05)))
-q_safe = (2.8662071228027344, -1.7563158474364222, -1.9528794288635254,
-          -1.0198443692973633, -4.752078358327047, -2.1280840078936976)
-
 grasp_start_widths = {
     'big_round_peg': 25,
     'small_round_peg': 17,
@@ -34,31 +21,6 @@ grasp_start_widths = {
     'ethernet_cable_head': 22,
 }
 
-r.ctrl.moveJ(q_safe)
-
-base_t_kit = Transform.load('base_t_kitlayout')
-kit_t_obj = Transform.load(f'kit_t_objects_practice/kit_t_{obj_name}')
-tcp_t_obj_grasp = Transform.load(f'tcp_t_obj_grasp/tcp_t_{obj_name}_grasp')
-base_t_tcp_grasp = base_t_kit @ kit_t_obj @ tcp_t_obj_grasp.inv
-
-r.ctrl.moveL(base_t_tcp_grasp @ Transform(p=(0, 0, -0.05)))
-gripper.move(grasp_start_widths[obj_name], 255, 255)
-r.ctrl.moveL(base_t_tcp_grasp)
-gripper.grasp(0, 0, 100, 0)
-if args.stop_at_grasp:
-    quit()
-r.ctrl.moveL(r.base_t_tcp() @ Transform(p=(0, 0, -0.05)))
-if args.dont_put_back:
-    quit()
-time.sleep(args.wait)
-r.ctrl.moveL(base_t_tcp_grasp)
-gripper.move(grasp_start_widths[obj_name], 255, 255)
-r.ctrl.moveL(r.base_t_tcp() @ Transform(p=(0, 0, -0.05)))
-
-
-
-
-
 def disassembly_place_belt(self, obj: Object, fingers: Tool):
     pick_frame = obj.find_frame("pick")
     if fingers is self._fingers_1:
@@ -68,12 +30,42 @@ def disassembly_place_belt(self, obj: Object, fingers: Tool):
     else:
         raise Exception("Expected use of fingers 1 or 6.")
 
+
+    taskboard_frame = self._taskboard.find_frame(obj.get_name())
+
+    gripper = get_gripper()
+    gripper.open()
+
+    q_safe = (2.8662071228027344, -1.7563158474364222, -1.9528794288635254,
+              -1.0198443692973633, -4.752078358327047, -2.1280840078936976)
+
+    r.ctrl.moveJ(q_safe)
+    pulley_frame = [0, 0, 0, 0, 0, 0]
+
+    big_pulley = self._taskboard.find_frame("big_pulley")
+    small_pulley = self._taskboard.find_frame("small_pulley")
+
+    #align Z (rotation) , go to belt and pick the belt () ??
+
     pick = PickObject(self._robot_a_control, self._robot_a_receive, self._gripper_a, fingers, tool_frame, obj,
                       pick_frame, 0.01, 0.002, self._persistence)
 
-    taskboard_frame = self._taskboard.find_frame(obj.get_name())
+    # Pick
+    gripper.move(grasp_start_widths[obj_name], 255, 255)
     pick.pick(0.2)
-    #small pulley frame and path planning
+
+    # Small pulley, position x y z , rotation Z
+    r.ctrl.moveL(base_t_tcp_grasp @ Transform(p=(0, 0, -0.05)))
+
+    # go to home
+    r.ctrl.moveL(base_t_tcp_grasp @ Transform(p=(0, 0, -0.05)))
+
+    # go to kit
+    r.ctrl.moveL(base_t_tcp_grasp @ Transform(p=(0, 0, -0.05)))
+
+    # Release
+    gripper.move(0, 255, 255)
+
 
     release_width = pick.get_release_width()
     self._gripper_a.release(release_width, 255, 255)
