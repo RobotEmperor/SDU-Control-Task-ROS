@@ -74,6 +74,7 @@ std::shared_ptr<TaskRobot> robot_b;
 
 std::string robot_a_ip;
 std::string robot_b_ip;
+std::string initial_path;
 std::string robot_path;
 
 std::vector<double> reference_frame_a_start;

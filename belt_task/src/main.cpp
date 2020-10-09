@@ -206,19 +206,21 @@ void initialize()
   selection_robot_a = "";
   selection_robot_b = "";
 
-  robot_path = "/home/yik/catkin_ws/src/SDU-Control-Task-ROS/belt_task/config";
+  initial_path = "/home/yik/catkin_ws/src";
+
+  robot_path = initial_path + "/SDU-Control-Task-ROS/belt_task/config";
   robot_a = std::make_shared<TaskRobot>("robot_A",robot_path);
   robot_path = robot_path + "/wc/UR10e_2018/UR10e_a.xml";
   robot_a ->init_model(robot_path, "UR10e");
   // robot_a ->initialize_reference_frame(reference_frame_a);
-  robot_a ->parse_init_data_("/home/yik/catkin_ws/src/SDU-Control-Task-ROS/belt_task/config/robot_A/initialize_robot.yaml");
+  robot_a ->parse_init_data_(initial_path + "/SDU-Control-Task-ROS/belt_task/config/robot_A/initialize_robot.yaml");
 
-  robot_path = "/home/yik/catkin_ws/src/SDU-Control-Task-ROS/belt_task/config";
+  robot_path = initial_path + "/SDU-Control-Task-ROS/belt_task/config";
   robot_b = std::make_shared<TaskRobot>("robot_B",robot_path);
   robot_path = robot_path + "/wc/UR10e_2018/UR10e_b.xml";
   robot_b ->init_model(robot_path, "UR10e");
   //robot_b ->initialize_reference_frame(reference_frame_b);
-  robot_b ->parse_init_data_("/home/yik/catkin_ws/src/SDU-Control-Task-ROS/belt_task/config/robot_B/initialize_robot.yaml");
+  robot_b ->parse_init_data_(initial_path + "/SDU-Control-Task-ROS/belt_task/config/robot_B/initialize_robot.yaml");
 }
 void my_function(int sig)
 { // can be called asynchronously
@@ -640,7 +642,7 @@ int main (int argc, char **argv)
     robot_a->set_position_controller_y_gain(0.8,0,0);
     robot_a->set_force_controller_z_gain(0.00007,0,0);
     robot_a->set_position_controller_z_gain(0.8,0,0);
-    robot_a ->assign_pulley("/home/yik/catkin_ws/src/SDU-Control-Task-ROS/belt_task/config/robot_A/initialize_robot.yaml", "master_pulley_big", "slave_pulley_big");
+    robot_a ->assign_pulley(initial_path + "/SDU-Control-Task-ROS/belt_task/config/robot_A/initialize_robot.yaml", "master_pulley_big", "slave_pulley_big");
   }
   else
   {
@@ -650,7 +652,7 @@ int main (int argc, char **argv)
     robot_a->set_position_controller_y_gain(0.06,0,0);
     robot_a->set_force_controller_z_gain(0.0008,0.000015,0);
     robot_a->set_position_controller_z_gain(0.06,0,0);
-    robot_a ->assign_pulley("/home/yik/catkin_ws/src/SDU-Control-Task-ROS/belt_task/config/robot_A/initialize_robot.yaml", "master_pulley_small", "slave_pulley_small");
+    robot_a ->assign_pulley(initial_path + "/SDU-Control-Task-ROS/belt_task/config/robot_A/initialize_robot.yaml", "master_pulley_small", "slave_pulley_small");
   }
 
   if(!selection_robot_b.compare("master"))
@@ -661,7 +663,7 @@ int main (int argc, char **argv)
     robot_b->set_position_controller_y_gain(0.8,0,0);
     robot_b->set_force_controller_z_gain(0.00007,0,0);
     robot_b->set_position_controller_z_gain(0.8,0,0);
-    robot_b ->assign_pulley("/home/yik/catkin_ws/src/SDU-Control-Task-ROS/belt_task/config/robot_B/initialize_robot.yaml", "master_pulley_big", "slave_pulley_big");
+    robot_b ->assign_pulley(initial_path + "/SDU-Control-Task-ROS/belt_task/config/robot_B/initialize_robot.yaml", "master_pulley_big", "slave_pulley_big");
   }
   else
   {
@@ -671,7 +673,7 @@ int main (int argc, char **argv)
     robot_b->set_position_controller_y_gain(0.06,0,0);
     robot_b->set_force_controller_z_gain(0.0008,0.000015,0);
     robot_b->set_position_controller_z_gain(0.06,0,0);
-    robot_b ->assign_pulley("/home/yik/catkin_ws/src/SDU-Control-Task-ROS/belt_task/config/robot_B/initialize_robot.yaml", "master_pulley_small", "slave_pulley_small");
+    robot_b ->assign_pulley(initial_path + "/SDU-Control-Task-ROS/belt_task/config/robot_B/initialize_robot.yaml", "master_pulley_small", "slave_pulley_small");
   }
 
   //preempt rt
