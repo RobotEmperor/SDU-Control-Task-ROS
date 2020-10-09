@@ -1,7 +1,10 @@
 import numpy as np
-from rtde_control import RTDEControlInterface
-from rtde_receive import RTDEReceiveInterface
+import time
+import argparse
+from ur_control import Robot
 from transform3d import Transform
+from transform3d import Transform
+from gripper import get_gripper
 
 r_a = RTDEControlInterface("192.168.1.129")
 r_a.ctrl.moveL(r_a.base_t_tcp() @ Transform(rotvec=(0, 0, 0)))
@@ -10,6 +13,48 @@ pulley_frame = [0, 0, 0, 0, 0, 0]
 
 big_pulley = self._taskboard.find_frame("big_pulley")
 small_pulley = self._taskboard.find_frame("small_pulley")
+
+gripper = get_gripper()
+gripper.open()
+
+r = Robot.from_ip('192.168.1.130')
+r.ctrl.moveL(r.base_t_tcp() @ Transform(p=(0, 0, -0.05)))
+q_safe = (2.8662071228027344, -1.7563158474364222, -1.9528794288635254,
+          -1.0198443692973633, -4.752078358327047, -2.1280840078936976)
+
+grasp_start_widths = {
+    'big_round_peg': 25,
+    'small_round_peg': 17,
+    'big_gear': 40,
+    'small_gear': 26,
+    'bnc': 24,
+    'belt': 30,
+    'small_square_peg': 14,
+    'big_square_peg': 22,
+    'ethernet_cable_head': 22,
+}
+
+r.ctrl.moveJ(q_safe)
+
+base_t_kit = Transform.load('base_t_kitlayout')
+kit_t_obj = Transform.load(f'kit_t_objects_practice/kit_t_{obj_name}')
+tcp_t_obj_grasp = Transform.load(f'tcp_t_obj_grasp/tcp_t_{obj_name}_grasp')
+base_t_tcp_grasp = base_t_kit @ kit_t_obj @ tcp_t_obj_grasp.inv
+
+r.ctrl.moveL(base_t_tcp_grasp @ Transform(p=(0, 0, -0.05)))
+gripper.move(grasp_start_widths[obj_name], 255, 255)
+r.ctrl.moveL(base_t_tcp_grasp)
+gripper.grasp(0, 0, 100, 0)
+if args.stop_at_grasp:
+    quit()
+r.ctrl.moveL(r.base_t_tcp() @ Transform(p=(0, 0, -0.05)))
+if args.dont_put_back:
+    quit()
+time.sleep(args.wait)
+r.ctrl.moveL(base_t_tcp_grasp)
+gripper.move(grasp_start_widths[obj_name], 255, 255)
+r.ctrl.moveL(r.base_t_tcp() @ Transform(p=(0, 0, -0.05)))
+
 
 
 
