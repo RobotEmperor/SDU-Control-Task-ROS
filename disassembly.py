@@ -161,3 +161,5 @@ if __name__=='__main__':
     #data_b = 0
     #grippers.move_grippper_a(data_a)
     #grippers.move_grippper_b(data_b)
+
+
