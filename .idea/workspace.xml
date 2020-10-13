@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="a9f5c60a-5d53-4b27-8bbb-f8029b019f89" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/disassembly.py" beforeDir="false" afterPath="$PROJECT_DIR$/disassembly.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />

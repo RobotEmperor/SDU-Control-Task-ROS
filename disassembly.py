@@ -29,6 +29,19 @@
         print("big_pulley :: ", base_t_big_pulley_a)
         print("small_pulley :: ", base_t_small_pulley_a)
 
+
+        #Align angle
+        #base_t_big_pulley_a = Pose6D(base_t_big_pulley_a.p(),0,0,0).to_transform_3d()
+        #base_t_small_pulley_b = Pose6D(base_t_small_pulley_a.p(), 0, 0, 0).to_transform_3d()
+        #t_base_robot_end = Pose6D(self._robot_a_receive.getActualTCPPose()).to_transform_3d()
+        #t_end_big_pulley_a = t_base_robot_end.inverse() * base_t_big_pulley_a
+        #t_end_small_pulley_a = t_base_robot_end.inverse() * base_t_small_pulley_a
+
+        #p = t_end_big_pulley_a.p() - t_end_small_pulley_a.p()
+
+        #align_angle_z_ = math.atan2(p[0], p[1])  # y axis align
+        #print("align_angle_z_: ", align_angle_z_)
+
         # Align angle
         p = base_t_big_pulley_a.p() - base_t_small_pulley_a.p()
         align_angle_z_ = math.atan2(p[0], p[1])  # y axis align
