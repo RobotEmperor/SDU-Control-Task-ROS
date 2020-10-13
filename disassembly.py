@@ -34,7 +34,28 @@
         align_angle_z_ = math.atan2(p[0], p[1])  # y axis align
         print("align_angle_z_: ", align_angle_z_)
 
-        t_align_angle_z_ = Transform3D(Vector3D(0.0, 0.0, 0.0), EAA(normalize(Vector3D(0.0, 0.0, 1.0)), align_angle_z_ - Pi/2))
+        if align_angle_z_ >= 178*pi/180:
+            align_angle_z_ = 178*pi/180
+        if align_angle_z_ <= -178*pi/180:
+            align_angle_z_ = -178*pi/180
+
+        if align_angle_z_ == 0:
+            t_align_angle_z_ = Transform3D(Vector3D(0.0, 0.0, 0.0),
+                                           EAA(normalize(Vector3D(0.0, 0.0, 1.0)), - (Pi / 2)))
+
+        if align_angle_z_ < - (Pi / 2):
+            t_align_angle_z_ = Transform3D(Vector3D(0.0, 0.0, 0.0),
+                                            EAA(normalize(Vector3D(0.0, 0.0, 1.0)), align_angle_z_ - (Pi / 2) + (2*Pi))
+
+        if align_angle_z_ == - (Pi / 2):
+            t_align_angle_z_ = Transform3D(Vector3D(0.0, 0.0, 0.0),
+                                            EAA(normalize(Vector3D(0.0, 0.0, 1.0)),
+                                                -178*pi/180))
+
+        t_align_angle_z_ = Transform3D(Vector3D(0.0, 0.0, 0.0),
+                                        EAA(normalize(Vector3D(0.0, 0.0, 1.0)), align_angle_z_ - Pi / 2))
+
+
         t_base_robot_end = Pose6D(self._robot_a_receive.getActualTCPPose()).to_transform_3d()
         t_base_end_approach = t_base_robot_end * t_align_angle_z_
         self._robot_a_control.moveL(Pose6D(t_base_end_approach)[0:6], 0.1, 0.1)
