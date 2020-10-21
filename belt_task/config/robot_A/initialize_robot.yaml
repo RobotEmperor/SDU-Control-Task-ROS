@@ -1,10 +1,8 @@
 preferred_solution_number: 3 #3
 tool_mass: 1.72
-pulley_bearing_position: [-0.645009239360538, 0.183897585106531, 0.345624830765288, 2.21642101059823, -2.21642096769922, -0.0110968867026749] #pulley
+part_position: [-0.645009239360538, 0.183897585106531, 0.345624830765288, 2.21642101059823, -2.21642096769922, -0.0110968867026749] #pulley
 robot_initial_pose: [-0.645009239360538, 0.183897585106531, 0.345624830765288, 2.21642101059823, -2.21642096769922, -0.0110968867026749] #robot initial pose
-#robot_initial_pose: [-0.645009239360538, 0.183897585106531, 0.345624830765288, 2.22144146908, -2.22144146908, 0] #robot initial pose
 initial_joint_states : [3.12608892488384, -1.52028611600049, -1.85446742889107, -1.32746492527331, -4.71472745404594,-3.15798824844802] # for gazebo
-task_initial_position: [-0.03, 0, -0.04, 0,0,0] # in relative to bigger pulley bearing's frame.  Not use!!!!
 pulley_radious: [0.0175,0.0275]
 
 #force controller gain
@@ -67,7 +65,6 @@ master_pulley_big: # roll -40< <0 pitch -40< <0 yaw -35< <35
 
 slave_pulley_big: # 
   0: [0,0,0,0,0,0,5] # close to the pulley
-#  1: [0.02,-0.02,-0.005,0,0,0,2.5] # keep the previous position
 
 master_pulley_small: # roll -40< <0 pitch -40< <0 yaw -35< <35
   0: [0.037,0,-0.01,0,0,0,3] # close to the pulley
@@ -75,21 +72,13 @@ master_pulley_small: # roll -40< <0 pitch -40< <0 yaw -35< <35
   2: [0.037,0.025,0.0135,0,0,0,1] # up motion
   3: [-0.01,0.025,-0.003,15,0,0,1]  # finish1
   4: [-0.01,0.025,-0.008,15,0,0,1]  # finish1
-  
-#  0: [0.045,0,-0.12,0,0,0,7] # close to the pulley
-#  1: [0,-0.0005,-0.12,0,0,0,5] # a desired belt point
-#  2: [0.045,0.05,-0.12,0,0,0,5] # up motion
-#  3: [-0.01,0.05,-0.12,30,0,0,5]  # finish1
-#  4: [-0.01,0.05,-0.14,30,0,0,5]  # finish1
 
 slave_pulley_small: # 
-#  0: [0.13,0,-0.17,0,0,0,8] # close to the pulley
-#  1: [0.13,0,-0.17,0,0,0,8] # close to the pulley
   0: [0.14,0,-0.014,0,0,0,5] # close to the pulley
   1: [0.14,0,-0.014,0,0,0,5] # close to the pulley
   
 
-tighten_force_value:
+desired_force_value:
   0: [-14,0,0.8]
   1: [-16,0,0.8]
 

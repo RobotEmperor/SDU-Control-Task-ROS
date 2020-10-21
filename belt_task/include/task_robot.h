@@ -7,7 +7,6 @@
 
 #ifndef SDU_CONTROL_TASK_ROS_BELT_TASK_INCLUDE_TASK_ROBOT_H_
 #define SDU_CONTROL_TASK_ROS_BELT_TASK_INCLUDE_TASK_ROBOT_H_
-//#define WC_FILE "/home/yik/sdu_ws/SDU-Control-Tasks/belt_task/config/wc/UR10e_2018/UR10e.xml"
 
 #include <Eigen/Dense>
 #include "log.h"
@@ -30,7 +29,6 @@
 #include <rwlibs/proximitystrategies/ProximityStrategyFactory.hpp>
 
 #include "tool_estimation.h"
-#include "sdu_math/end_point_to_rad_cal.h"
 #include "sdu_math/control_function.h"
 #include "sdu_math/statistics_math.h"
 #include "task_motion.h"
@@ -56,8 +54,9 @@ public:
 	void init_model(std::string wc_file, std::string robot_model);
 	void move_to_init_pose();
 
-	bool tasks(std::string command);
+	//bool tasks(std::string command);
 	bool hybrid_controller();
+	void motion_generator(Transform3D<> temp_reference_frame, std::vector<double> way_points);
 
 	void terminate_robot();
 	void terminate_data_log();
@@ -78,9 +77,8 @@ public:
 	void set_position_controller_eaa_y_gain(double kp,double ki,double kd);
 	void set_position_controller_eaa_z_gain(double kp,double ki,double kd);
 
-	void set_tf_static_robot(rw::math::Transform3D<> tf_base_to_staric_robot, rw::math::Transform3D<> tf_base_to_bearing_staric_robot);
-	void initialize_reference_frame(std::vector<double> temp_reference_frame_start, std::vector<double> temp_reference_frame_end, std::string command);
-	void assign_pulley(const std::string &path, std::string master, std::string slave);
+	void set_controller_smooth_change(double time);
+	void set_desired_force_values(std::vector<double> desired_force_values);
 
 	std::vector<double> get_raw_ft_data_();
 	std::vector<double> get_target_tcp_pose_data_();
@@ -89,14 +87,8 @@ public:
 	std::vector<double> get_actual_tcp_speed_();
 	std::vector<double> get_current_q_();
 	rw::math::Transform3D<> get_tf_current_();
-	rw::math::Transform3D<> get_tf_base_to_bearing_();
-
-	double get_gripper_move_values();
-
-	bool get_finish_task();
 
 private:
-
 	struct PIDControllerGain
 	{
 		double x_kp;
@@ -136,8 +128,7 @@ private:
 	std::shared_ptr<RTDEControlInterface> rtde_control_;
 
 	//traj and task motion
-	std::shared_ptr<EndEffectorTraj> robot_fifth_traj_;
-	std::shared_ptr<TaskMotion> robot_task_;
+	std::shared_ptr<TaskMotion> robot_motion_;
 
 	//tool estimation
 	std::shared_ptr<ToolEstimation> tool_estimation_;
@@ -165,22 +156,18 @@ private:
 	std::vector<double> acutal_tcp_acc_; //(3);
 	std::vector<double> raw_ft_data_; //(6);
 	std::vector<double> filtered_tcp_ft_data_; //(6);
-	std::vector<double> contacted_ft_data_; //(6);
-	std::vector<double> contacted_ft_no_offset_data_; //(6);
+	std::vector<double> filtered_base_ft_data_; //(6);
 	std::vector<double> current_q_; //(6);
 	std::vector<double> pid_compensation_; //(6);
 
 	//control states
-	std::vector<double> set_point_vector_; //(6);
 	std::vector<double> desired_pose_vector_; //(6);
 	std::vector<double> desired_force_torque_vector_; //(6);
 	std::vector<double> compensated_pose_vector_; //(6);
 	std::vector<double> initial_pose_vector_; //(6);
-	std::vector<double> limit_force_compensation_values_; //(3);
-	std::vector<double> force_compensation_values_; //(3);
 	std::vector<double> error_ee_pose_; //(6);
-
 	std::vector<double> compensated_q_; //(6);
+  rw::math::Vector3D<> desired_belt_;
 
 	//controller gains
 	std::vector<double> force_controller_; //(6);
@@ -188,44 +175,26 @@ private:
 
   std::vector<double> data_current_belt_;
   std::vector<double> data_desired_belt_;
-  std::vector<double> data_bearing_tcp_belt_;
-
-	//task motion
-	std::string previous_task_command_;
 
 	//tf
 	rw::math::Transform3D<> tf_tcp_desired_pose_;
 	rw::math::Transform3D<> tf_modified_pose_;
 	rw::math::Transform3D<> tf_current_;
 	rw::math::Transform3D<> tf_desired_;
-	rw::math::Transform3D<> tf_base_to_bearing_;
 
 	rw::math::Wrench6D<> current_ft_;
-	rw::math::Wrench6D<> current_ft_no_offset_;
-	rw::math::Wrench6D<> tf_tcp_current_force_;
-	rw::math::Transform3D<> tf_base_to_static_robot_;
-	rw::math::Transform3D<> tf_base_to_bearing_static_robot_;
-	rw::math::Transform3D<> tf_base_to_tcp_;
-	rw::math::Transform3D<> tf_base_to_start_;
-	rw::math::Transform3D<> tf_base_to_end_;
-
-	std::vector<double> pulley_bearing_position_;
-	std::vector<double> robot_initial_pose_;
 
 	//control
 	double control_time_;
 	double time_count_;
 	double tool_mass_;
 
-	bool contact_check_;
 	bool control_check_;
-	int previous_phase_;
 
 	//solution check
 	int preferred_solution_number_;
 	bool joint_vel_limits_;
 	std::vector<rw::math::Q> solutions_;
-	//rw::math::Q confStart;
 
 	//model identification
 	std::string wc_file_;
@@ -235,38 +204,6 @@ private:
 
 	// gazebo
 	bool gazebo_check_;
-
-	//
-	bool flag;
-	bool finish_task_;
-
-	rw::math::Vector3D<> desired_belt_;
-
-	// strategy
-	void master_robot();
-	void slave_robot();
-
-	int sub_tasks_;
-
-	//master robot
-	std::map<int, std::vector<double>> master_way_points_;
-	int master_way_points_numbers_;
-
-	//slave robot
-	std::map<int, std::vector<double>> slave_way_points_;
-	int slave_way_points_numbers_;
-
-	//roboust force values
-	std::map<int, std::vector<double>> tighten_force_values_;
-	std::map<int, std::vector<double>> force_vector_;
-
-	int tighten_force_values_numbers_;
-
-	//grippers
-	double gripper_move_values;
-
-
-
 };
 
 

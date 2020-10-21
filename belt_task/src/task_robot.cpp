@@ -14,7 +14,6 @@ TaskRobot::TaskRobot(std::string robot_name, std::string init_path)
 {
   control_time_ = 0.002;
   tool_mass_ = 0;
-  sub_tasks_ = 0;
 
   //vectors
   joint_positions_.assign(6,0); //(6);
@@ -24,12 +23,10 @@ TaskRobot::TaskRobot(std::string robot_name, std::string init_path)
   acutal_tcp_acc_.assign(3,0); //(3);
   raw_ft_data_.assign(6,0); //(6);
   filtered_tcp_ft_data_.assign(6,0); //(6);
-  contacted_ft_data_.assign(6,0); //(6);
-  contacted_ft_no_offset_data_.assign(6,0); //(6);
+  filtered_base_ft_data_.assign(6,0); //(6);
   current_q_.assign(6,0); //(6);
   pid_compensation_.assign(6,0); //(6);
 
-  set_point_vector_.assign(6,0); //(6);
   desired_pose_vector_.assign(6,0); //(6);
   desired_force_torque_vector_.assign(6,0); //(6);
   compensated_pose_vector_.assign(6,0); //(6);
@@ -37,13 +34,8 @@ TaskRobot::TaskRobot(std::string robot_name, std::string init_path)
   error_ee_pose_.assign(6,0); //(6);
   compensated_q_.assign(6,0); //(6);
 
-  limit_force_compensation_values_.assign(3,0);
   data_current_belt_.assign(3,0);
   data_desired_belt_.assign(3,0);
-  data_bearing_tcp_belt_.assign(3,0);
-
-  pulley_bearing_position_.assign(6,0);
-  robot_initial_pose_.assign(6,0);
 
   force_controller_gain_.x_kp = 0;
   force_controller_gain_.x_ki = 0;
@@ -85,6 +77,7 @@ TaskRobot::TaskRobot(std::string robot_name, std::string init_path)
 
   robot_name_ = robot_name;
 
+  parse_init_data_(init_path + "/" + robot_name_ + "/initialize_robot.yaml");
   //data log
   data_log_ = std::make_shared<DataLogging>(init_path + "/" + robot_name_);
   data_log_->initialize();
@@ -96,20 +89,9 @@ TaskRobot::TaskRobot(std::string robot_name, std::string init_path)
   //statistics
   statistics_math_ = std::make_shared<StatisticsMath>();
 
-  // fifth order traj
-  robot_fifth_traj_ = std::make_shared<EndEffectorTraj>();
-  robot_task_ = std::make_shared<TaskMotion>();
-
-  //setting up control time and mass of tool
-  //tool_estimation_ ->set_parameters(control_time_, tool_mass_);
-  robot_fifth_traj_->set_control_time(control_time_);
-
-  robot_task_->initialize(control_time_, init_path + "/" + robot_name_ + "/initialize_robot.yaml");
-
-  //load motion data
-  robot_task_->load_task_motion(init_path + "/" + robot_name_ + "/motion/initialize.yaml", "initialize");
-
-  desired_pose_vector_ = robot_task_ -> get_current_pose();
+  robot_motion_->initialize(control_time_);
+  robot_motion_->set_initial_pose(initial_pose_vector_[0], initial_pose_vector_[1], initial_pose_vector_[2], initial_pose_vector_[3], initial_pose_vector_[4], initial_pose_vector_[5]);
+  desired_pose_vector_ = robot_motion_ -> get_current_pose();
 
   //control
   force_x_compensator_ = std::make_shared<PID_function>(control_time_, 0.04, -0.04, 0, 0, 0, 0.0000001, -0.0000001, 0.5);
@@ -122,22 +104,11 @@ TaskRobot::TaskRobot(std::string robot_name, std::string init_path)
 
   control_check_ = false;
   joint_vel_limits_ = false;
-  contact_check_ = false;
 
   preferred_solution_number_ = 0;
   time_count_ = 0;
-  previous_task_command_ = "";
 
   gazebo_check_ = true;
-
-  flag = false;
-  previous_phase_ = -1;
-  finish_task_ = false;
-  master_way_points_numbers_ = 0;
-  slave_way_points_numbers_ = 0;
-  tighten_force_values_numbers_ = 0;
-
-  gripper_move_values = 0;
 
   position_x_controller_->set_smooth_gain_time(0.5);
   position_y_controller_->set_smooth_gain_time(0.5);
@@ -145,125 +116,10 @@ TaskRobot::TaskRobot(std::string robot_name, std::string init_path)
   force_x_compensator_->set_smooth_gain_time(2);
   force_y_compensator_->set_smooth_gain_time(2);
   force_z_compensator_->set_smooth_gain_time(2);
-
 }
 TaskRobot::~TaskRobot()
 {
 
-}
-void TaskRobot::initialize_reference_frame(std::vector<double> temp_reference_frame_start, std::vector<double> temp_reference_frame_end, std::string command)
-{
-  rw::math::Transform3D<> tf_base_to_tcp_;
-  rw::math::Transform3D<> tf_base_to_tcp_rotated_;
-  rw::math::Transform3D<> tf_base_to_start_;
-  rw::math::Transform3D<> tf_base_to_end_;
-
-  rw::math::Transform3D<> tf_tcp_to_start_;
-  rw::math::Transform3D<> tf_tcp_to_end_;
-
-  rw::math::Transform3D<> tf_tcp_to_direction_;
-  rw::math::Transform3D<> tf_tcp_to_rotate_;
-
-  std::vector<double> reference_frame;
-  reference_frame.assign(6,0);
-
-  std::vector<double> reference_frame_minor;
-  reference_frame_minor.assign(6,0);
-
-
-  rw::math::Transform3D<> temp_inv_;
-
-  double align_angle_z_ = 0;
-
-  tf_base_to_tcp_ = Transform3D<> (Vector3D<>(robot_initial_pose_[0], robot_initial_pose_[1], robot_initial_pose_[2]), EAA<>(robot_initial_pose_[3], robot_initial_pose_[4], robot_initial_pose_[5]).toRotation3D());
-  tf_base_to_start_ = Transform3D<> (Vector3D<>(temp_reference_frame_start[0], temp_reference_frame_start[1], temp_reference_frame_start[2]), EAA<>(robot_initial_pose_[3], robot_initial_pose_[4], robot_initial_pose_[5]).toRotation3D());
-  tf_base_to_end_ = Transform3D<> (Vector3D<>(temp_reference_frame_end[0], temp_reference_frame_end[1], temp_reference_frame_end[2]), EAA<>(robot_initial_pose_[3], robot_initial_pose_[4], robot_initial_pose_[5]).toRotation3D());
-
-
-  temp_inv_ = tf_base_to_tcp_;
-  temp_inv_.invMult(temp_inv_, tf_base_to_start_);
-  tf_tcp_to_start_ = temp_inv_;
-
-  temp_inv_ = tf_base_to_tcp_;
-  temp_inv_.invMult(temp_inv_, tf_base_to_end_);
-  tf_tcp_to_end_ = temp_inv_;
-
-  tf_tcp_to_direction_.P() = -(tf_tcp_to_end_.P() - tf_tcp_to_start_.P());
-
-  align_angle_z_ = atan2(tf_tcp_to_direction_.P()[1],tf_tcp_to_direction_.P()[0]);
-
-  std::cout << robot_name_ <<"::  align_angle_z_  :: " << align_angle_z_ << std::endl;
-
-  std::cout << robot_name_ <<"::  tf_tcp_to_direction_.P() :: " << tf_tcp_to_direction_.P() << std::endl;
-
-//  if(align_angle_z_ > 0)
-//  {
-//    for(int num = 0; num < tighten_force_values_numbers_; num ++)
-//    {
-//      force_vector_[num][0] = sin(45*DEGREE2RADIAN) * tighten_force_values_[num][0];
-//      force_vector_[num][1] = -1*(-cos(45*DEGREE2RADIAN) * tighten_force_values_[num][0]);
-//      force_vector_[num][2] = tighten_force_values_[num][2];
-//    }
-//  }
-//  if(align_angle_z_ < 0)
-//  {
-//    for(int num = 0; num < tighten_force_values_numbers_; num ++)
-//    {
-//      force_vector_[num][0] = sin(45*DEGREE2RADIAN) * tighten_force_values_[num][0];
-//      force_vector_[num][1] = cos(45*DEGREE2RADIAN) * tighten_force_values_[num][0];
-//      force_vector_[num][2] = tighten_force_values_[num][2];
-//    }
-//  }
-
-  std::cout << robot_name_ <<"  force_vector_ 0::"<< force_vector_[0] << std::endl;
-  std::cout << robot_name_ <<"  force_vector_ 1::"<< force_vector_[1] << std::endl;
-  std::cout << robot_name_ <<"  tighten_force_values_ 0::"<< tighten_force_values_[0]<< std::endl;
-  std::cout << robot_name_ <<"  tighten_force_values_ 1::"<< tighten_force_values_[1]<< std::endl;
-
-  if(align_angle_z_ > 69*DEGREE2RADIAN)
-    align_angle_z_ = 69*DEGREE2RADIAN;
-  if(align_angle_z_ < -69*DEGREE2RADIAN)
-    align_angle_z_ = -69*DEGREE2RADIAN;
-
-  tf_tcp_to_rotate_ =  Transform3D<> (Vector3D<>(0,0,0), RPY<>(align_angle_z_,0,0).toRotation3D());
-
-  reference_frame = temp_reference_frame_start; // main
-
-  tf_base_to_tcp_rotated_ = tf_base_to_tcp_*tf_tcp_to_rotate_;
-
-  reference_frame_minor = temp_reference_frame_end;
-
-  if(!command.compare("master"))
-  {
-    tf_base_to_start_.R() = tf_base_to_tcp_.R();
-    robot_task_->initialize_reference_frame(tf_base_to_start_, tf_base_to_end_);
-    //reference_frame[3] = EAA<>(tf_base_to_tcp_.R())[0];
-    //reference_frame[4] = EAA<>(tf_base_to_tcp_.R())[1];
-    //reference_frame[5] = EAA<>(tf_base_to_tcp_.R())[2];
-
-  }
-  else
-  {
-    tf_base_to_start_.R() = tf_base_to_tcp_rotated_.R();
-    tf_base_to_end_.R() = tf_base_to_tcp_.R();
-    robot_task_->initialize_reference_frame(tf_base_to_start_, tf_base_to_end_);
-    //reference_frame[3] = EAA<>(tf_base_to_start_.R())[0];
-    //reference_frame[4] = EAA<>(tf_base_to_start_.R())[1];
-    //reference_frame[5] = EAA<>(tf_base_to_start_.R())[2];
-  }
-
-  //reference_frame_minor[3] = EAA<>(tf_base_to_tcp_.R())[0];
-  //reference_frame_minor[4] = EAA<>(tf_base_to_tcp_.R())[1];
-  //reference_frame_minor[5] = EAA<>(tf_base_to_tcp_.R())[2];
-
-  std::cout << robot_name_ <<"::  reference_frame  :: " << tf_base_to_end_ << std::endl;
-  std::cout << robot_name_ <<"::  reference_frame  tf_base_to_tcp_rotated_ :: " <<EAA<>( tf_base_to_tcp_rotated_.R())[0] << std::endl;
-
-  //pulley_bearing_position_ = reference_frame;
-  //tf_base_to_bearing_ = Transform3D<> (Vector3D<>(pulley_bearing_position_[0], pulley_bearing_position_[1], pulley_bearing_position_[2]), EAA<>(pulley_bearing_position_[3], pulley_bearing_position_[4], pulley_bearing_position_[5]).toRotation3D());
-  desired_pose_vector_ = robot_task_ -> get_current_pose();
-
-  std::cout << robot_name_ <<"::  NEW initialize !! " << std::endl;
 }
 void TaskRobot::init_model(std::string wc_file, std::string robot_model)
 {
@@ -288,11 +144,11 @@ void TaskRobot::initialize(std::string robot_ip, bool gazebo_check)
     rtde_receive_ = std::make_shared<RTDEReceiveInterface>(robot_ip);
     rtde_control_ = std::make_shared<RTDEControlInterface>(robot_ip);
 
-    usleep(1000000);
+    usleep(200000);
 
     if(rtde_control_->zeroFtSensor())
     {
-      usleep(1000000);
+      usleep(200000);
       std::cout << COLOR_GREEN_BOLD << robot_name_ << ": Completed " << "ZeroFtSensor" << COLOR_RESET << std::endl;
     }
     else
@@ -301,20 +157,14 @@ void TaskRobot::initialize(std::string robot_ip, bool gazebo_check)
     std::cout << COLOR_GREEN_BOLD << robot_name_ <<": Connected to your program" << COLOR_RESET << std::endl;
   }
 }
-
 void TaskRobot::move_to_init_pose()
 {
   if(!gazebo_check_)
   {
-    std::cout << COLOR_RED_BOLD << robot_name_ <<": will move 1 seconds later" << COLOR_RESET << std::endl;
-
-    usleep(1000000);
-
+    std::cout << COLOR_RED_BOLD << robot_name_ <<": MoveL to initial pose" << COLOR_RESET << std::endl;
     rtde_control_->moveL(initial_pose_vector_, 0.08, 0.08);
 
-    std::cout << COLOR_RED_BOLD << robot_name_ <<": Send" << COLOR_RESET << std::endl;
-
-    usleep(1000000);
+    usleep(200000);
 
     std::cout << COLOR_GREEN_BOLD << robot_name_ << ": Adjust Accelerometer Sensor and compensate gravity term" << COLOR_RESET << std::endl;
     //getting sensor values sensor filter
@@ -328,8 +178,6 @@ void TaskRobot::move_to_init_pose()
 
     //initialize
     compensated_pose_vector_ = actual_tcp_pose_;
-
-    std::cout << robot_name_ << ": Compensated gravity terms " << acutal_tcp_acc_ << std::endl;
     std::cout << COLOR_GREEN << robot_name_ << " All of things were initialized!" << COLOR_RESET << std::endl;
   }
   else
@@ -338,125 +186,15 @@ void TaskRobot::move_to_init_pose()
     tf_current_ = Transform3D<> (Vector3D<>(compensated_pose_vector_[0], compensated_pose_vector_[1], compensated_pose_vector_[2]), RPY<>(compensated_pose_vector_[3], compensated_pose_vector_[4], compensated_pose_vector_[5]).toRotation3D());
   }
 }
-bool TaskRobot::tasks(std::string command) // first for only two pulleys
+void TaskRobot::motion_generator(Transform3D<> temp_reference_frame, std::vector<double> way_points)
 {
-  if(previous_task_command_.compare(command))
-  {
-    sub_tasks_ = 0;
-    robot_task_->clear_phase();
-
-  }
-
-  if(!command.compare(""))
-    return false;
-  else
-  {
-    if(!command.compare("master"))
-    {
-      robot_task_->set_all_phases_(master_way_points_numbers_);
-      master_robot();
-
-      if(sub_tasks_ == 1)
-        finish_task_ = 1;
-    }
-
-    if(!command.compare("slave"))
-    {
-      robot_task_->set_all_phases_(slave_way_points_numbers_);
-      slave_robot();
-    }
-
-    previous_phase_ = robot_task_->get_phases_();
-    robot_task_->generate_trajectory();
-    robot_task_->check_phases();
-  }
-  previous_task_command_ = command;
-
-  return true;
-}
-void TaskRobot::master_robot()
-{
-  static int motion_phases_ = 0;
-
-  if(sub_tasks_ == 0 && robot_task_->get_phases_() == master_way_points_numbers_)
-  {
-    sub_tasks_++;
-    return;
-  }
-  if(sub_tasks_ == 1) // pulley numbers
-    return;
-
-  if(previous_phase_ != robot_task_->get_phases_())
-  {
-    motion_phases_ = robot_task_->get_phases_();
-
-  if(robot_task_->get_phases_() == 3)
-    {
-      gripper_move_values = 12;
-    }
-
-    if(robot_task_->get_phases_() == 1)
-    {
-      for(int num = 0; num < 3; num ++)
-      {
-        desired_force_torque_vector_[num] = 0;
-      }
-      gripper_move_values = 6;
-
-      desired_belt_[0] = master_way_points_[1][0];
-      desired_belt_[1] = master_way_points_[1][1];
-      desired_belt_[2] = master_way_points_[1][2];
-
-      robot_task_->estimation_of_belt_position(desired_belt_); ////bearing frame
-      robot_task_->insert_into_groove(RPY<>(master_way_points_[1][3],master_way_points_[1][4],master_way_points_[1][5]));
-
-      return;
-    }
-    robot_task_->motion_to_desired_pose(contact_check_, master_way_points_[motion_phases_][0],master_way_points_[motion_phases_][1],master_way_points_[motion_phases_][2], RPY<>(master_way_points_[motion_phases_][3],master_way_points_[motion_phases_][4],master_way_points_[motion_phases_][5]),master_way_points_[motion_phases_][6]); //bearing frame
-  }
-}
-void TaskRobot::slave_robot() // for robot A
-{
-  static int motion_phases_ = 0;
-
-  if(sub_tasks_ == 0 && robot_task_->get_phases_() == slave_way_points_numbers_)
-  {
-    position_x_controller_->set_smooth_gain_time(2.5);
-    position_y_controller_->set_smooth_gain_time(2.5);
-    position_z_controller_->set_smooth_gain_time(2.5);
-    force_x_compensator_->set_smooth_gain_time(2.5);
-    force_y_compensator_->set_smooth_gain_time(2.5);
-    force_z_compensator_->set_smooth_gain_time(2.5);
-
-    cout << desired_force_torque_vector_ << "finished " << endl;
-
-    sub_tasks_++;
-    return;
-  }
-  if(sub_tasks_ == 1) // pulley numbers
-  {
-    return;
-  }
-  if(previous_phase_ != robot_task_->get_phases_())
-  {
-
-    motion_phases_ = robot_task_->get_phases_();
-
-    robot_task_->motion_to_desired_pose_big(contact_check_, slave_way_points_[motion_phases_][0],slave_way_points_[motion_phases_][1],slave_way_points_[motion_phases_][2], RPY<>(slave_way_points_[motion_phases_][3],slave_way_points_[motion_phases_][4],slave_way_points_[motion_phases_][5]),slave_way_points_[motion_phases_][6]); //bearin
-
-    cout << "motion! " << endl;
-
-    for(int num = 0; num < 3; num ++)
-    {
-      desired_force_torque_vector_[num] = force_vector_[motion_phases_][num];
-    }
-  }
+  robot_motion_->motion_to_desired_pose(temp_reference_frame, way_points[0], way_points[1], way_points[2], RPY<> (way_points[3],way_points[4],way_points[5]), way_points[6]);
 }
 bool TaskRobot::hybrid_controller()
 {
   //motion reference
 
-  desired_pose_vector_ = robot_task_->get_current_pose();
+  desired_pose_vector_ = robot_motion_->get_current_pose();
 
   //desired_force_torque_vector_ = robot_task_->get_desired_force_torque();
 
@@ -480,7 +218,7 @@ bool TaskRobot::hybrid_controller()
     joint_positions_ = rtde_receive_->getActualQ();
     //current_q_ = rtde_receive_->getActualQ();
 
-    robot_task_->set_current_pose_eaa(actual_tcp_pose_[0], actual_tcp_pose_[1], actual_tcp_pose_[2],actual_tcp_pose_[3], actual_tcp_pose_[4], actual_tcp_pose_[5]);
+    robot_motion_->set_current_pose_eaa(actual_tcp_pose_[0], actual_tcp_pose_[1], actual_tcp_pose_[2],actual_tcp_pose_[3], actual_tcp_pose_[4], actual_tcp_pose_[5]);
 
     tf_current_ = Transform3D<> (Vector3D<>(actual_tcp_pose_[0], actual_tcp_pose_[1], actual_tcp_pose_[2]), EAA<>(actual_tcp_pose_[3], actual_tcp_pose_[4], actual_tcp_pose_[5]).toRotation3D());
 
@@ -488,8 +226,8 @@ bool TaskRobot::hybrid_controller()
     tool_estimation_->set_orientation_data(tf_current_);
     tool_estimation_->process_estimated_force(raw_ft_data_, acutal_tcp_acc_);
 
-    contacted_ft_data_ = tool_estimation_->get_contacted_force();
-    current_ft_ = Wrench6D<> (contacted_ft_data_[0], contacted_ft_data_[1], contacted_ft_data_[2], contacted_ft_data_[3], contacted_ft_data_[4], contacted_ft_data_[5]);
+    filtered_base_ft_data_ = tool_estimation_->get_contacted_force();
+    current_ft_ = Wrench6D<> (filtered_base_ft_data_[0], filtered_base_ft_data_[1], filtered_base_ft_data_[2], filtered_base_ft_data_[3], filtered_base_ft_data_[4], filtered_base_ft_data_[5]);
     current_ft_ = (tf_current_.R()).inverse()*current_ft_;
     tf_current_ = Transform3D<> (Vector3D<>(actual_tcp_pose_[0], actual_tcp_pose_[1], actual_tcp_pose_[2]), EAA<>(actual_tcp_pose_[3], actual_tcp_pose_[4], actual_tcp_pose_[5]).toRotation3D());
 
@@ -528,17 +266,12 @@ bool TaskRobot::hybrid_controller()
     compensated_pose_vector_[3] = desired_pose_vector_[3]; //+ force_x_compensator->get_final_output();
     compensated_pose_vector_[4] = desired_pose_vector_[4]; //+ force_x_compensator->get_final_output();
     compensated_pose_vector_[5] = desired_pose_vector_[5]; //+ force_x_compensator->get_final_output();
-
-    //cout << compensated_pose_vector_ << endl;
   }
   else
   {
-
     position_x_controller_->PID_calculate(desired_pose_vector_[0], compensated_pose_vector_[0], 0);
     position_y_controller_->PID_calculate(desired_pose_vector_[1], compensated_pose_vector_[1], 0);
     position_z_controller_->PID_calculate(desired_pose_vector_[2], compensated_pose_vector_[2], 0);
-
-    //contact_check_ = ros_state->get_test();
 
     pid_compensation_[0] = position_x_controller_->get_final_output();
     pid_compensation_[1] = position_y_controller_->get_final_output();
@@ -546,8 +279,6 @@ bool TaskRobot::hybrid_controller()
     pid_compensation_[3] = 0;
     pid_compensation_[4] = 0;
     pid_compensation_[5] = 0;
-
-    //cout << pid_compensation << endl;
 
     compensated_pose_vector_[0] = compensated_pose_vector_[0] + pid_compensation_[0]; //+ ros_state->get_rl_action()[0];
     compensated_pose_vector_[1] = compensated_pose_vector_[1] + pid_compensation_[1]; //+ ros_state->get_rl_action()[1];
@@ -558,7 +289,7 @@ bool TaskRobot::hybrid_controller()
     compensated_pose_vector_[5] = desired_pose_vector_[5]; //+ force_x_compensator->get_final_output();
 
 
-    robot_task_->set_current_pose_rpy(compensated_pose_vector_[0], compensated_pose_vector_[1], compensated_pose_vector_[2],compensated_pose_vector_[3], compensated_pose_vector_[4], compensated_pose_vector_[5]);
+    robot_motion_->set_current_pose_rpy(compensated_pose_vector_[0], compensated_pose_vector_[1], compensated_pose_vector_[2],compensated_pose_vector_[3], compensated_pose_vector_[4], compensated_pose_vector_[5]);
     tf_current_ = Transform3D<> (Vector3D<>(compensated_pose_vector_[0], compensated_pose_vector_[1], compensated_pose_vector_[2]), RPY<>(compensated_pose_vector_[3], compensated_pose_vector_[4], compensated_pose_vector_[5]).toRotation3D()); // EAA
   }
 
@@ -573,7 +304,7 @@ bool TaskRobot::hybrid_controller()
   tf_desired_ = Transform3D<> (Vector3D<>(compensated_pose_vector_[0], compensated_pose_vector_[1], compensated_pose_vector_[2]),
       RPY<>(compensated_pose_vector_[3], compensated_pose_vector_[4], compensated_pose_vector_[5]).toRotation3D()); // // EAA
 
-  target_tcp_pose_ = desired_pose_vector_;
+  target_tcp_pose_ = compensated_pose_vector_;
   //solve ik problem
   solutions_ = solver_->solve(tf_desired_, state_);
 
@@ -615,9 +346,6 @@ bool TaskRobot::hybrid_controller()
      {
        compensated_q_[num] = confBest.toStdVector()[num];
      }
-
-
-  //std::cout << robot_name_ << "::" << compensated_q_ << "  "  << current_q_<< std::endl;
 
   //check velocity
   for(int num = 0; num <6 ; num ++)
@@ -662,12 +390,11 @@ bool TaskRobot::hybrid_controller()
   data_log_->set_data_getActualTCPForceTorque(raw_ft_data_);
   data_log_->set_data_getActualToolAccelerometer(acutal_tcp_acc_);
   data_log_->set_data_getFilteredTCPForceTorque(filtered_tcp_ft_data_);
-  data_log_->set_data_getContactedForceTorque(contacted_ft_data_);
+  data_log_->set_data_getContactedForceTorque(filtered_base_ft_data_);
   data_log_->set_data_getPidCompensation(pid_compensation_);
   data_log_->set_data_getDesiredTCPPose(desired_pose_vector_);
   data_log_->set_data_getBeltPosition(data_current_belt_);
   data_log_->set_data_getDesiredBeltPosition(data_desired_belt_);  //data_bearing_tcp_belt_
-  data_log_->set_data_getBearingTCPPosition(data_bearing_tcp_belt_);
   data_log_->set_data_new_line();
 
   return control_check_;
@@ -682,108 +409,16 @@ void TaskRobot::parse_init_data_(const std::string &path)
 
   }catch(const std::exception& e) //
   {
-    cout << "Fail to load yaml file!111111111" << endl;
+    cout << "Fail to load yaml file!" << endl;
     return;
   }
-
   tool_mass_= doc["tool_mass"].as<double>();
   //setting up control time and mass of tool
   tool_estimation_ ->set_parameters(control_time_, tool_mass_);
 
   preferred_solution_number_ =  doc["preferred_solution_number"].as<double>();
   YAML::Node initial_joint_states = doc["initial_joint_states"];
-  YAML::Node pulley_bearing_position_node = doc["pulley_bearing_position"];
-  YAML::Node robot_initial_pose_node = doc["robot_initial_pose"];
-  YAML::Node tighten_force_value_node = doc["tighten_force_value"];
-  YAML::Node master_pulley_node = doc["master_pulley_big"];
-  YAML::Node slave_node = doc["slave_pulley_big"];
-
-  //std::vector<double> bigger_pulley_bearing_position;
-  std::vector<double> temp_points_;
-  int temp_points_numbers_ = 0;
-
-  for(int num = 0; num < 6; num ++)
-  {
-    pulley_bearing_position_[num] = pulley_bearing_position_node[num].as<double>();
-  }
-
-  for(int num = 0; num < 6; num ++)
-  {
-    robot_initial_pose_[num] = robot_initial_pose_node[num].as<double>();
-  }
-
-  initial_pose_vector_ = robot_initial_pose_;
-
-  tf_base_to_bearing_ = Transform3D<> (Vector3D<>(pulley_bearing_position_[0], pulley_bearing_position_[1], pulley_bearing_position_[2]), EAA<>(pulley_bearing_position_[3], pulley_bearing_position_[4], pulley_bearing_position_[5]).toRotation3D());
-
-  master_way_points_numbers_ = 0;
-
-  for (YAML::iterator it = master_pulley_node.begin(); it != master_pulley_node.end(); ++it)
-  {
-    master_way_points_numbers_ ++;
-    temp_points_numbers_ = it->first.as<int>();
-
-    for(int num = 0; num < 3; num++)
-    {
-      temp_points_.push_back(it->second[num].as<double>());
-    }
-    for(int num = 3; num < 6; num++)
-    {
-      temp_points_.push_back(it->second[num].as<double>()*DEGREE2RADIAN);
-    }
-    temp_points_.push_back(it->second[6].as<double>());
-
-    master_way_points_[temp_points_numbers_] = temp_points_;
-
-    temp_points_.clear();
-
-    //cout <<  temp_points_numbers_ <<"::"<< master_way_points_[temp_points_numbers_]  << endl;
-  }
-
-  temp_points_.clear();
-
-  for (YAML::iterator it = tighten_force_value_node.begin(); it != tighten_force_value_node.end(); ++it)
-  {
-    tighten_force_values_numbers_ ++;
-    temp_points_numbers_ = it->first.as<int>();
-
-    for(int num = 0; num < 3; num++)
-    {
-      temp_points_.push_back(it->second[num].as<double>());
-    }
-
-    tighten_force_values_[temp_points_numbers_] = temp_points_;
-    force_vector_[temp_points_numbers_] = temp_points_;
-
-    temp_points_.clear();
-
-    //cout <<  temp_points_numbers_ <<"::"<< tighten_force_values_[temp_points_numbers_]  << endl;
-  }
-
-  temp_points_.clear();
-
-  for (YAML::iterator it = slave_node.begin(); it != slave_node.end(); ++it)
-  {
-    slave_way_points_numbers_ ++;
-    temp_points_numbers_ = it->first.as<int>();
-
-    for(int num = 0; num < 3; num++)
-    {
-      temp_points_.push_back(it->second[num].as<double>());
-    }
-    for(int num = 3; num < 6; num++)
-    {
-      temp_points_.push_back(it->second[num].as<double>()*DEGREE2RADIAN);
-    }
-
-    temp_points_.push_back(it->second[6].as<double>());
-
-    slave_way_points_[temp_points_numbers_] = temp_points_;
-
-    temp_points_.clear();
-
-    //cout <<  temp_points_numbers_ <<"::"<< slave_way_points_[temp_points_numbers_]  << endl;
-  }
+  YAML::Node robot_initial_pose = doc["robot_initial_pose"];
 
   force_controller_gain_.x_kp = doc["f_x_kp"].as<double>();
   force_controller_gain_.x_ki = doc["f_x_ki"].as<double>();
@@ -831,101 +466,13 @@ void TaskRobot::parse_init_data_(const std::string &path)
   current_q_[3] = initial_joint_states[3].as<double>();
   current_q_[4] = initial_joint_states[4].as<double>();
   current_q_[5] = initial_joint_states[5].as<double>();
-}
-void TaskRobot::assign_pulley(const std::string &path, std::string master, std::string slave)
-{
-  YAML::Node doc; //
-  try
-  {
-    // load yaml
-    doc = YAML::LoadFile(path.c_str()); //
 
-  }catch(const std::exception& e) //
-  {
-    cout << "Fail to load yaml file! assign_pulley" << endl;
-    return;
-  }
-
-  YAML::Node robust_force_value_node = doc["robust_force_value"];
-  YAML::Node master_pulley_node = doc[master];
-  YAML::Node slave_node = doc[slave];
-
-
-  std::vector<double> temp_points_;
-  int temp_points_numbers_ = 0;
-
-  master_way_points_numbers_ = 0;
-
-  for (YAML::iterator it = master_pulley_node.begin(); it != master_pulley_node.end(); ++it)
-  {
-    master_way_points_numbers_ ++;
-    temp_points_numbers_ = it->first.as<int>();
-
-    for(int num = 0; num < 3; num++)
-    {
-      temp_points_.push_back(it->second[num].as<double>());
-    }
-    for(int num = 3; num < 6; num++)
-    {
-      temp_points_.push_back(it->second[num].as<double>()*DEGREE2RADIAN);
-    }
-    temp_points_.push_back(it->second[6].as<double>());
-
-    master_way_points_[temp_points_numbers_] = temp_points_;
-
-    temp_points_.clear();
-
-    cout << robot_name_ << " " << temp_points_numbers_ <<"::"<< master_way_points_[temp_points_numbers_]  << endl;
-  }
-
-  temp_points_.clear();
-
-  tighten_force_values_numbers_ = 0;
-
-  for (YAML::iterator it = robust_force_value_node.begin(); it != robust_force_value_node.end(); ++it)
-  {
-    tighten_force_values_numbers_ ++;
-    temp_points_numbers_ = it->first.as<int>();
-
-    for(int num = 0; num < 3; num++)
-    {
-      temp_points_.push_back(it->second[num].as<double>());
-    }
-
-    tighten_force_values_[temp_points_numbers_] = temp_points_;
-    force_vector_[temp_points_numbers_] = temp_points_;
-
-    temp_points_.clear();
-
-    cout << robot_name_ << " " <<  temp_points_numbers_ <<"::"<< tighten_force_values_[temp_points_numbers_]  << endl;
-  }
-
-  temp_points_.clear();
-
-  slave_way_points_numbers_ = 0;
-
-  for (YAML::iterator it = slave_node.begin(); it != slave_node.end(); ++it)
-  {
-    slave_way_points_numbers_ ++;
-    temp_points_numbers_ = it->first.as<int>();
-
-    for(int num = 0; num < 3; num++)
-    {
-      temp_points_.push_back(it->second[num].as<double>());
-    }
-    for(int num = 3; num < 6; num++)
-    {
-      temp_points_.push_back(it->second[num].as<double>()*DEGREE2RADIAN);
-    }
-
-    temp_points_.push_back(it->second[6].as<double>());
-
-    slave_way_points_[temp_points_numbers_] = temp_points_;
-
-    temp_points_.clear();
-
-    cout << robot_name_ << " " <<  temp_points_numbers_ <<"::"<< slave_way_points_[temp_points_numbers_]  << endl;
-  }
+  initial_pose_vector_[0] = robot_initial_pose[0].as<double>();
+  initial_pose_vector_[1] = robot_initial_pose[1].as<double>();
+  initial_pose_vector_[2] = robot_initial_pose[2].as<double>();
+  initial_pose_vector_[3] = robot_initial_pose[3].as<double>();
+  initial_pose_vector_[4] = robot_initial_pose[4].as<double>();
+  initial_pose_vector_[5] = robot_initial_pose[5].as<double>();
 }
 void TaskRobot::set_force_controller_x_gain(double kp,double ki,double kd)
 {
@@ -999,10 +546,18 @@ void TaskRobot::set_position_controller_eaa_z_gain(double kp,double ki,double kd
   position_controller_gain_.eaa_z_ki = ki;
   position_controller_gain_.eaa_z_kd = kd;
 }
-void TaskRobot::set_tf_static_robot(rw::math::Transform3D<> tf_base_to_staric_robot, rw::math::Transform3D<> tf_base_to_bearing_static_robot)
+void TaskRobot::set_controller_smooth_change(double time)
 {
-  tf_base_to_static_robot_ = tf_base_to_staric_robot;
-  tf_base_to_bearing_static_robot_ = tf_base_to_bearing_static_robot;
+  position_x_controller_->set_smooth_gain_time(time);
+  position_y_controller_->set_smooth_gain_time(time);
+  position_z_controller_->set_smooth_gain_time(time);
+  force_x_compensator_->set_smooth_gain_time(time);
+  force_y_compensator_->set_smooth_gain_time(time);
+  force_z_compensator_->set_smooth_gain_time(time);
+}
+void TaskRobot::set_desired_force_values(std::vector<double> desired_force_values)
+{
+  desired_force_torque_vector_ = desired_force_values;
 }
 std::vector<double> TaskRobot::get_raw_ft_data_()
 {
@@ -1028,13 +583,9 @@ rw::math::Transform3D<> TaskRobot::get_tf_current_()
 {
   return tf_current_;
 }
-rw::math::Transform3D<> TaskRobot::get_tf_base_to_bearing_()
+std::vector<double> TaskRobot::get_target_tcp_pose_data_()
 {
-  return tf_base_to_bearing_;
-}
-double TaskRobot::get_gripper_move_values()
-{
-  return  gripper_move_values;
+  return target_tcp_pose_;
 }
 void TaskRobot::terminate_robot()
 {
@@ -1048,14 +599,7 @@ void TaskRobot::terminate_data_log()
 {
   data_log_->save_file();
 }
-bool TaskRobot::get_finish_task()
-{
-  return finish_task_;
-}
-std::vector<double> TaskRobot::get_target_tcp_pose_data_()
-{
-  return target_tcp_pose_;
-}
+
 
 
 
