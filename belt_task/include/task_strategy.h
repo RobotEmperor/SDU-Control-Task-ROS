@@ -31,22 +31,43 @@ using namespace rw::math;
 
 class TaskStrategy
 {
-
 public:
   TaskStrategy();
+  TaskStrategy(std::string robot_name);
   ~TaskStrategy();
 
-  void initialize_frame(const std::string &path);
-  void assign_parts(const std::string &path, std::string master, std::string slave);
+  void initialize(const std::string &path);
+  void assign_parts(std::string master, std::string slave);
+  void initialize_reference_frame();
+  bool tasks();
 
-
-  double get_gripper_move_values();
+  //belt task
+  void estimation_of_belt_position();
+  void decision_of_function();
 
   // m-s relationship
   void master_robot();
   void slave_robot();
 
   void check_phases();
+
+  //input data
+  void set_is_moving_check(bool check);
+  void set_robot_current_tf(Transform3D<> tf_current_pose);
+
+  //belt task
+  void set_parts_data(std::vector<double> first_part, std::vector<double> second_part);
+  void set_type(std::string type);
+
+  //output data
+  double get_gripper_move_values();
+  double get_controller_smooth_gain_change();
+  Transform3D<> get_current_reference_frame_();
+  std::vector<double> get_current_way_points_();
+  std::vector<double> get_current_desired_force_vector_();
+  bool get_finish_task_check();
+
+  std::string get_type();
 
 private:
   int pre_phases_;
@@ -55,6 +76,17 @@ private:
 
   int master_way_points_numbers_;
   int slave_way_points_numbers_;
+  int desired_force_values_numbers_;
+
+  std::string robot_name_;
+  std::string file_path_;
+
+  //command
+  std::string type_;
+  std::string pre_type_;
+
+  //initial pose
+  std::vector<double> initial_pose_vector_; //(6);
 
 
   //master robot way points
@@ -64,21 +96,44 @@ private:
   std::map<int, std::vector<double>> slave_way_points_;
 
   //roboust force values
-  std::map<int, std::vector<double>> tighten_force_values_;
-  std::map<int, std::vector<double>> force_vector_;
+  std::map<int, std::vector<double>> desired_force_values_;
 
   //current way points
   Transform3D<> current_reference_frame_;
   std::vector<double> current_way_points_;
   std::vector<double> current_desired_force_vector_;
 
-  int tighten_force_values_numbers_;
+  //algorithm
+  //pulley direction
+  rw::math::Transform3D<> tf_base_to_tcp_;
+  rw::math::Transform3D<> tf_base_to_tcp_rotated_;
+  rw::math::Transform3D<> tf_base_to_start_;
+  rw::math::Transform3D<> tf_base_to_end_;
 
+  rw::math::Transform3D<> tf_tcp_to_start_;
+  rw::math::Transform3D<> tf_tcp_to_end_;
+
+  rw::math::Transform3D<> tf_tcp_to_direction_;
+  rw::math::Transform3D<> tf_tcp_to_rotate_;
+
+  //estimation of belt pose
+  rw::math::Vector3D<> insert_belt_way_points_;
+  rw::math::Vector3D<> desired_groove_position_;
+
+  // input
+  // robot is moving check
+  Transform3D<> tf_current_pose_;
+  std::vector<double> first_part_;
+  std::vector<double> second_part_;
+  bool is_moving_check_;
+
+  //output
   //grippers
   double gripper_move_values_;
+  double smooth_gain_change_time_;
 
+  int finish_tasks_;
   int sub_tasks_;
-
 };
 
 

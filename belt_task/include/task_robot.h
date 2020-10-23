@@ -50,9 +50,9 @@ public:
 	~TaskRobot();
 
 	void parse_init_data_(const std::string &path);
-	void initialize(std::string robot_ip, bool gazebo_check);
+	void set_up_robot(std::string robot_ip, bool gazebo_check);
 	void init_model(std::string wc_file, std::string robot_model);
-	void move_to_init_pose();
+	void moveL_to_init_pose();
 
 	//bool tasks(std::string command);
 	bool hybrid_controller();
@@ -86,6 +86,7 @@ public:
 	std::vector<double> get_error_ee_pose_();
 	std::vector<double> get_actual_tcp_speed_();
 	std::vector<double> get_current_q_();
+	bool get_is_moving_check();
 	rw::math::Transform3D<> get_tf_current_();
 
 private:

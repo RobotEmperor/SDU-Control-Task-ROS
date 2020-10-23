@@ -39,7 +39,7 @@ public:
   void initialize(double control_time_);
   void motion_to_desired_pose(Transform3D<> reference_frame, double x, double y, double z,RPY<> tcp_rpy_, double time);
 
-  void generate_trajectory();
+  void generate_fifth_order_trajectory();
 
   bool is_moving_check();
 
@@ -57,7 +57,7 @@ private:
   std::vector<double> current_force_torque_vector_;
 
   std::shared_ptr<EndEffectorTraj> robot_traj_;
-  Eigen::MatrixXd desired_pose_matrix_;
+  Eigen::Matrix<double, 6, 8> desired_pose_matrix_;
 
   rw::math::Transform3D<> tf_base_to_bearing_start_;
   rw::math::Transform3D<> tf_base_to_bearing_end_;

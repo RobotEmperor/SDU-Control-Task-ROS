@@ -33,6 +33,7 @@
 #include "log.h"
 #include "ros_node.h"
 #include "task_robot.h"
+#include "task_strategy.h"
 #include <signal.h>
 
 //preempt rt system
@@ -54,19 +55,15 @@ void initialize();
 std::shared_ptr<TaskRobot> robot_a;
 std::shared_ptr<TaskRobot> robot_b;
 
+std::shared_ptr<TaskStrategy> robot_a_strategy;
+std::shared_ptr<TaskStrategy> robot_b_strategy;
+
 std::string robot_a_ip;
 std::string robot_b_ip;
 std::string initial_path;
 std::string robot_path;
 
-std::vector<double> reference_frame_a_start;
-std::vector<double> reference_frame_a_end;
-std::vector<double> reference_frame_b_start;
-std::vector<double> reference_frame_b_end;
-
 std::string silmulation_on_off;
-std::string selection_robot_a;
-std::string selection_robot_b;
 //ros
 std::shared_ptr<RosNode> ros_state;
 typedef actionlib::SimpleActionServer<belt_task::belt_task_actionAction> Server;

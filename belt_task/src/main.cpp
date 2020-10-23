@@ -34,15 +34,15 @@ void *thread_func_robot_a ( void *param )
     t_next = t_now;
     t_prev = t_now;
 
+    robot_a_strategy->set_robot_current_tf(robot_a->get_tf_current_());
+    robot_a_strategy->set_is_moving_check(robot_a->get_is_moving_check());
+
     //to do
-    if(!selection_robot_a.compare("slave"))
+    if(!robot_a_strategy->get_type().compare("slave"))
     {
-      if(finished_insertion == 0)
+      if(finished_insertion != 0)
       {
-        robot_a->tasks("slave");
-      }
-      else
-      {
+        //gain switch
         robot_a->set_force_controller_x_gain(0.00007,0,0);
         robot_a->set_position_controller_x_gain(0.8,0,0);
         robot_a->set_force_controller_y_gain(0.00007,0,0);
@@ -50,17 +50,18 @@ void *thread_func_robot_a ( void *param )
         robot_a->set_force_controller_z_gain(0.00007,0,0);
         robot_a->set_position_controller_z_gain(0.8,0,0);
 
-        robot_a->tasks("master");
+        robot_a_strategy->set_type("master");
       }
     }
     else
     {
-      robot_a->tasks("master");
-
-      if(robot_a->get_finish_task())
+      if(robot_a_strategy->get_finish_task_check())
         finished_insertion = 1;
     }
 
+    robot_a_strategy->tasks();
+
+    robot_a->motion_generator(robot_a_strategy->get_current_reference_frame_(), robot_a_strategy->get_current_way_points_());
     robot_a->hybrid_controller();
 
     if(gazebo_check)
@@ -77,7 +78,7 @@ void *thread_func_robot_a ( void *param )
 
     m.unlock();
 
-    ros_state->send_gripper_a_move(robot_a->get_gripper_move_values());
+    //ros_state->send_gripper_a_move(robot_a->get_gripper_move_values());
     ros_state->update_ros_data();
 
     TIMESPEC_ADD (t_next, period);
@@ -117,15 +118,15 @@ void *thread_func_robot_b ( void *param )
     t_next = t_now;
     t_prev = t_now;
 
+    robot_b_strategy->set_robot_current_tf(robot_b->get_tf_current_());
+    robot_b_strategy->set_is_moving_check(robot_b->get_is_moving_check());
+
     //to do
-    if(!selection_robot_b.compare("slave"))
+    if(!robot_b_strategy->get_type().compare("slave"))
     {
-      if(finished_insertion == 0)
+      if(finished_insertion != 0)
       {
-        robot_b->tasks("slave");
-      }
-      else
-      {
+        //gain switch
         robot_b->set_force_controller_x_gain(0.00007,0,0);
         robot_b->set_position_controller_x_gain(0.8,0,0);
         robot_b->set_force_controller_y_gain(0.00007,0,0);
@@ -133,17 +134,18 @@ void *thread_func_robot_b ( void *param )
         robot_b->set_force_controller_z_gain(0.00007,0,0);
         robot_b->set_position_controller_z_gain(0.8,0,0);
 
-        robot_b->tasks("master");
+        robot_b_strategy->set_type("master");
       }
     }
     else
     {
-      robot_b->tasks("master");
-
-      if(robot_b->get_finish_task())
+      if(robot_b_strategy->get_finish_task_check())
         finished_insertion = 1;
     }
 
+    robot_b_strategy->tasks();
+
+    robot_b->motion_generator(robot_b_strategy->get_current_reference_frame_(), robot_b_strategy->get_current_way_points_());
     robot_b->hybrid_controller();
 
     if(gazebo_check)
@@ -159,7 +161,7 @@ void *thread_func_robot_b ( void *param )
     t_diff  = t_now;
     m.unlock();
 
-    ros_state->send_gripper_b_move(robot_b->get_gripper_move_values());
+    //ros_state->send_gripper_b_move(robot_b->get_gripper_move_values());
     ros_state->update_ros_data();
 
     TIMESPEC_ADD (t_next, period);
@@ -176,11 +178,6 @@ void *thread_func_robot_b ( void *param )
 
 void initialize()
 {
-  reference_frame_a_start.assign(6,0);
-  reference_frame_a_end.assign(6,0);
-  reference_frame_b_start.assign(6,0);
-  reference_frame_b_end.assign(6,0);
-
   finished_insertion = 0;
 
   wait_command = false;
@@ -190,57 +187,53 @@ void initialize()
   robot_a_ip = "192.168.1.130";
   robot_b_ip = "192.168.1.129";
 
-  selection_robot_a = "";
-  selection_robot_b = "";
-
   initial_path = "/home/yik/catkin_ws/src";
 
   robot_path = initial_path + "/SDU-Control-Task-ROS/belt_task/config";
   robot_a = std::make_shared<TaskRobot>("robot_A",robot_path);
   robot_path = robot_path + "/wc/UR10e_2018/UR10e_a.xml";
   robot_a ->init_model(robot_path, "UR10e");
-  robot_a ->parse_init_data_(initial_path + "/SDU-Control-Task-ROS/belt_task/config/robot_A/initialize_robot.yaml");
 
   robot_path = initial_path + "/SDU-Control-Task-ROS/belt_task/config";
   robot_b = std::make_shared<TaskRobot>("robot_B",robot_path);
   robot_path = robot_path + "/wc/UR10e_2018/UR10e_b.xml";
   robot_b ->init_model(robot_path, "UR10e");
-  robot_b ->parse_init_data_(initial_path + "/SDU-Control-Task-ROS/belt_task/config/robot_B/initialize_robot.yaml");
+
+  robot_a_strategy = std::make_shared<TaskStrategy>("robot_A");
+  robot_b_strategy = std::make_shared<TaskStrategy>("robot_B");
+
+  robot_a_strategy->initialize(initial_path + "/SDU-Control-Task-ROS/belt_task/config/robot_A/initialize_robot.yaml");
+  robot_b_strategy->initialize(initial_path + "/SDU-Control-Task-ROS/belt_task/config/robot_B/initialize_robot.yaml");
 }
 
 void executeAction(const belt_task::belt_task_actionGoalConstPtr &start_end, Server* as)
 {
-  double temp_a_big_x = 0;
-  double temp_a_big_y = 0;
-  double temp_a_big_z = 0;
+  std::vector<double> temp_a_big;
+  std::vector<double> temp_a_small;
 
-  double temp_a_small_x = 0;
-  double temp_a_small_y = 0;
-  double temp_a_small_z = 0;
+  std::vector<double> temp_b_big;
+  std::vector<double> temp_b_small;
 
-  double temp_b_big_x = 0;
-  double temp_b_big_y = 0;
-  double temp_b_big_z = 0;
+  temp_a_big.assign(6,0);
+  temp_a_small.assign(6,0);
+  temp_b_big.assign(6,0);
+  temp_b_small.assign(6,0);
 
-  double temp_b_small_x = 0;
-  double temp_b_small_y = 0;
-  double temp_b_small_z = 0;
-
-  temp_a_big_x = start_end->transform_a_big_pulley[0];
-  temp_a_big_y = start_end->transform_a_big_pulley[1];
-  temp_a_big_z = start_end->transform_a_big_pulley[2];
-
-  temp_a_small_x = start_end->transform_a_small_pulley[0];
-  temp_a_small_y = start_end->transform_a_small_pulley[1];
-  temp_a_small_z = start_end->transform_a_small_pulley[2];
-
-  temp_b_big_x = start_end->transform_b_big_pulley[0];
-  temp_b_big_y = start_end->transform_b_big_pulley[1];
-  temp_b_big_z = start_end->transform_b_big_pulley[2];
-
-  temp_b_small_x = start_end->transform_b_small_pulley[0];
-  temp_b_small_y = start_end->transform_b_small_pulley[1];
-  temp_b_small_z = start_end->transform_b_small_pulley[2];
+  //  temp_a_big_x = start_end->transform_a_big_pulley[0];
+  //  temp_a_big_y = start_end->transform_a_big_pulley[1];
+  //  temp_a_big_z = start_end->transform_a_big_pulley[2];
+  //
+  //  temp_a_small_x = start_end->transform_a_small_pulley[0];
+  //  temp_a_small_y = start_end->transform_a_small_pulley[1];
+  //  temp_a_small_z = start_end->transform_a_small_pulley[2];
+  //
+  //  temp_b_big_x = start_end->transform_b_big_pulley[0];
+  //  temp_b_big_y = start_end->transform_b_big_pulley[1];
+  //  temp_b_big_z = start_end->transform_b_big_pulley[2];
+  //
+  //  temp_b_small_x = start_end->transform_b_small_pulley[0];
+  //  temp_b_small_y = start_end->transform_b_small_pulley[1];
+  //  temp_b_small_z = start_end->transform_b_small_pulley[2];
 
   //example
   //transform_a_big_pulley   :  Q[6]{-0.57389, 0.376311, 0.0549096, -1.58493, 0.914809, 1.57408}
@@ -248,90 +241,49 @@ void executeAction(const belt_task::belt_task_actionGoalConstPtr &start_end, Ser
   //transform_b_big_pulley   :  Q[6]{-0.836103, -0.384349, 0.0623581, 0.823434, 1.40879, -0.828878}
   //transform_b_small_pulley   :  Q[6]{-0.950775, -0.451959, 0.0622844, 1.32863, 1.1246, -1.33446}
 
-  temp_a_big_x = -0.57389;
-  temp_a_big_y = 0.376311;
-  temp_a_big_z = 0.0549096;
+  temp_a_big[0] = -0.57389;
+  temp_a_big[1] = 0.376311;
+  temp_a_big[2] = 0.0549096;
 
-  temp_a_small_x = -0.459831;
-  temp_a_small_y = 0.444951;
-  temp_a_small_z = 0.0550761;
+  temp_a_small[0] = -0.459831;
+  temp_a_small[1] = 0.444951;
+  temp_a_small[2] = 0.0550761;
 
-  temp_b_big_x = -0.836103;
-  temp_b_big_y = -0.384349;
-  temp_b_big_z = 0.0623581;
+  temp_b_big[0] = -0.836103;
+  temp_b_big[1] = -0.384349;
+  temp_b_big[2] = 0.0623581;
 
-  temp_b_small_x = -0.950775;
-  temp_b_small_y = -0.451959;
-  temp_b_small_z = 0.0622844;
+  temp_b_small[0] = -0.950775;
+  temp_b_small[1] = -0.451959;
+  temp_b_small[2] = 0.0622844;
+
+  robot_a_strategy->set_parts_data(temp_a_big, temp_a_small);
+  if(!robot_a_strategy->get_type().compare("master"))
+    robot_b_strategy->set_type("slave");
+  else
+    robot_b_strategy->set_type("master");
+  robot_b_strategy->set_parts_data(temp_b_big, temp_b_small);
 
 
   if(start_end->on_off)
   {
     wait_command = true;
 
-    if( temp_a_big_y > temp_a_small_y)
+    //wait
+    if(!robot_a_strategy->get_type().compare("slave") && !robot_b_strategy->get_type().compare("master"))
     {
-      selection_robot_a = "slave"; // small
-      selection_robot_b = "master"; // big
-    }
-    if(temp_a_big_y < temp_a_small_y)
-    {
-      selection_robot_a = "master";// big
-      selection_robot_b = "slave";// small
-    }
-
-    if(!selection_robot_a.compare("master") && !selection_robot_b.compare("slave"))
-    {
-      reference_frame_a_start[0] = temp_a_big_x;
-      reference_frame_a_start[1] = temp_a_big_y;
-      reference_frame_a_start[2] = temp_a_big_z;
-
-      reference_frame_a_end[0] = temp_a_small_x;
-      reference_frame_a_end[1] = temp_a_small_y;
-      reference_frame_a_end[2] = temp_a_small_z;
-
-      reference_frame_b_start[0] = temp_b_small_x;
-      reference_frame_b_start[1] = temp_b_small_y;
-      reference_frame_b_start[2] = temp_b_small_z;
-
-      reference_frame_b_end[0] = temp_b_big_x;
-      reference_frame_b_end[1] = temp_b_big_y;
-      reference_frame_b_end[2] = temp_b_big_z;
-    }
-
-    if(!selection_robot_a.compare("slave") && !selection_robot_b.compare("master"))
-    {
-      reference_frame_a_start[0] = temp_a_small_x;
-      reference_frame_a_start[1] = temp_a_small_y;
-      reference_frame_a_start[2] = temp_a_small_z;
-
-      reference_frame_a_end[0] = temp_a_big_x;
-      reference_frame_a_end[1] = temp_a_big_y;
-      reference_frame_a_end[2] = temp_a_big_z;
-
-      reference_frame_b_start[0] = temp_b_big_x;
-      reference_frame_b_start[1] = temp_b_big_y;
-      reference_frame_b_start[2] = temp_b_big_z;
-
-      reference_frame_b_end[0] = temp_b_small_x;
-      reference_frame_b_end[1] = temp_b_small_y;
-      reference_frame_b_end[2] = temp_b_small_z;
-    }
-    if(!selection_robot_a.compare("slave") && !selection_robot_b.compare("master"))
-    {
-      while(!robot_a->get_finish_task() && !exit_program)
+      while(!robot_a_strategy->get_finish_task_check() && !exit_program)
       {
         usleep(0.1);
       }
     }
     else
     {
-      while(!robot_b->get_finish_task() && !exit_program)
+      while(!robot_b_strategy->get_finish_task_check() && !exit_program)
       {
         usleep(0.1);
       }
     }
-
     exit_program = true;
     as->setSucceeded();
   }
@@ -413,28 +365,23 @@ int main (int argc, char **argv)
 
   if(gazebo_check)
   {
-    robot_a->move_to_init_pose();
-    robot_b->move_to_init_pose();
+    robot_a->moveL_to_init_pose();
+    robot_b->moveL_to_init_pose();
     ros_state->send_gazebo_command(robot_a->get_current_q_());
     ros_state->send_gazebo_b_command(robot_b->get_current_q_());
   }
   else
   {
-    robot_a->initialize(robot_a_ip, gazebo_check);
-    robot_a->move_to_init_pose();
+    robot_a->set_up_robot(robot_a_ip, gazebo_check);
+    robot_a->moveL_to_init_pose();
 
-    robot_b->initialize(robot_b_ip, gazebo_check);
-    robot_b->move_to_init_pose();
+    robot_b->set_up_robot(robot_b_ip, gazebo_check);
+    robot_b->moveL_to_init_pose();
   }
 
-  robot_a ->initialize_reference_frame(reference_frame_a_start,reference_frame_a_end,selection_robot_a);
-  robot_b ->initialize_reference_frame(reference_frame_b_start,reference_frame_b_end,selection_robot_b);
-
-  std::cout << COLOR_RED_BOLD << "ROBOT A  " << selection_robot_a << COLOR_RESET << std::endl;
-  std::cout << COLOR_RED_BOLD << "ROBOT B  " << selection_robot_b << COLOR_RESET << std::endl;
 
 
-  if(!selection_robot_a.compare("master"))
+  if(!robot_a_strategy->get_type().compare("master"))
   {
     robot_a->set_force_controller_x_gain(0.00007,0,0);
     robot_a->set_position_controller_x_gain(0.8,0,0);
@@ -442,7 +389,6 @@ int main (int argc, char **argv)
     robot_a->set_position_controller_y_gain(0.8,0,0);
     robot_a->set_force_controller_z_gain(0.00007,0,0);
     robot_a->set_position_controller_z_gain(0.8,0,0);
-    //robot_a ->assign_pulley(initial_path + "/SDU-Control-Task-ROS/belt_task/config/robot_A/initialize_robot.yaml", "master_pulley_big", "slave_pulley_big");
   }
   else
   {
@@ -452,10 +398,9 @@ int main (int argc, char **argv)
     robot_a->set_position_controller_y_gain(0.06,0,0);
     robot_a->set_force_controller_z_gain(0.0008,0.000015,0);
     robot_a->set_position_controller_z_gain(0.06,0,0);
-    //robot_a ->assign_pulley(initial_path + "/SDU-Control-Task-ROS/belt_task/config/robot_A/initialize_robot.yaml", "master_pulley_small", "slave_pulley_small");
   }
 
-  if(!selection_robot_b.compare("master"))
+  if(!robot_b_strategy->get_type().compare("master"))
   {
     robot_b->set_force_controller_x_gain(0.00007,0,0);
     robot_b->set_position_controller_x_gain(0.8,0,0);
@@ -463,7 +408,6 @@ int main (int argc, char **argv)
     robot_b->set_position_controller_y_gain(0.8,0,0);
     robot_b->set_force_controller_z_gain(0.00007,0,0);
     robot_b->set_position_controller_z_gain(0.8,0,0);
-    //robot_b ->assign_pulley(initial_path + "/SDU-Control-Task-ROS/belt_task/config/robot_B/initialize_robot.yaml", "master_pulley_big", "slave_pulley_big");
   }
   else
   {
@@ -473,8 +417,12 @@ int main (int argc, char **argv)
     robot_b->set_position_controller_y_gain(0.06,0,0);
     robot_b->set_force_controller_z_gain(0.0008,0.000015,0);
     robot_b->set_position_controller_z_gain(0.06,0,0);
-    //robot_b ->assign_pulley(initial_path + "/SDU-Control-Task-ROS/belt_task/config/robot_B/initialize_robot.yaml", "master_pulley_small", "slave_pulley_small");
   }
+
+
+  std::cout << COLOR_RED_BOLD << "ROBOT A  " << robot_a_strategy->get_type() << COLOR_RESET << std::endl;
+  std::cout << COLOR_RED_BOLD << "ROBOT B  " << robot_b_strategy->get_type() << COLOR_RESET << std::endl;
+
 
   //preempt rt
   int policy;

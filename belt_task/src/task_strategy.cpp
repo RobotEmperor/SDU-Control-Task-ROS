@@ -8,31 +8,48 @@
 
 TaskStrategy::TaskStrategy()
 {
-  pre_phases_ = 0;
-  phases_ = 0;
+}
+TaskStrategy::TaskStrategy(std::string robot_name)
+{
+  initial_pose_vector_.assign(6,0);
+  current_way_points_.assign(7,0);
+  current_desired_force_vector_.assign(3,0);
+  first_part_.assign(6,0);
+  second_part_.assign(6,0);
+  pre_phases_ = -1;
+  phases_ = -1;
   all_phases_ = 0;
 
   master_way_points_numbers_ = 0;
   slave_way_points_numbers_ = 0;
+  desired_force_values_numbers_ = 0;
 
-  tighten_force_values_numbers_ = 0;
+  finish_tasks_ = 0;
+  sub_tasks_ = 0;
+
+  type_ = "";
+  pre_type_ = "";
 
   //grippers
   gripper_move_values_= 0;
+  robot_name_ = robot_name;
+  smooth_gain_change_time_ = 2.5;
 
-  sub_tasks_ = 0;
+  //is_moving_check_
+  is_moving_check_ = false;
 }
 TaskStrategy::~TaskStrategy()
 {
 
 }
-void TaskStrategy::initialize_frame(const std::string &path)
+void TaskStrategy::initialize(const std::string &path)
 {
   YAML::Node doc; //
   try
   {
     // load yaml
     doc = YAML::LoadFile(path.c_str()); //
+    file_path_ = path;
 
   }catch(const std::exception& e) //
   {
@@ -40,6 +57,7 @@ void TaskStrategy::initialize_frame(const std::string &path)
     return;
   }
   YAML::Node part_position_node = doc["part_position"];
+  YAML::Node robot_initial_pose = doc["robot_initial_pose"];
   YAML::Node desired_force_value_node = doc["desired_force_value"];
 
   std::vector<double> temp_points_;
@@ -48,7 +66,7 @@ void TaskStrategy::initialize_frame(const std::string &path)
   temp_points_.clear();
   for (YAML::iterator it = desired_force_value_node.begin(); it != desired_force_value_node.end(); ++it)
   {
-    tighten_force_values_numbers_ ++;
+    desired_force_values_numbers_ ++;
     temp_points_numbers_ = it->first.as<int>();
 
     for(int num = 0; num < 3; num++)
@@ -56,19 +74,25 @@ void TaskStrategy::initialize_frame(const std::string &path)
       temp_points_.push_back(it->second[num].as<double>());
     }
 
-    tighten_force_values_[temp_points_numbers_] = temp_points_;
-    force_vector_[temp_points_numbers_] = temp_points_;
+    desired_force_values_[temp_points_numbers_] = temp_points_;
+
 
     temp_points_.clear();
   }
+  initial_pose_vector_[0] = robot_initial_pose[0].as<double>();
+  initial_pose_vector_[1] = robot_initial_pose[1].as<double>();
+  initial_pose_vector_[2] = robot_initial_pose[2].as<double>();
+  initial_pose_vector_[3] = robot_initial_pose[3].as<double>();
+  initial_pose_vector_[4] = robot_initial_pose[4].as<double>();
+  initial_pose_vector_[5] = robot_initial_pose[5].as<double>();
 }
-void TaskStrategy::assign_parts(const std::string &path, std::string master, std::string slave)
+void TaskStrategy::assign_parts(std::string master, std::string slave)
 {
   YAML::Node doc; //
   try
   {
     // load yaml
-    doc = YAML::LoadFile(path.c_str()); //
+    doc = YAML::LoadFile(file_path_.c_str()); //
 
   }catch(const std::exception& e) //
   {
@@ -103,7 +127,7 @@ void TaskStrategy::assign_parts(const std::string &path, std::string master, std
 
     temp_points_.clear();
 
-    //cout << robot_name_ << " " << temp_points_numbers_ <<"::"<< master_way_points_[temp_points_numbers_]  << endl;
+    //std::cout << robot_name_ << " " << temp_points_numbers_ <<"::"<< master_way_points_[temp_points_numbers_]  << std::endl;
   }
 
   temp_points_.clear();
@@ -130,37 +154,14 @@ void TaskStrategy::assign_parts(const std::string &path, std::string master, std
 
     temp_points_.clear();
 
-    //cout << robot_name_ << " " <<  temp_points_numbers_ <<"::"<< slave_way_points_[temp_points_numbers_]  << endl;
+    //std::cout << robot_name_ << " " <<  temp_points_numbers_ <<"::"<< slave_way_points_[temp_points_numbers_]  << std::endl;
   }
 }
-void TaskStrategy::initialize_reference_frame(std::vector<double> temp_reference_frame_start, std::vector<double> temp_reference_frame_end, std::string command)
+void TaskStrategy::initialize_reference_frame()
 {
-  rw::math::Transform3D<> tf_base_to_tcp_;
-  rw::math::Transform3D<> tf_base_to_tcp_rotated_;
-  rw::math::Transform3D<> tf_base_to_start_;
-  rw::math::Transform3D<> tf_base_to_end_;
-
-  rw::math::Transform3D<> tf_tcp_to_start_;
-  rw::math::Transform3D<> tf_tcp_to_end_;
-
-  rw::math::Transform3D<> tf_tcp_to_direction_;
-  rw::math::Transform3D<> tf_tcp_to_rotate_;
-
-  std::vector<double> reference_frame;
-  reference_frame.assign(6,0);
-
-  std::vector<double> reference_frame_minor;
-  reference_frame_minor.assign(6,0);
-
-
   rw::math::Transform3D<> temp_inv_;
-
   double align_angle_z_ = 0;
-
-  tf_base_to_tcp_ = Transform3D<> (Vector3D<>(robot_initial_pose_[0], robot_initial_pose_[1], robot_initial_pose_[2]), EAA<>(robot_initial_pose_[3], robot_initial_pose_[4], robot_initial_pose_[5]).toRotation3D());
-  tf_base_to_start_ = Transform3D<> (Vector3D<>(temp_reference_frame_start[0], temp_reference_frame_start[1], temp_reference_frame_start[2]), EAA<>(robot_initial_pose_[3], robot_initial_pose_[4], robot_initial_pose_[5]).toRotation3D());
-  tf_base_to_end_ = Transform3D<> (Vector3D<>(temp_reference_frame_end[0], temp_reference_frame_end[1], temp_reference_frame_end[2]), EAA<>(robot_initial_pose_[3], robot_initial_pose_[4], robot_initial_pose_[5]).toRotation3D());
-
+  tf_base_to_tcp_ = Transform3D<> (Vector3D<>(initial_pose_vector_[0], initial_pose_vector_[1], initial_pose_vector_[2]), EAA<>(initial_pose_vector_[3], initial_pose_vector_[4], initial_pose_vector_[5]).toRotation3D());
 
   temp_inv_ = tf_base_to_tcp_;
   temp_inv_.invMult(temp_inv_, tf_base_to_start_);
@@ -174,77 +175,155 @@ void TaskStrategy::initialize_reference_frame(std::vector<double> temp_reference
 
   align_angle_z_ = atan2(tf_tcp_to_direction_.P()[1],tf_tcp_to_direction_.P()[0]);
 
-
   if(align_angle_z_ > 69*DEGREE2RADIAN)
     align_angle_z_ = 69*DEGREE2RADIAN;
   if(align_angle_z_ < -69*DEGREE2RADIAN)
     align_angle_z_ = -69*DEGREE2RADIAN;
 
   tf_tcp_to_rotate_ =  Transform3D<> (Vector3D<>(0,0,0), RPY<>(align_angle_z_,0,0).toRotation3D());
-
-  reference_frame = temp_reference_frame_start; // main
-
   tf_base_to_tcp_rotated_ = tf_base_to_tcp_*tf_tcp_to_rotate_;
 
-  reference_frame_minor = temp_reference_frame_end;
 
-  if(!command.compare("master"))
+  if(!type_.compare("master"))
   {
     tf_base_to_start_.R() = tf_base_to_tcp_.R();
-    robot_task_->initialize_reference_frame(tf_base_to_start_, tf_base_to_end_);
   }
   else
   {
     tf_base_to_start_.R() = tf_base_to_tcp_rotated_.R();
     tf_base_to_end_.R() = tf_base_to_tcp_.R();
-    robot_task_->initialize_reference_frame(tf_base_to_start_, tf_base_to_end_);
   }
-  desired_pose_vector_ = robot_task_ -> get_current_pose();
-  std::cout << robot_name_ <<"::  NEW initialize !! " << std::endl;
+
+  current_reference_frame_ = tf_base_to_tcp_;
+  std::cout << robot_name_ <<"::  NEW initialize !! " << tf_base_to_tcp_ << std::endl;
 }
-
-bool TaskStrategy::tasks(std::string command) // first for only two pulleys
+void TaskStrategy::estimation_of_belt_position()
 {
-  if(previous_task_command_.compare(command))
-  {
-    sub_tasks_ = 0;
-    robot_task_->clear_phase();
+  Transform3D<> temp_;
+  Transform3D<> tf_bearing_to_robot_;
+  Transform3D<> tf_bearing_to_cur_belt_;
+  Transform3D<> tf_bearing_to_desired_point_;
+  rw::math::Vector3D<> error_;
+  rw::math::Vector3D<> cur_belt_;
 
+  temp_ = tf_base_to_start_;
+  temp_.invMult(temp_, tf_current_pose_);
+  tf_bearing_to_robot_ = temp_;
+
+  //bearing robot point
+  cur_belt_[0] = 0;
+  cur_belt_[1] = tf_bearing_to_robot_.P()[1] + 0.008; // same in two robot
+  cur_belt_[2] = tf_bearing_to_robot_.P()[2];
+
+  std::cout << " init_current_belt_  :"<< cur_belt_ << std::endl;
+
+  tf_bearing_to_cur_belt_.P() = cur_belt_;
+  tf_bearing_to_desired_point_.P() = desired_groove_position_;
+
+  std::cout << " tf_bearing_to_master_robot_x :"<< tf_bearing_to_robot_.P()[0] << std::endl;
+  std::cout << " tf_bearing_to_master_robot_y :"<< tf_bearing_to_robot_.P()[1] << std::endl;
+  std::cout << " tf_bearing_to_master_robot_z :"<< tf_bearing_to_robot_.P()[2] << std::endl;
+
+  error_ = tf_bearing_to_desired_point_.P() - tf_bearing_to_cur_belt_.P();
+
+  insert_belt_way_points_ = tf_bearing_to_robot_.P() + error_;
+
+  std::cout << " tf_desired_pose_x :"<< insert_belt_way_points_[0] << std::endl;
+  std::cout << " tf_desired_pose_y :"<< insert_belt_way_points_[1] << std::endl;
+  std::cout << " tf_desired_pose_z :"<< insert_belt_way_points_[2] << std::endl;
+}
+void TaskStrategy::decision_of_function()
+{
+  if(!type_.compare(""))
+  {
+    if(first_part_[1] > second_part_[1])
+    {
+      type_ = "slave"; // small
+      assign_parts("master_pulley_small", "slave_pulley_small");
+      tf_base_to_start_.P()[0] = second_part_[0];
+      tf_base_to_start_.P()[1] = second_part_[1];
+      tf_base_to_start_.P()[2] = second_part_[2];
+
+      tf_base_to_end_.P()[0] = first_part_[0];
+      tf_base_to_end_.P()[1] = first_part_[1];
+      tf_base_to_end_.P()[2] = first_part_[2];
+    }
+    if(first_part_[1] < second_part_[1])
+    {
+      type_ = "master";// big
+      assign_parts("master_pulley_big", "slave_pulley_big");
+      tf_base_to_start_.P()[0] = first_part_[0];
+      tf_base_to_start_.P()[1] = first_part_[1];
+      tf_base_to_start_.P()[2] = first_part_[2];
+
+      tf_base_to_end_.P()[0] = second_part_[0];
+      tf_base_to_end_.P()[1] = second_part_[1];
+      tf_base_to_end_.P()[2] = second_part_[2];
+    }
+  }
+  else
+  {
+    if(!type_.compare("master"))
+    {
+      assign_parts("master_pulley_big", "slave_pulley_big");
+      tf_base_to_start_.P()[0] = first_part_[0];
+      tf_base_to_start_.P()[1] = first_part_[1];
+      tf_base_to_start_.P()[2] = first_part_[2];
+
+      tf_base_to_end_.P()[0] = second_part_[0];
+      tf_base_to_end_.P()[1] = second_part_[1];
+      tf_base_to_end_.P()[2] = second_part_[2];
+    }
+
+    if(!type_.compare("slave"))
+    {
+      assign_parts("master_pulley_small", "slave_pulley_small");
+      tf_base_to_start_.P()[0] = second_part_[0];
+      tf_base_to_start_.P()[1] = second_part_[1];
+      tf_base_to_start_.P()[2] = second_part_[2];
+
+      tf_base_to_end_.P()[0] = first_part_[0];
+      tf_base_to_end_.P()[1] = first_part_[1];
+      tf_base_to_end_.P()[2] = first_part_[2];
+    }
+  }
+}
+bool TaskStrategy::tasks() // first for only two pulleys
+{
+  check_phases();
+  if(pre_type_.compare(type_))
+  {
+    pre_phases_ = -1;
+    phases_ = -1;
+    all_phases_ = 0;
   }
 
-  if(!command.compare(""))
+  if(!type_.compare(""))
     return false;
   else
   {
-    if(!command.compare("master"))
+    if(!type_.compare("master"))
     {
-      robot_motion_->set_all_phases_(master_way_points_numbers_);
       master_robot();
 
       if(sub_tasks_ == 1)
-        finish_task_ = 1;
+        finish_tasks_ = 1;
     }
 
-    if(!command.compare("slave"))
+    if(!type_.compare("slave"))
     {
-      robot_motion_->set_all_phases_(slave_way_points_numbers_);
       slave_robot();
     }
-
-    previous_phase_ = robot_task_->get_phases_();
-    robot_motion_->generate_trajectory();
-    robot_motion_->check_phases();
   }
-  previous_task_command_ = command;
-
+  pre_type_ = type_;
   return true;
 }
 void TaskStrategy::master_robot()
 {
-  all_phases_ = master_way_points_numbers_;
   static int motion_phases_ = 0;
+  all_phases_ = master_way_points_numbers_;
 
-  if(sub_tasks_ == 0 && robot_task_->get_phases_() == master_way_points_numbers_)
+  if(sub_tasks_ == 0 && phases_ == all_phases_)
   {
     sub_tasks_++;
     return;
@@ -252,117 +331,125 @@ void TaskStrategy::master_robot()
   if(sub_tasks_ == 1) // pulley numbers
     return;
 
-  if(previous_phase_ != robot_task_->get_phases_())
+  if(pre_phases_ != phases_)
   {
-    motion_phases_ = robot_task_->get_phases_();
+    motion_phases_ = phases_;
+    std::cout << "Master motion! " << std::endl;
+    current_reference_frame_ = tf_base_to_start_;
 
-  if(robot_motion_->get_phases_() == 3)
+    if(phases_ == 3)
     {
-      gripper_move_values = 12;
+      gripper_move_values_ = 12;
     }
 
-    if(robot_motion_->get_phases_() == 1)
+    if(phases_ == 1)
     {
       for(int num = 0; num < 3; num ++)
       {
-        desired_force_torque_vector_[num] = 0;
+        current_desired_force_vector_[num] = 0;
       }
-      gripper_move_values = 6;
+      gripper_move_values_ = 6;
 
-      desired_belt_[0] = master_way_points_[1][0];
-      desired_belt_[1] = master_way_points_[1][1];
-      desired_belt_[2] = master_way_points_[1][2];
+      desired_groove_position_[0] = master_way_points_[1][0];
+      desired_groove_position_[1] = master_way_points_[1][1];
+      desired_groove_position_[2] = master_way_points_[1][2];
 
-      robot_motion_->estimation_of_belt_position(desired_belt_); ////bearing frame
-      robot_motion_->insert_into_groove(RPY<>(master_way_points_[1][3],master_way_points_[1][4],master_way_points_[1][5]));
+      estimation_of_belt_position(); ////bearing frame
 
-      return;
+      master_way_points_[1][0] = insert_belt_way_points_[0];
+      master_way_points_[1][1] = insert_belt_way_points_[1];
+      master_way_points_[1][2] = insert_belt_way_points_[2];
     }
-    robot_motion_->motion_to_desired_pose(contact_check_, master_way_points_[motion_phases_][0],master_way_points_[motion_phases_][1],master_way_points_[motion_phases_][2], RPY<>(master_way_points_[motion_phases_][3],master_way_points_[motion_phases_][4],master_way_points_[motion_phases_][5]),master_way_points_[motion_phases_][6]); //bearing frame
+
+    for(int num = 0; num < 7; num ++)
+    {
+      current_way_points_[num] = master_way_points_[phases_][num];
+    }
+    std::cout << " current_way_points_ :"<< current_way_points_ << std::endl;
   }
 }
-void TaskStrategy::slave_robot() // for robot A
+void TaskStrategy::slave_robot()
 {
   static int motion_phases_ = 0;
   all_phases_ = slave_way_points_numbers_;
 
-  if(sub_tasks_ == 0 && robot_task_->get_phases_() == slave_way_points_numbers_)
+  if(sub_tasks_ == 0 && phases_ == slave_way_points_numbers_)
   {
-    position_x_controller_->set_smooth_gain_time(2.5);
-    position_y_controller_->set_smooth_gain_time(2.5);
-    position_z_controller_->set_smooth_gain_time(2.5);
-    force_x_compensator_->set_smooth_gain_time(2.5);
-    force_y_compensator_->set_smooth_gain_time(2.5);
-    force_z_compensator_->set_smooth_gain_time(2.5);
-
-    cout << desired_force_torque_vector_ << "finished " << endl;
-
-    sub_tasks_++;
+    smooth_gain_change_time_ = 2.5;
     return;
   }
-  if(sub_tasks_ == 1) // pulley numbers
-  {
-    return;
-  }
-  if(previous_phase_ != robot_task_->get_phases_())
+  if(pre_phases_ != phases_)
   {
 
-    motion_phases_ = robot_task_->get_phases_();
-
-    robot_motion_->motion_to_desired_pose_big(contact_check_, slave_way_points_[motion_phases_][0],slave_way_points_[motion_phases_][1],slave_way_points_[motion_phases_][2], RPY<>(slave_way_points_[motion_phases_][3],slave_way_points_[motion_phases_][4],slave_way_points_[motion_phases_][5]),slave_way_points_[motion_phases_][6]); //bearin
-
-    cout << "motion! " << endl;
+    motion_phases_ = phases_;
+    std::cout << "slave motion! " << std::endl;
+    current_reference_frame_ = tf_base_to_end_;
 
     for(int num = 0; num < 3; num ++)
     {
-      desired_force_torque_vector_[num] = force_vector_[motion_phases_][num];
+      //force vector
+      current_desired_force_vector_[num] = desired_force_values_[motion_phases_][num];
+    }
+
+    for(int num = 0; num < 7; num ++)
+    {
+      current_way_points_[num] = slave_way_points_[phases_][num];
     }
   }
 }
-
 void TaskStrategy::check_phases()
 {
   pre_phases_ = phases_;
-  if(robot_motion_->is_moving_check() == false && phases_ < all_phases_)
+  if(is_moving_check_ == false && phases_ < all_phases_)
   {
     phases_ ++;
   }
 }
+void TaskStrategy::set_is_moving_check(bool check)
+{
+  is_moving_check_ = check;
+}
+void TaskStrategy::set_robot_current_tf(Transform3D<> tf_current_pose)
+{
+  tf_current_pose_ = tf_current_pose;
+}
+void TaskStrategy::set_parts_data(std::vector<double> first_part, std::vector<double> second_part)
+{
+  first_part_ = first_part;
+  second_part_ = second_part;
 
-
-
+  decision_of_function();
+  initialize_reference_frame();
+}
+bool TaskStrategy::get_finish_task_check()
+{
+  return finish_tasks_;
+}
+double TaskStrategy::get_controller_smooth_gain_change()
+{
+  return smooth_gain_change_time_;
+}
 double TaskStrategy::get_gripper_move_values()
 {
-  return  gripper_move_values;
+  return  gripper_move_values_;
 }
-
-void TaskMotion::estimation_of_belt_position(rw::math::Vector3D<> desired_position)
+std::string TaskStrategy::get_type()
 {
-  temp_ = tf_base_to_bearing_start_;
-  temp_.invMult(temp_, tf_current_pose_);
-  tf_bearing_to_master_robot_ = temp_;
-
-  //bearing robot point
-  ref_belt_[0] = 0;
-  ref_belt_[1] = tf_bearing_to_master_robot_.P()[1] + 0.008; // same in two robot
-  ref_belt_[2] = tf_bearing_to_master_robot_.P()[2];
-
-  desired_groove_position_ = desired_position;
-
-  std::cout << " init_current_belt_  :"<< ref_belt_ << std::endl;
-
-  tf_bearing_ref_belt_.P() = ref_belt_;
-  tf_bearing_desired_groove_.P() = desired_groove_position_;
-
-  std::cout << " tf_bearing_to_master_robot_x :"<< tf_bearing_to_master_robot_.P()[0] << std::endl;
-  std::cout << " tf_bearing_to_master_robot_y :"<< tf_bearing_to_master_robot_.P()[1] << std::endl;
-  std::cout << " tf_bearing_to_master_robot_z :"<< tf_bearing_to_master_robot_.P()[2] << std::endl;
-
-  error_ = tf_bearing_desired_groove_.P() - tf_bearing_ref_belt_.P();
-
-  modified_master_robot_ = tf_bearing_to_master_robot_.P() + error_;
-
-  std::cout << " tf_desired_pose_x :"<< modified_master_robot_[0] << std::endl;
-  std::cout << " tf_desired_pose_y :"<< modified_master_robot_[1] << std::endl;
-  std::cout << " tf_desired_pose_z :"<< modified_master_robot_[2] << std::endl;
+  return type_;
+}
+void TaskStrategy::set_type(std::string type)
+{
+  type_ = type;
+}
+Transform3D<> TaskStrategy::get_current_reference_frame_()
+{
+  return current_reference_frame_;
+}
+std::vector<double> TaskStrategy::get_current_way_points_()
+{
+  return current_way_points_;
+}
+std::vector<double> TaskStrategy::get_current_desired_force_vector_()
+{
+  return current_desired_force_vector_;
 }

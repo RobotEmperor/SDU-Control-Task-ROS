@@ -51,6 +51,7 @@ set( SOURCE_FILES
   src/main.cpp
   src/tool_estimation.cpp
   src/task_robot.cpp
+  src/task_strategy.cpp
 )
 
 add_executable(belt_task ${SOURCE_FILES})
