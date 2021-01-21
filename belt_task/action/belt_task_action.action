@@ -1,0 +1,8 @@
+#goal definition
+bool on_off_
+---
+#result definition
+bool done_
+---
+#feedback
+bool sequence
