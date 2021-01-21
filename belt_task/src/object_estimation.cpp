@@ -46,7 +46,7 @@ void ObejectEstimation::initialize(int all_point_number, const std::string &path
 }
 void ObejectEstimation::model_estimation()
 {
-  std::vector<double> force_unit_vector_;
+  static std::vector<double> force_unit_vector_;
   for(long unsigned int num_ = 0; num_ < current_grabs_pose_.size() - 1; num_ ++)
   {
     current_grab_point_magnitude_ = sqrt(pow(2,current_grabs_pose_[num_][0] - current_grabs_pose_[num_+1][0])
@@ -61,10 +61,11 @@ void ObejectEstimation::model_estimation()
 
     for(long unsigned int num_inner_ = 0; num_inner_ < 3; num_inner_ ++)
     {
-      current_object_force_torque_vector_[num_][num_inner_]=force_unit_vector_[num_inner_];
+      current_object_force_torque_vector_[num_+1][num_inner_]=force_unit_vector_[num_inner_]*objects_force_magnitude_;
     }
     //check
-    std::cout << current_object_force_torque_vector_[num_+1] << std::endl;
+    std::cout << force_unit_vector_ << std::endl;
+    //std::cout << objects_force_magnitude_ << std::endl;
     force_unit_vector_.clear();
   }
 }
@@ -76,7 +77,7 @@ void ObejectEstimation::set_initial_grab_poses(std::vector<std::vector<double>> 
 {
   initial_grabs_pose_ = initial_grabs_poses;
 
-  for(long unsigned int num_ = 0; num_ < initial_grabs_poses.size(); num_ ++)
+  for(long unsigned int num_ = 0; num_ < initial_grabs_poses.size() - 1 ;num_ ++)
   {
     initial_grab_point_magnitude_ = sqrt(pow(2,initial_grabs_poses[num_][0] - initial_grabs_poses[num_+1][0])
         + pow(2,initial_grabs_poses[num_][1] - initial_grabs_poses[num_+1][1])

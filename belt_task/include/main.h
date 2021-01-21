@@ -34,6 +34,7 @@
 #include "ros_node.h"
 #include "task_robot.h"
 #include "task_strategy.h"
+#include "object_estimation.h"
 #include <signal.h>
 
 //preempt rt system
@@ -58,12 +59,23 @@ std::shared_ptr<TaskRobot> robot_b;
 std::shared_ptr<TaskStrategy> robot_a_strategy;
 std::shared_ptr<TaskStrategy> robot_b_strategy;
 
+std::shared_ptr<ObejectEstimation> robot_a_object_estimation;
+
 std::string robot_a_ip;
 std::string robot_b_ip;
 std::string initial_path;
 std::string robot_path;
 
 std::string silmulation_on_off;
+//robot grab points
+Transform3D<> tf_a_parts;
+Transform3D<> tf_b_parts;
+Transform3D<> tf_a_b;
+Transform3D<> temp_a_b;
+
+std::vector<std::vector<double>> current_grabs_poses;
+
+
 //ros
 std::shared_ptr<RosNode> ros_state;
 typedef actionlib::SimpleActionServer<belt_task::belt_task_actionAction> Server;

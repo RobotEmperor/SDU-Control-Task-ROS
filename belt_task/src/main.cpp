@@ -24,6 +24,16 @@ void *thread_func_robot_a ( void *param )
     std::cout << COLOR_GREEN_BOLD << "Gazebo robot A start " << COLOR_RESET << std::endl;
   }
 
+  current_grabs_poses[0][0] = (robot_a->get_tf_current_().P())[0];
+  current_grabs_poses[0][1] = (robot_a->get_tf_current_().P())[1];
+  current_grabs_poses[0][2] = (robot_a->get_tf_current_().P())[2];
+
+  current_grabs_poses[1][0] = ((tf_a_b * robot_b->get_tf_current_()).P())[0];
+  current_grabs_poses[1][1] = ((tf_a_b * robot_b->get_tf_current_()).P())[1];
+  current_grabs_poses[1][2] = ((tf_a_b * robot_b->get_tf_current_()).P())[2];
+
+  robot_a_object_estimation->set_initial_grab_poses(current_grabs_poses);
+
   while(!exit_program)
   {
     clock_gettime ( CLOCK_MONOTONIC, &t_now );
@@ -33,6 +43,22 @@ void *thread_func_robot_a ( void *param )
     clock_gettime ( CLOCK_MONOTONIC, &t_now );
     t_next = t_now;
     t_prev = t_now;
+
+    // objects estimation
+
+    current_grabs_poses[1][0] = (robot_a->get_tf_current_().P())[0];
+    current_grabs_poses[1][1] = (robot_a->get_tf_current_().P())[1];
+    current_grabs_poses[1][2] = (robot_a->get_tf_current_().P())[2];
+
+    current_grabs_poses[0][0] = ((tf_a_b * robot_b->get_tf_current_()).P())[0];
+    current_grabs_poses[0][1] = ((tf_a_b * robot_b->get_tf_current_()).P())[1];
+    current_grabs_poses[0][2] = ((tf_a_b * robot_b->get_tf_current_()).P())[2];
+
+    robot_a_object_estimation->set_current_grab_poses(current_grabs_poses);
+
+    robot_a_object_estimation->model_estimation();
+
+    //std::cout << robot_a_object_estimation ->get_current_object_force(1) << std::endl;
 
     robot_a_strategy->set_robot_current_tf(robot_a->get_tf_current_());
     robot_a_strategy->set_is_moving_check(robot_a->get_is_moving_check());
@@ -87,8 +113,8 @@ void *thread_func_robot_a ( void *param )
     clock_gettime ( CLOCK_MONOTONIC, &t_now );
     t_all = t_now;
 
-    if(((t_all.tv_sec - t_all_pre.tv_sec) + (t_all.tv_nsec - t_all_pre.tv_nsec))*0.000001  >= 2.5)
-    std::cout << COLOR_GREEN_BOLD << "  Elapsed time A : "<< ((t_all.tv_sec - t_all_pre.tv_sec) + (t_all.tv_nsec - t_all_pre.tv_nsec))*0.000001 << COLOR_RESET << std::endl;
+    //if(((t_all.tv_sec - t_all_pre.tv_sec) + (t_all.tv_nsec - t_all_pre.tv_nsec))*0.000001  >= 2.5)
+    //  std::cout << COLOR_GREEN_BOLD << "  Elapsed time A : "<< ((t_all.tv_sec - t_all_pre.tv_sec) + (t_all.tv_nsec - t_all_pre.tv_nsec))*0.000001 << COLOR_RESET << std::endl;
   }
   return NULL;
 }
@@ -204,94 +230,49 @@ void initialize()
 
   robot_a_strategy->initialize(initial_path + "/SDU-Control-Task-ROS/belt_task/config/robot_A/initialize_robot.yaml");
   robot_b_strategy->initialize(initial_path + "/SDU-Control-Task-ROS/belt_task/config/robot_B/initialize_robot.yaml");
-}
 
-void executeAction(const belt_task::belt_task_actionGoalConstPtr &start_end, Server* as)
-{
-  std::vector<double> temp_a_big;
-  std::vector<double> temp_a_small;
+  robot_a_object_estimation = std::make_shared<ObejectEstimation>();
+  robot_a_object_estimation->initialize(2, initial_path + "/SDU-Control-Task-ROS/belt_task/config/objects/model_config.yaml");
+  std::vector<double> temp_;
+  temp_.assign(6, 0);
+  //two robot
+  current_grabs_poses.push_back(temp_);
+  current_grabs_poses.push_back(temp_);
 
-  std::vector<double> temp_b_big;
-  std::vector<double> temp_b_small;
+  tf_a_parts =  Transform3D<> (Vector3D<>(-0.739757210413974, 0.07993900394775277, 0.2449995438351456), EAA<>(-0.7217029684216122, -1.7591780460014375, 1.7685571865188172).toRotation3D());
+  tf_b_parts =  Transform3D<> (Vector3D<>(-0.6654834316385497, -0.0844570012960042, 0.2551901723057327), EAA<>(-1.484318068681165, 0.6191402790204206, -0.6254296057933952 ).toRotation3D());
 
-  temp_a_big.assign(6,0);
-  temp_a_small.assign(6,0);
-  temp_b_big.assign(6,0);
-  temp_b_small.assign(6,0);
+  tf_a_b = tf_a_parts * inverse(tf_b_parts);
 
-  //  temp_a_big_x = start_end->transform_a_big_pulley[0];
-  //  temp_a_big_y = start_end->transform_a_big_pulley[1];
-  //  temp_a_big_z = start_end->transform_a_big_pulley[2];
-  //
-  //  temp_a_small_x = start_end->transform_a_small_pulley[0];
-  //  temp_a_small_y = start_end->transform_a_small_pulley[1];
-  //  temp_a_small_z = start_end->transform_a_small_pulley[2];
-  //
-  //  temp_b_big_x = start_end->transform_b_big_pulley[0];
-  //  temp_b_big_y = start_end->transform_b_big_pulley[1];
-  //  temp_b_big_z = start_end->transform_b_big_pulley[2];
-  //
-  //  temp_b_small_x = start_end->transform_b_small_pulley[0];
-  //  temp_b_small_y = start_end->transform_b_small_pulley[1];
-  //  temp_b_small_z = start_end->transform_b_small_pulley[2];
+  std::cout << (tf_a_b.P())[0] << std::endl;
+  std::cout << (tf_a_b.P())[1] << std::endl;
+  std::cout << (tf_a_b.P())[2] << std::endl;
 
-  //example
-  //transform_a_big_pulley   :  Q[6]{-0.57389, 0.376311, 0.0549096, -1.58493, 0.914809, 1.57408}
-  //transform_a_small_pulley   :  Q[6]{-0.459831, 0.444951, 0.0550761, -1.09482, 1.27564, 1.08678}
-  //transform_b_big_pulley   :  Q[6]{-0.836103, -0.384349, 0.0623581, 0.823434, 1.40879, -0.828878}
-  //transform_b_small_pulley   :  Q[6]{-0.950775, -0.451959, 0.0622844, 1.32863, 1.1246, -1.33446}
+  std::cout << RPY<> (tf_a_b.R())[0] << std::endl;
+  std::cout << RPY<> (tf_a_b.R())[1] << std::endl;
+  std::cout << RPY<> (tf_a_b.R())[2] << std::endl;
 
-  temp_a_big[0] = -0.57389;
-  temp_a_big[1] = 0.376311;
-  temp_a_big[2] = 0.0549096;
+  temp_[0] = -0.739757210413974;
+  temp_[1] = 0.07993900394775277;
+  temp_[2] = 0.2449995438351456;
 
-  temp_a_small[0] = -0.459831;
-  temp_a_small[1] = 0.444951;
-  temp_a_small[2] = 0.0550761;
+  temp_[3] = -0.7217029684216122;
+  temp_[4] = -1.7591780460014375;
+  temp_[5] = 1.7685571865188172;
+//
+  robot_a_strategy->set_parts_data(temp_,temp_);
+//
+  temp_[0] = -0.6654834316385497;
+  temp_[1] = -0.0844570012960042;
+  temp_[2] = 0.2551901723057327;
 
-  temp_b_big[0] = -0.836103;
-  temp_b_big[1] = -0.384349;
-  temp_b_big[2] = 0.0623581;
-
-  temp_b_small[0] = -0.950775;
-  temp_b_small[1] = -0.451959;
-  temp_b_small[2] = 0.0622844;
-
-  robot_a_strategy->set_parts_data(temp_a_big, temp_a_small);
-  if(!robot_a_strategy->get_type().compare("master"))
-    robot_b_strategy->set_type("slave");
-  else
-    robot_b_strategy->set_type("master");
-  robot_b_strategy->set_parts_data(temp_b_big, temp_b_small);
+  temp_[3] = -1.484318068681165;
+  temp_[4] =  0.6191402790204206;
+  temp_[5] = -0.6254296057933952;
+//
+  robot_b_strategy->set_parts_data(temp_,temp_);
 
 
-  if(start_end->on_off)
-  {
-    wait_command = true;
-
-    //wait
-    if(!robot_a_strategy->get_type().compare("slave") && !robot_b_strategy->get_type().compare("master"))
-    {
-      while(!robot_a_strategy->get_finish_task_check() && !exit_program)
-      {
-        usleep(0.1);
-      }
-    }
-    else
-    {
-      while(!robot_b_strategy->get_finish_task_check() && !exit_program)
-      {
-        usleep(0.1);
-      }
-    }
-    exit_program = true;
-    as->setSucceeded();
-  }
-  else
-  {
-    return;
-  }
-  //real time task
 }
 
 void my_function(int sig)
@@ -312,26 +293,23 @@ int main (int argc, char **argv)
   ros_state = std::make_shared<RosNode>(argc,argv,"Belt_Task",nh);
   ros_state->initialize();
 
-  Server server(nh, "belt_task", boost::bind(&executeAction, _1, &server), false);
-  server.start();
-
   signal(SIGINT, my_function);
-//  while(!wait_command)
-//  {
-//    if(exit_program)
-//    {
-//      wait_command = true;
-//      ros_state->shout_down_ros();
-//
-//      robot_a->terminate_data_log();
-//      robot_b->terminate_data_log();
-//
-//      std::cout << COLOR_RED_BOLD << "Terminate program" << COLOR_RESET << std::endl;
-//      return 0;
-//    }
-//    ros_state->update_ros_data();
-//    usleep(1);
-//  }
+  //  while(!wait_command)
+  //  {
+  //    if(exit_program)
+  //    {
+  //      wait_command = true;
+  //      ros_state->shout_down_ros();
+  //
+  //      robot_a->terminate_data_log();
+  //      robot_b->terminate_data_log();
+  //
+  //      std::cout << COLOR_RED_BOLD << "Terminate program" << COLOR_RESET << std::endl;
+  //      return 0;
+  //    }
+  //    ros_state->update_ros_data();
+  //    usleep(1);
+  //  }
 
   std::cout << COLOR_YELLOW_BOLD << "Simulation On [ yes / no ]" << COLOR_RESET << std::endl;
   std::cin >> silmulation_on_off;
@@ -378,6 +356,9 @@ int main (int argc, char **argv)
     robot_b->set_up_robot(robot_b_ip, gazebo_check);
     robot_b->moveL_to_init_pose();
   }
+
+  robot_a_strategy->set_type("master");
+  robot_b_strategy->set_type("slave");
 
 
 
