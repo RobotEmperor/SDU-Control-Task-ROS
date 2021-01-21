@@ -50,6 +50,9 @@ public:
   void send_ee_velocity (std::vector<double> ee_velocity);
   void send_satefy_violation (bool satefy_violation);
 
+  void send_gripper_a_move (double values);
+  void send_gripper_b_move (double values);
+
   void clear_task_command ();
 
   void TestMsgCallBack (const std_msgs::Bool::ConstPtr& msg);
@@ -101,6 +104,10 @@ private:
   ros::Subscriber force_pid_gain_command_sub_;
 
   ros::Subscriber test_sub_;
+  // grippers
+
+  ros::Publisher gripper_a_pub_;
+  ros::Publisher gripper_b_pub_;
 
   std_msgs::Float64MultiArray raw_force_torque_msg_;
   std_msgs::Float64MultiArray filtered_force_torque_msg_;
@@ -119,6 +126,9 @@ private:
   std_msgs::Float64 gazebo_wrist_1_position_b_msg_;
   std_msgs::Float64 gazebo_wrist_2_position_b_msg_;
   std_msgs::Float64 gazebo_wrist_3_position_b_msg_;
+
+  std_msgs::Float64 gripper_a_msg_;
+  std_msgs::Float64 gripper_b_msg_;
 
   //messages for RL
   ros::Publisher error_ee_pose_pub_;

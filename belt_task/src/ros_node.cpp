@@ -34,6 +34,9 @@ void RosNode::initialize()
 	ee_velocity_pub_ = nh.advertise<std_msgs::Float64MultiArray>("/sdu/ur10e/ee_velocity", 10);
 	satefy_violation_pub_ = nh.advertise<std_msgs::Bool>("/sdu/ur10e/safety_violation", 10);
 
+	gripper_a_pub_ =nh.advertise<std_msgs::Float64>("/sdu/ur10e/gripper_a", 10);
+	gripper_b_pub_ =nh.advertise<std_msgs::Float64>("/sdu/ur10e/gripper_b", 10);
+
 	gazebo_shoulder_pan_position_pub_ = nh.advertise<std_msgs::Float64>("/ur10e_robot/shoulder_pan_position/command", 10);
 	gazebo_shoulder_lift_position_pub_ = nh.advertise<std_msgs::Float64>("/ur10e_robot/shoulder_lift_position/command", 10);
 	gazebo_elbow_position_pub_ = nh.advertise<std_msgs::Float64>("/ur10e_robot/elbow_position/command", 10);
@@ -46,7 +49,7 @@ void RosNode::initialize()
 	gazebo_elbow_position_b_pub_= nh.advertise<std_msgs::Float64>("/robot_b/ur10e_robot_b/elbow_position/command", 10);
 	gazebo_wrist_1_position_b_pub_= nh.advertise<std_msgs::Float64>("/robot_b/ur10e_robot_b/wrist_1_position/command", 10);
 	gazebo_wrist_2_position_b_pub_= nh.advertise<std_msgs::Float64>("/robot_b/ur10e_robot_b/wrist_2_position/command", 10);
-	gazebo_wrist_3_position_b_pub_= nh.advertise<std_msgs::Float64>("robot_b/ur10e_robot_b/wrist_3_position/command", 10);
+	gazebo_wrist_3_position_b_pub_= nh.advertise<std_msgs::Float64>("/robot_b/ur10e_robot_b/wrist_3_position/command", 10);
 
 
 	ee_command_sub_ = nh.subscribe("/sdu/ur10e/ee_command", 10, &RosNode::EeCommandDataMsgCallBack, this);
@@ -76,19 +79,19 @@ void RosNode::PidGainCommandMsgCallBack (const std_msgs::Float64MultiArray::Cons
 	gain_i_ = msg->data[1];
 	gain_d_ = msg->data[2];
 
-	YAML::Emitter y_out;
-	std::string path_ = "../config/pose_pid_gain.yaml";
-
-	y_out << YAML::BeginMap;
-	y_out << YAML::Key << "p_gain";
-	y_out << YAML::Value << gain_p_;
-	y_out << YAML::Key << "i_gain";
-	y_out << YAML::Value << gain_i_;
-	y_out << YAML::Key << "d_gain";
-	y_out << YAML::Value << gain_d_;
-	y_out << YAML::EndMap;
-	std::ofstream fout(path_.c_str());
-	fout << y_out.c_str(); // dump it back into the file
+//	YAML::Emitter y_out;
+//	std::string path_ = "../config/pose_pid_gain.yaml";
+//
+//	y_out << YAML::BeginMap;
+//	y_out << YAML::Key << "p_gain";
+//	y_out << YAML::Value << gain_p_;
+//	y_out << YAML::Key << "i_gain";
+//	y_out << YAML::Value << gain_i_;
+//	y_out << YAML::Key << "d_gain";
+//	y_out << YAML::Value << gain_d_;
+//	y_out << YAML::EndMap;
+//	std::ofstream fout(path_.c_str());
+//	fout << y_out.c_str(); // dump it back into the file
 }
 void RosNode::ForcePidGainCommandMsgCallBack (const std_msgs::Float64MultiArray::ConstPtr& msg)
 {
@@ -96,19 +99,19 @@ void RosNode::ForcePidGainCommandMsgCallBack (const std_msgs::Float64MultiArray:
 	force_gain_i_ = msg->data[1];
 	force_gain_d_ = msg->data[2];
 
-	YAML::Emitter y_out;
-	std::string path_ = "../config/force_pid_gain.yaml";
-
-	y_out << YAML::BeginMap;
-	y_out << YAML::Key << "p_gain";
-	y_out << YAML::Value << force_gain_p_;
-	y_out << YAML::Key << "i_gain";
-	y_out << YAML::Value << force_gain_i_;
-	y_out << YAML::Key << "d_gain";
-	y_out << YAML::Value << force_gain_d_;
-	y_out << YAML::EndMap;
-	std::ofstream fout(path_.c_str());
-	fout << y_out.c_str(); // dump it back into the file
+//	YAML::Emitter y_out;
+//	std::string path_ = "../config/force_pid_gain.yaml";
+//
+//	y_out << YAML::BeginMap;
+//	y_out << YAML::Key << "p_gain";
+//	y_out << YAML::Value << force_gain_p_;
+//	y_out << YAML::Key << "i_gain";
+//	y_out << YAML::Value << force_gain_i_;
+//	y_out << YAML::Key << "d_gain";
+//	y_out << YAML::Value << force_gain_d_;
+//	y_out << YAML::EndMap;
+//	std::ofstream fout(path_.c_str());
+//	fout << y_out.c_str(); // dump it back into the file
 }
 void RosNode::TestMsgCallBack (const std_msgs::Bool::ConstPtr& msg)
 {
@@ -218,6 +221,16 @@ void RosNode::send_satefy_violation (bool satefy_violation)
 {
 	satefy_violation_msg_.data = satefy_violation;
 	satefy_violation_pub_.publish(satefy_violation_msg_);
+}
+void RosNode::send_gripper_a_move (double values)
+{
+  gripper_a_msg_.data = values;
+  gripper_a_pub_.publish(gripper_a_msg_);
+}
+void RosNode::send_gripper_b_move (double values)
+{
+  gripper_b_msg_.data = values;
+  gripper_b_pub_.publish(gripper_b_msg_);
 }
 void RosNode::update_ros_data()
 {

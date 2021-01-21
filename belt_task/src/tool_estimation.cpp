@@ -179,7 +179,7 @@ void ToolEstimation::initialize()
 	mass_of_tool_ = 0;
 	cutoff_frequency_ = 3;
 
-	r_ = 20;
+	r_ = 500;
 	q_ = 0.1;
 
 	kf_estimated_force = std::make_shared<KalmanFilter>();
@@ -277,9 +277,9 @@ void ToolEstimation::process_estimated_force(std::vector<double> ft_data, std::v
 	ft_data_m_(0,0) =  ft_data_m_(0,0) + (mass_of_tool_*compensated_acc_)(0,0);
 	ft_data_m_(1,0) =  ft_data_m_(1,0) + (mass_of_tool_*compensated_acc_)(1,0);
 	ft_data_m_(2,0) =  ft_data_m_(2,0) + (mass_of_tool_*compensated_acc_)(2,0);
-	ft_data_m_(3,0) =  ft_data_m_(3,0);
-	ft_data_m_(4,0) =  ft_data_m_(4,0);
-	ft_data_m_(5,0) =  ft_data_m_(5,0);
+//	ft_data_m_(3,0) =  ft_data_m_(3,0);
+//	ft_data_m_(4,0) =  ft_data_m_(4,0);
+//	ft_data_m_(5,0) =  ft_data_m_(5,0);
 
 	kf_estimated_force->process_kalman_filtered_data(ft_data_m_);
 

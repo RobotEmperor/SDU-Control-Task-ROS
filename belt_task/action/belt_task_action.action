@@ -1,8 +1,12 @@
 #goal definition
-bool on_off_
+bool on_off
+float64[] transform_a_big_pulley
+float64[] transform_a_small_pulley
+float64[] transform_b_big_pulley
+float64[] transform_b_small_pulley
 ---
 #result definition
-bool done_
+bool done
 ---
 #feedback
 bool sequence
