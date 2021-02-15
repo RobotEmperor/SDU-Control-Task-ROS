@@ -164,38 +164,38 @@ void TaskStrategy::initialize_reference_frame()
   double align_angle_z_ = 0;
   tf_base_to_tcp_ = Transform3D<> (Vector3D<>(initial_pose_vector_[0], initial_pose_vector_[1], initial_pose_vector_[2]), EAA<>(initial_pose_vector_[3], initial_pose_vector_[4], initial_pose_vector_[5]).toRotation3D());
 
-//  temp_inv_ = tf_base_to_tcp_;
-//  temp_inv_.invMult(temp_inv_, tf_base_to_start_);
-//  tf_tcp_to_start_ = temp_inv_;
-//
-//  temp_inv_ = tf_base_to_tcp_;
-//  temp_inv_.invMult(temp_inv_, tf_base_to_end_);
-//  tf_tcp_to_end_ = temp_inv_;
+  //  temp_inv_ = tf_base_to_tcp_;
+  //  temp_inv_.invMult(temp_inv_, tf_base_to_start_);
+  //  tf_tcp_to_start_ = temp_inv_;
+  //
+  //  temp_inv_ = tf_base_to_tcp_;
+  //  temp_inv_.invMult(temp_inv_, tf_base_to_end_);
+  //  tf_tcp_to_end_ = temp_inv_;
 
-//  tf_tcp_to_direction_.P() = -(tf_tcp_to_end_.P() - tf_tcp_to_start_.P());
-//
-//  align_angle_z_ = atan2(tf_tcp_to_direction_.P()[1],tf_tcp_to_direction_.P()[0]);
-//
-//  if(align_angle_z_ > 69*DEGREE2RADIAN)
-//    align_angle_z_ = 69*DEGREE2RADIAN;
-//  if(align_angle_z_ < -69*DEGREE2RADIAN)
-//    align_angle_z_ = -69*DEGREE2RADIAN;
-//
-//  tf_tcp_to_rotate_ =  Transform3D<> (Vector3D<>(0,0,0), RPY<>(align_angle_z_,0,0).toRotation3D());
-//  tf_base_to_tcp_rotated_ = tf_base_to_tcp_*tf_tcp_to_rotate_;
-//
-//
-//  if(!type_.compare("master"))
-//  {
-//    tf_base_to_start_.R() = tf_base_to_tcp_.R();
-//  }
-//  else
-//  {
-//    tf_base_to_start_.R() = tf_base_to_tcp_rotated_.R();
-//    tf_base_to_end_.R() = tf_base_to_tcp_.R();
-//  }
+  //  tf_tcp_to_direction_.P() = -(tf_tcp_to_end_.P() - tf_tcp_to_start_.P());
+  //
+  //  align_angle_z_ = atan2(tf_tcp_to_direction_.P()[1],tf_tcp_to_direction_.P()[0]);
+  //
+  //  if(align_angle_z_ > 69*DEGREE2RADIAN)
+  //    align_angle_z_ = 69*DEGREE2RADIAN;
+  //  if(align_angle_z_ < -69*DEGREE2RADIAN)
+  //    align_angle_z_ = -69*DEGREE2RADIAN;
+  //
+  //  tf_tcp_to_rotate_ =  Transform3D<> (Vector3D<>(0,0,0), RPY<>(align_angle_z_,0,0).toRotation3D());
+  //  tf_base_to_tcp_rotated_ = tf_base_to_tcp_*tf_tcp_to_rotate_;
+  //
+  //
+  //  if(!type_.compare("master"))
+  //  {
+  //    tf_base_to_start_.R() = tf_base_to_tcp_.R();
+  //  }
+  //  else
+  //  {
+  //    tf_base_to_start_.R() = tf_base_to_tcp_rotated_.R();
+  //    tf_base_to_end_.R() = tf_base_to_tcp_.R();
+  //  }
 
-//  current_reference_frame_ = tf_base_to_tcp_;
+  //  current_reference_frame_ = tf_base_to_tcp_;
   std::cout << robot_name_ <<"::  NEW initialize !! " << tf_base_to_tcp_ << std::endl;
 }
 void TaskStrategy::estimation_of_belt_position()
@@ -423,37 +423,84 @@ void TaskStrategy::set_parts_data(std::vector<double> first_part, std::vector<do
   tf_base_to_end_ = Transform3D<> (Vector3D<>(second_part_[0],second_part_[1],second_part_[2]), EAA<>(second_part_[3],second_part_[4],second_part_[5]).toRotation3D());
 
 
-//  Transform3D<> tf_start_tcp;
-//  Transform3D<> tf_base_to_start_tcp;
-//
-//  tf_start_tcp = Transform3D<> (Vector3D<>(0.03,0,-0.02), RPY<>(0,-25*DEGREE2RADIAN,0).toRotation3D()); // b
-//  tf_base_to_start_tcp = tf_base_to_start_*tf_start_tcp;
-//
-//  std::cout << "A:0  " << (tf_base_to_start_tcp.P())[0] << std::endl;
-//  std::cout << "A:1  " << (tf_base_to_start_tcp.P())[1] << std::endl;
-//  std::cout << "A:2  " << (tf_base_to_start_tcp.P())[2] << std::endl;
-//
-//  std::cout << "A:3  " << EAA<> (tf_base_to_start_tcp.R())[0] << std::endl;
-//  std::cout << "A:4  " << EAA<> (tf_base_to_start_tcp.R())[1] << std::endl;
-//  std::cout << "A:5  " << EAA<> (tf_base_to_start_tcp.R())[2] << std::endl;
+  //  Transform3D<> tf_start_tcp;
+  //  Transform3D<> tf_base_to_start_tcp;
+  //
+  //  tf_start_tcp = Transform3D<> (Vector3D<>(0.03,0,-0.02), RPY<>(0,-25*DEGREE2RADIAN,0).toRotation3D()); // b
+  //  tf_base_to_start_tcp = tf_base_to_start_*tf_start_tcp;
+  //
+  //  std::cout << "A:0  " << (tf_base_to_start_tcp.P())[0] << std::endl;
+  //  std::cout << "A:1  " << (tf_base_to_start_tcp.P())[1] << std::endl;
+  //  std::cout << "A:2  " << (tf_base_to_start_tcp.P())[2] << std::endl;
+  //
+  //  std::cout << "A:3  " << EAA<> (tf_base_to_start_tcp.R())[0] << std::endl;
+  //  std::cout << "A:4  " << EAA<> (tf_base_to_start_tcp.R())[1] << std::endl;
+  //  std::cout << "A:5  " << EAA<> (tf_base_to_start_tcp.R())[2] << std::endl;
 
 
-//  tf_start_tcp = Transform3D<> (Vector3D<>(0.03,0,-0.02), RPY<>(0,-25*DEGREE2RADIAN,0).toRotation3D()); // b
-//  tf_base_to_start_tcp = tf_base_to_start_*tf_base_to_start_tcp;
-//
-//  std::cout << "B:0  " << (tf_base_to_start_tcp.P())[0] << std::endl;
-//  std::cout << "B:1  " << (tf_base_to_start_tcp.P())[1] << std::endl;
-//  std::cout << "B:2  " << (tf_base_to_start_tcp.P())[2] << std::endl;
-//
-//  std::cout << "B:3  " << EAA<> (tf_base_to_start_tcp.R())[0] << std::endl;
-//  std::cout << "B:4  " << EAA<> (tf_base_to_start_tcp.R())[1] << std::endl;
-//  std::cout << "B:5  " << EAA<> (tf_base_to_start_tcp.R())[2] << std::endl;
+  //  tf_start_tcp = Transform3D<> (Vector3D<>(0.03,0,-0.02), RPY<>(0,-25*DEGREE2RADIAN,0).toRotation3D()); // b
+  //  tf_base_to_start_tcp = tf_base_to_start_*tf_base_to_start_tcp;
+  //
+  //  std::cout << "B:0  " << (tf_base_to_start_tcp.P())[0] << std::endl;
+  //  std::cout << "B:1  " << (tf_base_to_start_tcp.P())[1] << std::endl;
+  //  std::cout << "B:2  " << (tf_base_to_start_tcp.P())[2] << std::endl;
+  //
+  //  std::cout << "B:3  " << EAA<> (tf_base_to_start_tcp.R())[0] << std::endl;
+  //  std::cout << "B:4  " << EAA<> (tf_base_to_start_tcp.R())[1] << std::endl;
+  //  std::cout << "B:5  " << EAA<> (tf_base_to_start_tcp.R())[2] << std::endl;
 
 
   //iros
   //decision_of_function();
   initialize_reference_frame();
-  assign_parts("master_pulley_big", "slave_pulley_big");
+  //assign_parts("master_pulley_big", "slave_pulley_big");
+}
+void TaskStrategy::input_paths(geometry_msgs::PoseArray paths_)
+{
+
+  Transform3D<> temp_pose_;
+  temp_pose_ = Transform3D<> (Vector3D<>(0, 0, 0), Quaternion<>(0,0,0,0).toRotation3D());// xyz w
+
+  std::vector<double> temp_points_;
+  int temp_points_numbers_ = 0;
+
+  master_way_points_numbers_ = 0;
+
+  double roll_x, pitch_y, yaw_z;
+  roll_x = 0;
+  pitch_y = 0;
+  yaw_z = 0;
+
+  if(paths_.poses.size() == 0)
+    return;
+
+  for(int num = 0; num < paths_.poses.size(); num ++)
+  {
+    master_way_points_numbers_ ++;
+
+    temp_points_.push_back(paths_.poses[num].position.x);
+    temp_points_.push_back(paths_.poses[num].position.y);
+    temp_points_.push_back(paths_.poses[num].position.z);
+
+    temp_pose_ = Transform3D<> (Vector3D<>(0, 0, 0), Quaternion<>(paths_.poses[num].orientation.x,paths_.poses[num].orientation.y,paths_.poses[num].orientation.z,paths_.poses[num].orientation.w).toRotation3D());// xyz w
+
+
+    yaw_z = RPY<>(temp_pose_.R())[0]; // z
+    pitch_y = RPY<>(temp_pose_.R())[1]; // y
+    roll_x = RPY<>(temp_pose_.R())[2]; // x
+
+    temp_points_.push_back(yaw_z);
+    temp_points_.push_back(pitch_y);
+    temp_points_.push_back(roll_x);
+
+    temp_points_.push_back(0.5); // should be modified
+
+    master_way_points_[num] = temp_points_;
+
+    temp_points_.clear();
+
+    std::cout << robot_name_ << " " << num  <<"::"<< master_way_points_[num]  << std::endl;
+  }
 }
 bool TaskStrategy::get_finish_task_check()
 {
@@ -476,9 +523,9 @@ void TaskStrategy::set_type(std::string type)
   type_ = type;
 }
 Transform3D<> TaskStrategy::get_current_reference_frame_()
-{
+        {
   return current_reference_frame_;
-}
+        }
 std::vector<double> TaskStrategy::get_current_way_points_()
 {
   return current_way_points_;

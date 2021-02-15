@@ -13,6 +13,7 @@
 #include "std_msgs/Float64.h"
 #include "std_msgs/Bool.h"
 #include "std_msgs/String.h"
+#include "geometry_msgs/PoseArray.h"
 
 // file load
 #include <fstream>
@@ -37,6 +38,7 @@ public:
   void update_ros_data();
   void shout_down_ros();
 
+  void DisplayToolPathMsgCallBack(const geometry_msgs::PoseArray::ConstPtr& msg);
   void EeCommandDataMsgCallBack (const std_msgs::Float64MultiArray::ConstPtr& msg);
   void TaskCommandDataMsgCallBack (const std_msgs::String::ConstPtr& msg);
   void PidGainCommandMsgCallBack (const std_msgs::Float64MultiArray::ConstPtr& msg);
@@ -68,9 +70,11 @@ public:
 
 
   bool get_test();
-  //bool get_program_on_off_();
-
+  bool check_input_paths();
   std::string get_task_command();
+
+  //get paths
+  geometry_msgs::PoseArray get_tool_paths();
 
 private:
   ros::NodeHandle nh;
@@ -104,6 +108,7 @@ private:
   ros::Subscriber force_pid_gain_command_sub_;
 
   ros::Subscriber test_sub_;
+  ros::Subscriber display_tool_path_sub_;
   // grippers
 
   ros::Publisher gripper_a_pub_;
@@ -130,6 +135,8 @@ private:
   std_msgs::Float64 gripper_a_msg_;
   std_msgs::Float64 gripper_b_msg_;
 
+  geometry_msgs::PoseArray display_tool_path_msg_;
+
   //messages for RL
   ros::Publisher error_ee_pose_pub_;
   ros::Publisher ee_velocity_pub_;
@@ -142,6 +149,7 @@ private:
   //message for action
 
   bool test_;
+  bool check_input_paths_;
 };
 
 

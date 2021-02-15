@@ -259,9 +259,9 @@ void initialize()
   temp_[3] = -0.7217029684216122;
   temp_[4] = -1.7591780460014375;
   temp_[5] = 1.7685571865188172;
-//
+  //
   robot_a_strategy->set_parts_data(temp_,temp_);
-//
+  //
   temp_[0] = -0.6654834316385497;
   temp_[1] = -0.0844570012960042;
   temp_[2] = 0.2551901723057327;
@@ -269,7 +269,7 @@ void initialize()
   temp_[3] = -1.484318068681165;
   temp_[4] =  0.6191402790204206;
   temp_[5] = -0.6254296057933952;
-//
+  //
   robot_b_strategy->set_parts_data(temp_,temp_);
 
 
@@ -310,6 +310,27 @@ int main (int argc, char **argv)
   //    ros_state->update_ros_data();
   //    usleep(1);
   //  }
+
+  while(!ros_state->check_input_paths())
+  {
+    if(exit_program)
+    {
+      wait_command = true;
+      ros_state->shout_down_ros();
+
+      robot_a->terminate_data_log();
+      robot_b->terminate_data_log();
+
+      std::cout << COLOR_RED_BOLD << "Terminate program" << COLOR_RESET << std::endl;
+      return 0;
+    }
+    ros_state->update_ros_data();
+    usleep(1);
+  }
+
+  std::cout << COLOR_YELLOW_BOLD << "Recieved :: " << ros_state->check_input_paths() << COLOR_RESET << std::endl;
+  robot_a_strategy->input_paths(ros_state->get_tool_paths());
+
 
   std::cout << COLOR_YELLOW_BOLD << "Simulation On [ yes / no ]" << COLOR_RESET << std::endl;
   std::cin >> silmulation_on_off;

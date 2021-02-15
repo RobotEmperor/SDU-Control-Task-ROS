@@ -27,6 +27,9 @@
 //log
 #include "log.h"
 
+//ros msg
+#include "geometry_msgs/PoseArray.h"
+
 using namespace rw::math;
 
 class TaskStrategy
@@ -38,6 +41,8 @@ public:
 
   void initialize(const std::string &path);
   void assign_parts(std::string master, std::string slave);
+  //recieve motion planning
+  void input_paths(geometry_msgs::PoseArray paths_);
   void initialize_reference_frame();
   bool tasks();
 

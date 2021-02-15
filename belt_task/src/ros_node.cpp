@@ -19,6 +19,7 @@ nh(nh_)
 	force_gain_i_ = 0;
 	force_gain_d_ = 0;
 	test_ = false;
+	check_input_paths_ = false;
 }
 RosNode::~RosNode()
 {
@@ -59,8 +60,17 @@ void RosNode::initialize()
 
 	test_sub_ =  nh.subscribe("/sdu/ur10e/test", 10, &RosNode::TestMsgCallBack, this);
 
+	display_tool_path_sub_ = nh.subscribe("/tesseract/display_tool_path", 10, &RosNode::DisplayToolPathMsgCallBack, this);
+
 	set_point_.assign(6,0);
 
+}
+void RosNode::DisplayToolPathMsgCallBack(const geometry_msgs::PoseArray::ConstPtr& msg)
+{
+  check_input_paths_ = true;
+  display_tool_path_msg_.poses = msg->poses;
+
+  std::cout << "STATUS :: Input Paths :: " << check_input_paths_ << std::endl;
 }
 void RosNode::EeCommandDataMsgCallBack (const std_msgs::Float64MultiArray::ConstPtr& msg)
 {
@@ -287,4 +297,12 @@ double RosNode::get_force_d_gain()
 bool RosNode::get_test()
 {
 	return test_;
+}
+bool RosNode::check_input_paths()
+{
+ return check_input_paths_;
+}
+geometry_msgs::PoseArray RosNode::get_tool_paths()
+{
+  return display_tool_path_msg_;
 }

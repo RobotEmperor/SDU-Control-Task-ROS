@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 11)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
+  geometry_msgs
   actionlib
   actionlib_msgs
   message_generation
