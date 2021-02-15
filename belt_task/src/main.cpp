@@ -244,13 +244,13 @@ void initialize()
 
   tf_a_b = tf_a_parts * inverse(tf_b_parts);
 
-  std::cout << (tf_a_b.P())[0] << std::endl;
-  std::cout << (tf_a_b.P())[1] << std::endl;
-  std::cout << (tf_a_b.P())[2] << std::endl;
+  std::cout << (tf_a_parts.P())[0] << std::endl;
+  std::cout << (tf_a_parts.P())[1] << std::endl;
+  std::cout << (tf_a_parts.P())[2] << std::endl;
 
-  std::cout << RPY<> (tf_a_b.R())[0] << std::endl;
-  std::cout << RPY<> (tf_a_b.R())[1] << std::endl;
-  std::cout << RPY<> (tf_a_b.R())[2] << std::endl;
+  std::cout << RPY<> (tf_a_parts.R())[0] << std::endl;
+  std::cout << RPY<> (tf_a_parts.R())[1] << std::endl;
+  std::cout << RPY<> (tf_a_parts.R())[2] << std::endl;
 
   temp_[0] = -0.739757210413974;
   temp_[1] = 0.07993900394775277;

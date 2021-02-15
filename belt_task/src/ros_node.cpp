@@ -38,12 +38,12 @@ void RosNode::initialize()
 	gripper_a_pub_ =nh.advertise<std_msgs::Float64>("/sdu/ur10e/gripper_a", 10);
 	gripper_b_pub_ =nh.advertise<std_msgs::Float64>("/sdu/ur10e/gripper_b", 10);
 
-	gazebo_shoulder_pan_position_pub_ = nh.advertise<std_msgs::Float64>("/ur10e_robot_a/shoulder_pan_position/command", 10);
-	gazebo_shoulder_lift_position_pub_ = nh.advertise<std_msgs::Float64>("/ur10e_robot_a/shoulder_lift_position/command", 10);
-	gazebo_elbow_position_pub_ = nh.advertise<std_msgs::Float64>("/ur10e_robot_a/elbow_position/command", 10);
-	gazebo_wrist_1_position_pub_ = nh.advertise<std_msgs::Float64>("/ur10e_robot_a/wrist_1_position/command", 10);
-	gazebo_wrist_2_position_pub_ = nh.advertise<std_msgs::Float64>("/ur10e_robot_a/wrist_2_position/command", 10);
-	gazebo_wrist_3_position_pub_ = nh.advertise<std_msgs::Float64>("/ur10e_robot_a/wrist_3_position/command", 10);
+	gazebo_shoulder_pan_position_pub_ = nh.advertise<std_msgs::Float64>("/ur10e_a/a_shoulder_pan_position/command", 10);
+	gazebo_shoulder_lift_position_pub_ = nh.advertise<std_msgs::Float64>("/ur10e_a/a_shoulder_lift_position/command", 10);
+	gazebo_elbow_position_pub_ = nh.advertise<std_msgs::Float64>("/ur10e_a/a_elbow_position/command", 10);
+	gazebo_wrist_1_position_pub_ = nh.advertise<std_msgs::Float64>("/ur10e_a/a_wrist_1_position/command", 10);
+	gazebo_wrist_2_position_pub_ = nh.advertise<std_msgs::Float64>("/ur10e_a/a_wrist_2_position/command", 10);
+	gazebo_wrist_3_position_pub_ = nh.advertise<std_msgs::Float64>("/ur10e_a/a_wrist_3_position/command", 10);
 
 	gazebo_shoulder_pan_position_b_pub_ = nh.advertise<std_msgs::Float64>("/robot_b/ur10e_robot_b/shoulder_pan_position/command", 10);
 	gazebo_shoulder_lift_position_b_pub_ = nh.advertise<std_msgs::Float64>("/robot_b/ur10e_robot_b/shoulder_lift_position/command", 10);

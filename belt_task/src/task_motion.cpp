@@ -35,7 +35,8 @@ void TaskMotion::motion_to_desired_pose(Transform3D<> reference_frame, double x,
   // output always has to be points in relative to base frame (global)
   tf_tcp_desired_pose_ = Transform3D<> (Vector3D<>(x, y, z), tcp_rpy_.toRotation3D());
 
-  tf_desired_pose_ = reference_frame*tf_tcp_desired_pose_;
+  //tf_desired_pose_ = reference_frame*tf_tcp_desired_pose_;
+  tf_desired_pose_ = tf_tcp_desired_pose_;
 
   desired_pose_matrix_(0,1) = Vector3D<> (tf_desired_pose_.P())[0];
   desired_pose_matrix_(1,1) = Vector3D<> (tf_desired_pose_.P())[1];

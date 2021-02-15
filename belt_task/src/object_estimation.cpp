@@ -64,7 +64,7 @@ void ObejectEstimation::model_estimation()
       current_object_force_torque_vector_[num_+1][num_inner_]=force_unit_vector_[num_inner_]*objects_force_magnitude_;
     }
     //check
-    std::cout << force_unit_vector_ << std::endl;
+    //std::cout << force_unit_vector_ << std::endl;
     //std::cout << objects_force_magnitude_ << std::endl;
     force_unit_vector_.clear();
   }

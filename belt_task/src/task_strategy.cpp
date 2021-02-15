@@ -343,24 +343,24 @@ void TaskStrategy::master_robot()
       gripper_move_values_ = 12;
     }
 
-    if(phases_ == 1)
-    {
-      for(int num = 0; num < 3; num ++)
-      {
-        current_desired_force_vector_[num] = 0;
-      }
-      gripper_move_values_ = 6;
-
-      desired_groove_position_[0] = master_way_points_[1][0];
-      desired_groove_position_[1] = master_way_points_[1][1];
-      desired_groove_position_[2] = master_way_points_[1][2];
-
-      estimation_of_belt_position(); ////bearing frame
-
-      master_way_points_[1][0] = insert_belt_way_points_[0];
-      master_way_points_[1][1] = insert_belt_way_points_[1];
-      master_way_points_[1][2] = insert_belt_way_points_[2];
-    }
+//    if(phases_ == 1)
+//    {
+//      for(int num = 0; num < 3; num ++)
+//      {
+//        current_desired_force_vector_[num] = 0;
+//      }
+//      gripper_move_values_ = 6;
+//
+//      desired_groove_position_[0] = master_way_points_[1][0];
+//      desired_groove_position_[1] = master_way_points_[1][1];
+//      desired_groove_position_[2] = master_way_points_[1][2];
+//
+//      estimation_of_belt_position(); ////bearing frame
+//
+//      master_way_points_[1][0] = insert_belt_way_points_[0];
+//      master_way_points_[1][1] = insert_belt_way_points_[1];
+//      master_way_points_[1][2] = insert_belt_way_points_[2];
+//    }
 
     for(int num = 0; num < 7; num ++)
     {
@@ -459,8 +459,9 @@ void TaskStrategy::input_paths(geometry_msgs::PoseArray paths_)
 {
 
   Transform3D<> temp_pose_;
+  Transform3D<> tf_base_a_to_world;
   temp_pose_ = Transform3D<> (Vector3D<>(0, 0, 0), Quaternion<>(0,0,0,0).toRotation3D());// xyz w
-
+  tf_base_a_to_world = Transform3D<> (Vector3D<>(0, 0, -0.05), RPY<>(-180*DEGREE2RADIAN,0,0).toRotation3D());// xyz w
   std::vector<double> temp_points_;
   int temp_points_numbers_ = 0;
 
@@ -482,18 +483,25 @@ void TaskStrategy::input_paths(geometry_msgs::PoseArray paths_)
     temp_points_.push_back(paths_.poses[num].position.y);
     temp_points_.push_back(paths_.poses[num].position.z);
 
-    temp_pose_ = Transform3D<> (Vector3D<>(0, 0, 0), Quaternion<>(paths_.poses[num].orientation.x,paths_.poses[num].orientation.y,paths_.poses[num].orientation.z,paths_.poses[num].orientation.w).toRotation3D());// xyz w
+    temp_pose_ = Transform3D<> (Vector3D<>(temp_points_[0], temp_points_[1], temp_points_[2]), Quaternion<>(paths_.poses[num].orientation.x,paths_.poses[num].orientation.y,paths_.poses[num].orientation.z,paths_.poses[num].orientation.w).toRotation3D());// xyz w
+
+    temp_pose_ = tf_base_a_to_world*temp_pose_;
+
+    temp_points_.clear();
 
 
     yaw_z = RPY<>(temp_pose_.R())[0]; // z
     pitch_y = RPY<>(temp_pose_.R())[1]; // y
     roll_x = RPY<>(temp_pose_.R())[2]; // x
 
+    temp_points_.push_back(temp_pose_.P()[0]);
+    temp_points_.push_back(temp_pose_.P()[1]);
+    temp_points_.push_back(temp_pose_.P()[2]);
     temp_points_.push_back(yaw_z);
     temp_points_.push_back(pitch_y);
     temp_points_.push_back(roll_x);
 
-    temp_points_.push_back(0.5); // should be modified
+    temp_points_.push_back(1); // should be modified
 
     master_way_points_[num] = temp_points_;
 
