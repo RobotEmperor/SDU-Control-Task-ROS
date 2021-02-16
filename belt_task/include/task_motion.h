@@ -38,6 +38,7 @@ public:
   //setup
   void initialize(double control_time_);
   void motion_to_desired_pose(Transform3D<> reference_frame, double x, double y, double z,RPY<> tcp_rpy_, double time);
+  void add_desired_vel(std::vector<double> init_vel_, std::vector<double> final_vel_);
 
   void generate_fifth_order_trajectory();
 

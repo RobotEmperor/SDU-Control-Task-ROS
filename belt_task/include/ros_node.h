@@ -39,6 +39,7 @@ public:
   void shout_down_ros();
 
   void DisplayToolPathMsgCallBack(const geometry_msgs::PoseArray::ConstPtr& msg);
+  void DisplayToolPathBMsgCallBack(const geometry_msgs::PoseArray::ConstPtr& msg);
   void EeCommandDataMsgCallBack (const std_msgs::Float64MultiArray::ConstPtr& msg);
   void TaskCommandDataMsgCallBack (const std_msgs::String::ConstPtr& msg);
   void PidGainCommandMsgCallBack (const std_msgs::Float64MultiArray::ConstPtr& msg);
@@ -74,7 +75,8 @@ public:
   std::string get_task_command();
 
   //get paths
-  geometry_msgs::PoseArray get_tool_paths();
+  geometry_msgs::PoseArray get_a_tool_paths();
+  geometry_msgs::PoseArray get_b_tool_paths();
 
 private:
   ros::NodeHandle nh;
@@ -109,6 +111,7 @@ private:
 
   ros::Subscriber test_sub_;
   ros::Subscriber display_tool_path_sub_;
+  ros::Subscriber display_tool_path_b_sub_;
   // grippers
 
   ros::Publisher gripper_a_pub_;
@@ -136,6 +139,7 @@ private:
   std_msgs::Float64 gripper_b_msg_;
 
   geometry_msgs::PoseArray display_tool_path_msg_;
+  geometry_msgs::PoseArray display_tool_path_b_msg_;
 
   //messages for RL
   ros::Publisher error_ee_pose_pub_;
@@ -150,6 +154,7 @@ private:
 
   bool test_;
   bool check_input_paths_;
+  bool check_input_b_paths_;
 };
 
 

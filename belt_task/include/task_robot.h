@@ -56,7 +56,7 @@ public:
 
 	//bool tasks(std::string command);
 	bool hybrid_controller();
-	void motion_generator(Transform3D<> temp_reference_frame, std::vector<double> way_points);
+	void motion_generator(Transform3D<> temp_reference_frame, std::vector<double> way_points, std::vector<double> init_vel_ , std::vector<double> final_vel_);
 
 	void terminate_robot();
 	void terminate_data_log();

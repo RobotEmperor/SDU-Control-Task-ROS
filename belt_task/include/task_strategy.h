@@ -43,6 +43,11 @@ public:
   void assign_parts(std::string master, std::string slave);
   //recieve motion planning
   void input_paths(geometry_msgs::PoseArray paths_);
+  void input_b_paths(geometry_msgs::PoseArray paths_);
+  double calculate_velocity(double first_point_, double second_point_, double interval_time_);
+  void calculate_init_final_velocity(int point_number_);
+  double calculate_next_velocity(double first_vel_, double second_vel_);
+
   void initialize_reference_frame();
   bool tasks();
 
@@ -69,6 +74,8 @@ public:
   double get_controller_smooth_gain_change();
   Transform3D<> get_current_reference_frame_();
   std::vector<double> get_current_way_points_();
+  std::vector<double> get_current_way_init_vel_points_();
+  std::vector<double> get_current_way_final_vel_points_();
   std::vector<double> get_current_desired_force_vector_();
   bool get_finish_task_check();
 
@@ -96,6 +103,8 @@ private:
 
   //master robot way points
   std::map<int, std::vector<double>> master_way_points_;
+  std::map<int, std::vector<double>> master_way_init_vel_points_;
+  std::map<int, std::vector<double>> master_way_final_vel_points_;
 
   //slave robot way points
   std::map<int, std::vector<double>> slave_way_points_;
@@ -106,6 +115,8 @@ private:
   //current way points
   Transform3D<> current_reference_frame_;
   std::vector<double> current_way_points_;
+  std::vector<double> current_way_init_vel_points_;
+  std::vector<double> current_way_final_vel_points_;
   std::vector<double> current_desired_force_vector_;
 
   //algorithm

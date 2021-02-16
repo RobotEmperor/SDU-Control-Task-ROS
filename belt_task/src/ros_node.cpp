@@ -20,6 +20,7 @@ nh(nh_)
 	force_gain_d_ = 0;
 	test_ = false;
 	check_input_paths_ = false;
+	check_input_b_paths_ = false;
 }
 RosNode::~RosNode()
 {
@@ -45,12 +46,12 @@ void RosNode::initialize()
 	gazebo_wrist_2_position_pub_ = nh.advertise<std_msgs::Float64>("/ur10e_a/a_wrist_2_position/command", 10);
 	gazebo_wrist_3_position_pub_ = nh.advertise<std_msgs::Float64>("/ur10e_a/a_wrist_3_position/command", 10);
 
-	gazebo_shoulder_pan_position_b_pub_ = nh.advertise<std_msgs::Float64>("/robot_b/ur10e_robot_b/shoulder_pan_position/command", 10);
-	gazebo_shoulder_lift_position_b_pub_ = nh.advertise<std_msgs::Float64>("/robot_b/ur10e_robot_b/shoulder_lift_position/command", 10);
-	gazebo_elbow_position_b_pub_= nh.advertise<std_msgs::Float64>("/robot_b/ur10e_robot_b/elbow_position/command", 10);
-	gazebo_wrist_1_position_b_pub_= nh.advertise<std_msgs::Float64>("/robot_b/ur10e_robot_b/wrist_1_position/command", 10);
-	gazebo_wrist_2_position_b_pub_= nh.advertise<std_msgs::Float64>("/robot_b/ur10e_robot_b/wrist_2_position/command", 10);
-	gazebo_wrist_3_position_b_pub_= nh.advertise<std_msgs::Float64>("/robot_b/ur10e_robot_b/wrist_3_position/command", 10);
+	gazebo_shoulder_pan_position_b_pub_ = nh.advertise<std_msgs::Float64>("/ur10e_b/b_shoulder_pan_position/command", 10);
+	gazebo_shoulder_lift_position_b_pub_ = nh.advertise<std_msgs::Float64>("/ur10e_b/b_shoulder_lift_position/command", 10);
+	gazebo_elbow_position_b_pub_= nh.advertise<std_msgs::Float64>("/ur10e_b/b_elbow_position/command", 10);
+	gazebo_wrist_1_position_b_pub_= nh.advertise<std_msgs::Float64>("/ur10e_b/b_wrist_1_position/command", 10);
+	gazebo_wrist_2_position_b_pub_= nh.advertise<std_msgs::Float64>("/ur10e_b/b_wrist_2_position/command", 10);
+	gazebo_wrist_3_position_b_pub_= nh.advertise<std_msgs::Float64>("/ur10e_b/b_wrist_3_position/command", 10);
 
 
 	ee_command_sub_ = nh.subscribe("/sdu/ur10e/ee_command", 10, &RosNode::EeCommandDataMsgCallBack, this);
@@ -60,17 +61,25 @@ void RosNode::initialize()
 
 	test_sub_ =  nh.subscribe("/sdu/ur10e/test", 10, &RosNode::TestMsgCallBack, this);
 
-	display_tool_path_sub_ = nh.subscribe("/tesseract/display_tool_path", 10, &RosNode::DisplayToolPathMsgCallBack, this);
+	display_tool_path_sub_ = nh.subscribe("/ur10e_a/display_tool_path", 10, &RosNode::DisplayToolPathMsgCallBack, this);
+	display_tool_path_b_sub_ = nh.subscribe("/ur10e_b/display_tool_path", 10, &RosNode::DisplayToolPathBMsgCallBack, this);
 
 	set_point_.assign(6,0);
 
+}
+void RosNode::DisplayToolPathBMsgCallBack(const geometry_msgs::PoseArray::ConstPtr& msg)
+{
+  check_input_b_paths_ = true;
+  display_tool_path_b_msg_.poses = msg->poses;
+
+  std::cout << "STATUS :: ROBOT B :: Input Paths :: " << check_input_paths_ << std::endl;
 }
 void RosNode::DisplayToolPathMsgCallBack(const geometry_msgs::PoseArray::ConstPtr& msg)
 {
   check_input_paths_ = true;
   display_tool_path_msg_.poses = msg->poses;
 
-  std::cout << "STATUS :: Input Paths :: " << check_input_paths_ << std::endl;
+  std::cout << "STATUS :: ROBOT A :: Input Paths :: " << check_input_paths_ << std::endl;
 }
 void RosNode::EeCommandDataMsgCallBack (const std_msgs::Float64MultiArray::ConstPtr& msg)
 {
@@ -300,9 +309,16 @@ bool RosNode::get_test()
 }
 bool RosNode::check_input_paths()
 {
- return check_input_paths_;
+  if(check_input_paths_ && check_input_b_paths_)
+    return check_input_paths_;
+  else
+    return false;
 }
-geometry_msgs::PoseArray RosNode::get_tool_paths()
+geometry_msgs::PoseArray RosNode::get_a_tool_paths()
 {
   return display_tool_path_msg_;
+}
+geometry_msgs::PoseArray RosNode::get_b_tool_paths()
+{
+  return display_tool_path_b_msg_;
 }

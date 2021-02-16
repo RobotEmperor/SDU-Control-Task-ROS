@@ -28,9 +28,9 @@ void *thread_func_robot_a ( void *param )
   current_grabs_poses[0][1] = (robot_a->get_tf_current_().P())[1];
   current_grabs_poses[0][2] = (robot_a->get_tf_current_().P())[2];
 
-  current_grabs_poses[1][0] = ((tf_a_b * robot_b->get_tf_current_()).P())[0];
-  current_grabs_poses[1][1] = ((tf_a_b * robot_b->get_tf_current_()).P())[1];
-  current_grabs_poses[1][2] = ((tf_a_b * robot_b->get_tf_current_()).P())[2];
+  //current_grabs_poses[1][0] = ((tf_a_b * robot_b->get_tf_current_()).P())[0];
+  //current_grabs_poses[1][1] = ((tf_a_b * robot_b->get_tf_current_()).P())[1];
+  //current_grabs_poses[1][2] = ((tf_a_b * robot_b->get_tf_current_()).P())[2];
 
   robot_a_object_estimation->set_initial_grab_poses(current_grabs_poses);
 
@@ -46,19 +46,15 @@ void *thread_func_robot_a ( void *param )
 
     // objects estimation
 
-    current_grabs_poses[1][0] = (robot_a->get_tf_current_().P())[0];
-    current_grabs_poses[1][1] = (robot_a->get_tf_current_().P())[1];
-    current_grabs_poses[1][2] = (robot_a->get_tf_current_().P())[2];
+    current_grabs_poses[0][0] = (robot_a->get_tf_current_().P())[0];
+    current_grabs_poses[0][1] = (robot_a->get_tf_current_().P())[1];
+    current_grabs_poses[0][2] = (robot_a->get_tf_current_().P())[2];
 
-    current_grabs_poses[0][0] = ((tf_a_b * robot_b->get_tf_current_()).P())[0];
-    current_grabs_poses[0][1] = ((tf_a_b * robot_b->get_tf_current_()).P())[1];
-    current_grabs_poses[0][2] = ((tf_a_b * robot_b->get_tf_current_()).P())[2];
 
     robot_a_object_estimation->set_current_grab_poses(current_grabs_poses);
 
     robot_a_object_estimation->model_estimation();
 
-    //std::cout << robot_a_object_estimation ->get_current_object_force(1) << std::endl;
 
     robot_a_strategy->set_robot_current_tf(robot_a->get_tf_current_());
     robot_a_strategy->set_is_moving_check(robot_a->get_is_moving_check());
@@ -87,7 +83,7 @@ void *thread_func_robot_a ( void *param )
 
     robot_a_strategy->tasks();
 
-    robot_a->motion_generator(robot_a_strategy->get_current_reference_frame_(), robot_a_strategy->get_current_way_points_());
+    robot_a->motion_generator(robot_a_strategy->get_current_reference_frame_(), robot_a_strategy->get_current_way_points_(),robot_a_strategy->get_current_way_init_vel_points_(),robot_a_strategy->get_current_way_final_vel_points_());
     robot_a->hybrid_controller();
 
     if(gazebo_check)
@@ -171,7 +167,7 @@ void *thread_func_robot_b ( void *param )
 
     robot_b_strategy->tasks();
 
-    robot_b->motion_generator(robot_b_strategy->get_current_reference_frame_(), robot_b_strategy->get_current_way_points_());
+    robot_b->motion_generator(robot_b_strategy->get_current_reference_frame_(), robot_b_strategy->get_current_way_points_(), robot_b_strategy->get_current_way_init_vel_points_(), robot_b_strategy->get_current_way_final_vel_points_());
     robot_b->hybrid_controller();
 
     if(gazebo_check)
@@ -311,7 +307,7 @@ int main (int argc, char **argv)
   //    usleep(1);
   //  }
 
-  while(!ros_state->check_input_paths())
+  while(!ros_state->check_input_paths() && !ros_state->check_input_paths())
   {
     if(exit_program)
     {
@@ -329,7 +325,9 @@ int main (int argc, char **argv)
   }
 
   std::cout << COLOR_YELLOW_BOLD << "Recieved :: " << ros_state->check_input_paths() << COLOR_RESET << std::endl;
-  robot_a_strategy->input_paths(ros_state->get_tool_paths());
+
+  robot_a_strategy->input_paths(ros_state->get_a_tool_paths());
+  robot_b_strategy->input_b_paths(ros_state->get_b_tool_paths());
 
 
   std::cout << COLOR_YELLOW_BOLD << "Simulation On [ yes / no ]" << COLOR_RESET << std::endl;
@@ -379,7 +377,7 @@ int main (int argc, char **argv)
   }
 
   robot_a_strategy->set_type("master");
-  robot_b_strategy->set_type("slave");
+  robot_b_strategy->set_type("master");
 
 
 

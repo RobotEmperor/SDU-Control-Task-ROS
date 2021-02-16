@@ -189,11 +189,12 @@ void TaskRobot::moveL_to_init_pose()
     tf_current_ = Transform3D<> (Vector3D<>(compensated_pose_vector_[0], compensated_pose_vector_[1], compensated_pose_vector_[2]), RPY<>(compensated_pose_vector_[3], compensated_pose_vector_[4], compensated_pose_vector_[5]).toRotation3D());
   }
 }
-void TaskRobot::motion_generator(Transform3D<> temp_reference_frame, std::vector<double> way_points)
+void TaskRobot::motion_generator(Transform3D<> temp_reference_frame, std::vector<double> way_points, std::vector<double> init_vel_ , std::vector<double> final_vel_)
 {
   //std::cout << COLOR_GREEN << robot_name_ << temp_reference_frame << COLOR_RESET << std::endl;
   //std::cout << COLOR_GREEN << robot_name_ << way_points << COLOR_RESET << std::endl;
   robot_motion_->motion_to_desired_pose(temp_reference_frame, way_points[0], way_points[1], way_points[2], RPY<> (way_points[3],way_points[4],way_points[5]), way_points[6]);
+  robot_motion_->add_desired_vel(init_vel_, final_vel_);
   robot_motion_->generate_fifth_order_trajectory();
 }
 bool TaskRobot::hybrid_controller()
@@ -344,14 +345,14 @@ bool TaskRobot::hybrid_controller()
   }
 
   rw::math::Q confBest = solutions_[preferred_solution_number_];
-    for (unsigned int i = 1; i < solutions_.size(); i++)
-      if ((confStart - solutions_[i]).norm2() < (confStart - confBest).norm2())
-        confBest = solutions_[i];
+  for (unsigned int i = 1; i < solutions_.size(); i++)
+    if ((confStart - solutions_[i]).norm2() < (confStart - confBest).norm2())
+      confBest = solutions_[i];
 
-    for(int num = 0; num <6 ; num ++)
-     {
-       compensated_q_[num] = confBest.toStdVector()[num];
-     }
+  for(int num = 0; num <6 ; num ++)
+  {
+    compensated_q_[num] = confBest.toStdVector()[num];
+  }
 
   //check velocity
   for(int num = 0; num <6 ; num ++)
@@ -586,9 +587,9 @@ std::vector<double> TaskRobot::get_current_q_()
   return current_q_;
 }
 rw::math::Transform3D<> TaskRobot::get_tf_current_()
-{
+    {
   return tf_current_;
-}
+    }
 bool TaskRobot::get_is_moving_check()
 {
   return robot_motion_->is_moving_check();

@@ -51,6 +51,14 @@ void TaskMotion::motion_to_desired_pose(Transform3D<> reference_frame, double x,
     desired_pose_matrix_(num,7) = time;
   }
 }
+void TaskMotion::add_desired_vel(std::vector<double> init_vel_, std::vector<double> final_vel_)
+{
+  for(int num = 0; num <6 ; num ++)
+  {
+    desired_pose_matrix_(num,2) = init_vel_[num];
+    desired_pose_matrix_(num,3) = final_vel_[num];
+  }
+}
 void TaskMotion::generate_fifth_order_trajectory()
 {
   robot_traj_->cal_end_point_to_rad(desired_pose_matrix_);
