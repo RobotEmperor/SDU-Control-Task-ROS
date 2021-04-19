@@ -38,16 +38,24 @@ public:
   void set_current_grab_poses(std::vector<std::vector<double>> current_grabs_poses);
   void set_initial_grab_poses(std::vector<std::vector<double>> initial_grabs_poses);
 
+  void set_current_grab_poses(rw::math::Transform3D<> current_grabs_poses);
+  void set_initial_grab_poses(rw::math::Transform3D<> initial_grabs_poses);
+
   void set_current_grab_vels(std::vector<std::vector<double>> current_grabs_vel);
   void set_initial_grab_vels(std::vector<std::vector<double>> initial_grabs_vel);
 
   std::vector<double> get_current_object_pose(int point_number);
   std::vector<double> get_current_object_force(int point_number);
 
+  double get_current_object_force();
+
 private:
   //robot's gripper position
   std::vector<std::vector<double>> current_grabs_pose_;
   std::vector<std::vector<double>> initial_grabs_pose_;
+
+  rw::math::Transform3D<> current_grabs_tf_pose_;
+  rw::math::Transform3D<> initial_grabs_tf_pose_;
 
   std::vector<std::vector<double>> current_grabs_vel_;
   std::vector<std::vector<double>> initial_grabs_vel_;

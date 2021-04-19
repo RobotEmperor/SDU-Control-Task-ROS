@@ -1,5 +1,5 @@
 #This is about model specification variables 
 #spring - damper 
-spring_constant_k : 70 # should obtain a little bit correct values by Matlab
+spring_constant_k : 120 # should obtain a little bit correct values by Matlab
 damper_constant_c : 0
 

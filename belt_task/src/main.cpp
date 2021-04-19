@@ -32,7 +32,7 @@ void *thread_func_robot_a ( void *param )
   //current_grabs_poses[1][1] = ((tf_a_b * robot_b->get_tf_current_()).P())[1];
   //current_grabs_poses[1][2] = ((tf_a_b * robot_b->get_tf_current_()).P())[2];
 
-  robot_a_object_estimation->set_initial_grab_poses(current_grabs_poses);
+  robot_a_object_estimation->set_initial_grab_poses(robot_a->get_tf_current_());
 
   while(!exit_program)
   {
@@ -51,7 +51,7 @@ void *thread_func_robot_a ( void *param )
     current_grabs_poses[0][2] = (robot_a->get_tf_current_().P())[2];
 
 
-    robot_a_object_estimation->set_current_grab_poses(current_grabs_poses);
+    robot_a_object_estimation->set_current_grab_poses(robot_a->get_tf_current_());
 
     robot_a_object_estimation->model_estimation();
 
@@ -100,7 +100,9 @@ void *thread_func_robot_a ( void *param )
 
     m.unlock();
 
-    //ros_state->send_gripper_a_move(robot_a->get_gripper_move_values());
+    //robot_a_object_estimation->get_current_object_force();
+
+    ros_state->send_gripper_a_move(robot_a_object_estimation->get_current_object_force());
     ros_state->update_ros_data();
 
     TIMESPEC_ADD (t_next, period);
@@ -290,6 +292,7 @@ int main (int argc, char **argv)
   ros_state->initialize();
 
   signal(SIGINT, my_function);
+  // For real experiments
   //  while(!wait_command)
   //  {
   //    if(exit_program)
@@ -307,6 +310,7 @@ int main (int argc, char **argv)
   //    usleep(1);
   //  }
 
+  //trajopt experiments
   while(!ros_state->check_input_paths() && !ros_state->check_input_paths())
   {
     if(exit_program)

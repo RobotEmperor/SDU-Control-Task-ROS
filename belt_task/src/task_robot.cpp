@@ -354,6 +354,9 @@ bool TaskRobot::hybrid_controller()
     compensated_q_[num] = confBest.toStdVector()[num];
   }
 
+  // for initial
+  //std::cout << robot_name_  << " : " << compensated_q_ << std::endl;
+
   //check velocity
   for(int num = 0; num <6 ; num ++)
   {

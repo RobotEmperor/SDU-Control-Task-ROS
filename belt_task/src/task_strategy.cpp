@@ -511,7 +511,7 @@ void TaskStrategy::input_paths(geometry_msgs::PoseArray paths_)
     temp_points_.push_back(pitch_y);
     temp_points_.push_back(roll_x);
 
-    temp_points_.push_back(0.3); // should be modified
+    temp_points_.push_back(1); // should be modified
 
     master_way_points_[num] = temp_points_;
 
@@ -659,7 +659,7 @@ void TaskStrategy::input_b_paths(geometry_msgs::PoseArray paths_)
     temp_points_.push_back(pitch_y);
     temp_points_.push_back(roll_x);
 
-    temp_points_.push_back(0.3); // should be modified
+    temp_points_.push_back(1); // should be modified
 
     master_way_points_[num] = temp_points_;
 
