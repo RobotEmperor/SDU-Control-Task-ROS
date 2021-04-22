@@ -28,10 +28,6 @@ void *thread_func_robot_a ( void *param )
   current_grabs_poses[0][1] = (robot_a->get_tf_current_().P())[1];
   current_grabs_poses[0][2] = (robot_a->get_tf_current_().P())[2];
 
-  //current_grabs_poses[1][0] = ((tf_a_b * robot_b->get_tf_current_()).P())[0];
-  //current_grabs_poses[1][1] = ((tf_a_b * robot_b->get_tf_current_()).P())[1];
-  //current_grabs_poses[1][2] = ((tf_a_b * robot_b->get_tf_current_()).P())[2];
-
   robot_a_object_estimation->set_initial_grab_poses(robot_a->get_tf_current_());
 
   while(!exit_program)
@@ -45,15 +41,14 @@ void *thread_func_robot_a ( void *param )
     t_prev = t_now;
 
     // objects estimation
-
     current_grabs_poses[0][0] = (robot_a->get_tf_current_().P())[0];
     current_grabs_poses[0][1] = (robot_a->get_tf_current_().P())[1];
     current_grabs_poses[0][2] = (robot_a->get_tf_current_().P())[2];
 
 
-    robot_a_object_estimation->set_current_grab_poses(robot_a->get_tf_current_());
+    //robot_a_object_estimation->set_current_grab_poses(robot_a->get_tf_current_());
 
-    robot_a_object_estimation->model_estimation();
+    //robot_a_object_estimation->model_estimation();
 
 
     robot_a_strategy->set_robot_current_tf(robot_a->get_tf_current_());
@@ -99,8 +94,6 @@ void *thread_func_robot_a ( void *param )
     t_diff  = t_now;
 
     m.unlock();
-
-    //robot_a_object_estimation->get_current_object_force();
 
     ros_state->send_gripper_a_move(robot_a_object_estimation->get_current_object_force());
     ros_state->update_ros_data();
@@ -231,53 +224,18 @@ void initialize()
 
   robot_a_object_estimation = std::make_shared<ObejectEstimation>();
   robot_a_object_estimation->initialize(2, initial_path + "/SDU-Control-Task-ROS/belt_task/config/objects/model_config.yaml");
+
+  //two robot grab poses
   std::vector<double> temp_;
   temp_.assign(6, 0);
-  //two robot
   current_grabs_poses.push_back(temp_);
   current_grabs_poses.push_back(temp_);
-
-  tf_a_parts =  Transform3D<> (Vector3D<>(-0.739757210413974, 0.07993900394775277, 0.2449995438351456), EAA<>(-0.7217029684216122, -1.7591780460014375, 1.7685571865188172).toRotation3D());
-  tf_b_parts =  Transform3D<> (Vector3D<>(-0.6654834316385497, -0.0844570012960042, 0.2551901723057327), EAA<>(-1.484318068681165, 0.6191402790204206, -0.6254296057933952 ).toRotation3D());
-
-  tf_a_b = tf_a_parts * inverse(tf_b_parts);
-
-  std::cout << (tf_a_parts.P())[0] << std::endl;
-  std::cout << (tf_a_parts.P())[1] << std::endl;
-  std::cout << (tf_a_parts.P())[2] << std::endl;
-
-  std::cout << RPY<> (tf_a_parts.R())[0] << std::endl;
-  std::cout << RPY<> (tf_a_parts.R())[1] << std::endl;
-  std::cout << RPY<> (tf_a_parts.R())[2] << std::endl;
-
-  temp_[0] = -0.739757210413974;
-  temp_[1] = 0.07993900394775277;
-  temp_[2] = 0.2449995438351456;
-
-  temp_[3] = -0.7217029684216122;
-  temp_[4] = -1.7591780460014375;
-  temp_[5] = 1.7685571865188172;
-  //
-  robot_a_strategy->set_parts_data(temp_,temp_);
-  //
-  temp_[0] = -0.6654834316385497;
-  temp_[1] = -0.0844570012960042;
-  temp_[2] = 0.2551901723057327;
-
-  temp_[3] = -1.484318068681165;
-  temp_[4] =  0.6191402790204206;
-  temp_[5] = -0.6254296057933952;
-  //
-  robot_b_strategy->set_parts_data(temp_,temp_);
-
-
 }
 
 void my_function(int sig)
 {
   exit_program = true; // set flag
 }
-
 
 int main (int argc, char **argv)
 {
@@ -292,23 +250,8 @@ int main (int argc, char **argv)
   ros_state->initialize();
 
   signal(SIGINT, my_function);
-  // For real experiments
-  //  while(!wait_command)
-  //  {
-  //    if(exit_program)
-  //    {
-  //      wait_command = true;
-  //      ros_state->shout_down_ros();
-  //
-  //      robot_a->terminate_data_log();
-  //      robot_b->terminate_data_log();
-  //
-  //      std::cout << COLOR_RED_BOLD << "Terminate program" << COLOR_RESET << std::endl;
-  //      return 0;
-  //    }
-  //    ros_state->update_ros_data();
-  //    usleep(1);
-  //  }
+
+  std::cout << COLOR_YELLOW_BOLD << "Waiting for input paths :: "<< COLOR_RESET << std::endl;
 
   //trajopt experiments
   while(!ros_state->check_input_paths() && !ros_state->check_input_paths())
@@ -329,14 +272,69 @@ int main (int argc, char **argv)
   }
 
   std::cout << COLOR_YELLOW_BOLD << "Recieved :: " << ros_state->check_input_paths() << COLOR_RESET << std::endl;
-
   robot_a_strategy->input_paths(ros_state->get_a_tool_paths());
   robot_b_strategy->input_b_paths(ros_state->get_b_tool_paths());
+
+  Transform3D<> initial_position_a_;
+  Transform3D<> initial_position_b_;
+  Transform3D<> tf_a_big_pulley;
+  Transform3D<> tf_b_big_pulley;
+  Transform3D<> tf_a_b;
+
+  Transform3D<> tf_world_base_a;
+  Transform3D<> tf_world_base_b;
+
+  tf_world_base_a = Transform3D<> (Vector3D<>(0, 0, 0.05), EAA<>(0, 0, 180*DEGREE2RADIAN).toRotation3D());
+
+  tf_a_big_pulley = robot_a_strategy->get_a_part_frame_();
+  tf_b_big_pulley = robot_a_strategy->get_b_part_frame_();
+
+  tf_a_b = tf_a_big_pulley*inverse(tf_b_big_pulley);
+  tf_b_big_pulley = inverse(tf_a_b) * tf_a_big_pulley;
+
+  initial_position_a_ = Transform3D<> (Vector3D<>(-0.13, 0, -0.04), RPY<> (0,0,0).toRotation3D()); // RPY
+  initial_position_a_ = tf_a_big_pulley * initial_position_a_ ;
+
+  initial_position_b_ = Transform3D<> (Vector3D<>(0.02, 0, -0.04), RPY<> (0,-25*DEGREE2RADIAN,0).toRotation3D()); // RPY
+  initial_position_b_ = tf_b_big_pulley * initial_position_b_ ;
+
+  tf_a_b = tf_a_big_pulley*inverse(tf_b_big_pulley);
+
+  tf_world_base_b = tf_world_base_a * tf_a_b;
+
+  std::cout << "A :: ---------------------------- " << std::endl;
+
+  std::cout << (initial_position_a_.P())[0] << std::endl;
+  std::cout << (initial_position_a_.P())[1] << std::endl;
+  std::cout << (initial_position_a_.P())[2] << std::endl;
+
+  std::cout << EAA<> (initial_position_a_.R())[0] << std::endl;
+  std::cout << EAA<> (initial_position_a_.R())[1] << std::endl;
+  std::cout << EAA<> (initial_position_a_.R())[2] << std::endl;
+
+  std::cout << "B :: ---------------------------- " << std::endl;
+
+  std::cout << (initial_position_b_.P())[0] << std::endl;
+  std::cout << (initial_position_b_.P())[1] << std::endl;
+  std::cout << (initial_position_b_.P())[2] << std::endl;
+
+  std::cout << EAA<> (initial_position_b_.R())[0] << std::endl;
+  std::cout << EAA<> (initial_position_b_.R())[1] << std::endl;
+  std::cout << EAA<> (initial_position_b_.R())[2] << std::endl;
+
+  std::cout << "a_b :: ---------------------------- " << std::endl;
+
+  std::cout << (tf_a_b.P())[0] << std::endl;
+  std::cout << (tf_a_b.P())[1] << std::endl;
+  std::cout << (tf_a_b.P())[2] << std::endl;
+
+  std::cout << RPY<> (tf_a_b.R())[0] << std::endl;
+  std::cout << RPY<> (tf_a_b.R())[1] << std::endl;
+  std::cout << RPY<> (tf_a_b.R())[2] << std::endl;
 
 
   std::cout << COLOR_YELLOW_BOLD << "Simulation On [ yes / no ]" << COLOR_RESET << std::endl;
   std::cin >> silmulation_on_off;
-  //silmulation_on_off = "y";
 
   if(!silmulation_on_off.compare("yes") || !silmulation_on_off.compare("y"))
     std::cout << COLOR_GREEN_BOLD << "Setting up Simulation " << COLOR_RESET << std::endl;
@@ -345,7 +343,7 @@ int main (int argc, char **argv)
     std::cout << COLOR_GREEN_BOLD << "REAL Robot, Be careful to run:" << COLOR_RESET << std::endl;
     std::cout << COLOR_GREEN_BOLD << "Are you sure ? [yes / no]" << COLOR_RESET << std::endl;
     std::cin >> silmulation_on_off;
-    //silmulation_on_off = "y";
+
     if(silmulation_on_off.compare("y")!=0)
     {
       ros_state->shout_down_ros();
@@ -381,9 +379,7 @@ int main (int argc, char **argv)
   }
 
   robot_a_strategy->set_type("master");
-  robot_b_strategy->set_type("master");
-
-
+  robot_b_strategy->set_type("slave");
 
   if(!robot_a_strategy->get_type().compare("master"))
   {
@@ -426,7 +422,6 @@ int main (int argc, char **argv)
 
   std::cout << COLOR_RED_BOLD << "ROBOT A  " << robot_a_strategy->get_type() << COLOR_RESET << std::endl;
   std::cout << COLOR_RED_BOLD << "ROBOT B  " << robot_b_strategy->get_type() << COLOR_RESET << std::endl;
-
 
   //preempt rt
   int policy;

@@ -63,7 +63,9 @@ void KalmanFilter::process_kalman_filtered_data(Eigen::Matrix<double, 6, 1> meas
 		return;
 	}
 
-	kalman_gain_k_ = prediction_value_p_ * H_.transpose() * ((H_ * prediction_value_p_ * H_.transpose() + R_).inverse());
+	kalman_gain_k_ = ((H_ * prediction_value_p_ * H_.transpose() + R_).inverse());
+
+	kalman_gain_k_ = prediction_value_p_ * H_.transpose() * kalman_gain_k_;
 
 	estimated_y_ = H_ * prediction_value_x_ + additonal_estimated_y_;
 
@@ -75,6 +77,7 @@ void KalmanFilter::process_kalman_filtered_data(Eigen::Matrix<double, 6, 1> meas
 	previous_correction_value_p_ = correction_value_p_;
 
 	measurement_output_error_ = measurement_y - estimated_y_;
+
 	output_error_(0,0) = measurement_y(0,0) - correction_value_x_(0,0);
 }
 

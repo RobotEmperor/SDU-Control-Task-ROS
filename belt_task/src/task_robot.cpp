@@ -191,8 +191,6 @@ void TaskRobot::moveL_to_init_pose()
 }
 void TaskRobot::motion_generator(Transform3D<> temp_reference_frame, std::vector<double> way_points, std::vector<double> init_vel_ , std::vector<double> final_vel_)
 {
-  //std::cout << COLOR_GREEN << robot_name_ << temp_reference_frame << COLOR_RESET << std::endl;
-  //std::cout << COLOR_GREEN << robot_name_ << way_points << COLOR_RESET << std::endl;
   robot_motion_->motion_to_desired_pose(temp_reference_frame, way_points[0], way_points[1], way_points[2], RPY<> (way_points[3],way_points[4],way_points[5]), way_points[6]);
   robot_motion_->add_desired_vel(init_vel_, final_vel_);
   robot_motion_->generate_fifth_order_trajectory();
@@ -222,12 +220,13 @@ bool TaskRobot::hybrid_controller()
     acutal_tcp_acc_  = rtde_receive_->getActualToolAccelerometer();
     actual_tcp_pose_ = rtde_receive_->getActualTCPPose();
     actual_tcp_speed_ = rtde_receive_->getActualTCPSpeed();
-    joint_positions_ = rtde_receive_->getActualQ();
-    //current_q_ = rtde_receive_->getActualQ();
+    //joint_positions_ = rtde_receive_->getActualQ();
+    current_q_ = rtde_receive_->getActualQ();
 
     robot_motion_->set_current_pose_eaa(actual_tcp_pose_[0], actual_tcp_pose_[1], actual_tcp_pose_[2],actual_tcp_pose_[3], actual_tcp_pose_[4], actual_tcp_pose_[5]);
 
     tf_current_ = Transform3D<> (Vector3D<>(actual_tcp_pose_[0], actual_tcp_pose_[1], actual_tcp_pose_[2]), EAA<>(actual_tcp_pose_[3], actual_tcp_pose_[4], actual_tcp_pose_[5]).toRotation3D());
+
 
     //force torque sensor filtering
     tool_estimation_->set_orientation_data(tf_current_);
@@ -245,6 +244,7 @@ bool TaskRobot::hybrid_controller()
     force_x_compensator_->PID_calculate(desired_force_torque_vector_[0],current_ft_.force()[0],0);
     force_y_compensator_->PID_calculate(desired_force_torque_vector_[1],current_ft_.force()[1],0);
     force_z_compensator_->PID_calculate(desired_force_torque_vector_[2],current_ft_.force()[2],0);
+
 
     tf_tcp_desired_pose_ = Transform3D<> (Vector3D<>(force_x_compensator_->get_final_output(),force_y_compensator_->get_final_output(),force_z_compensator_->get_final_output()), EAA<>(0,0,0).toRotation3D());
 
@@ -303,10 +303,9 @@ bool TaskRobot::hybrid_controller()
   error_ee_pose_[0] = position_x_controller_->get_error();
   error_ee_pose_[1] = position_y_controller_->get_error();
   error_ee_pose_[2] = position_z_controller_->get_error();
-  error_ee_pose_[3] = 0; //position_x_controller->get_error();
-  error_ee_pose_[4] = 0; //position_x_controller->get_error();
-  error_ee_pose_[5] = 0; //position_x_controller->get_error();
-
+  error_ee_pose_[3] = 0;
+  error_ee_pose_[4] = 0;
+  error_ee_pose_[5] = 0;
 
   tf_desired_ = Transform3D<> (Vector3D<>(compensated_pose_vector_[0], compensated_pose_vector_[1], compensated_pose_vector_[2]),
       RPY<>(compensated_pose_vector_[3], compensated_pose_vector_[4], compensated_pose_vector_[5]).toRotation3D()); // // EAA
@@ -319,7 +318,7 @@ bool TaskRobot::hybrid_controller()
   //  std::cout << robot_name_ << "    :  " << i << " : " << solutions_[i] << std::endl;
   // }
 
-  //std::cout << robot_name_  << " : " << solutions_[3] << std::endl;
+  //std::cout << robot_name_  << " : " << compensated_pose_vector_<< std::endl;
 
   const rw::math::Q confStart(6, current_q_[0], current_q_[1], current_q_[2], current_q_[3], current_q_[4], current_q_[5]);
 
@@ -358,21 +357,21 @@ bool TaskRobot::hybrid_controller()
   //std::cout << robot_name_  << " : " << compensated_q_ << std::endl;
 
   //check velocity
-  for(int num = 0; num <6 ; num ++)
-  {
-    if(fabs((compensated_q_[num] - current_q_[num])/control_time_) > 270*DEGREE2RADIAN)
-    {
-      std::cout << robot_name_ << "::" << num << "::" << fabs((compensated_q_[num] - current_q_[num])/control_time_) << std::endl;
-      std::cout << COLOR_RED_BOLD << "Robot speed is so FAST" << COLOR_RESET << std::endl;
-      if(!gazebo_check_)
-      {
-        joint_vel_limits_ = true;
-        control_check_ = false;
-      }
-      else
-        joint_vel_limits_ = false;
-    }
-  }
+//  for(int num = 0; num <6 ; num ++)
+//  {
+//    if(fabs((compensated_q_[num] - current_q_[num])/control_time_) > 270*DEGREE2RADIAN)
+//    {
+//      std::cout << robot_name_ << "::" << num << "::" << fabs((compensated_q_[num] - current_q_[num])/control_time_) << std::endl;
+//      std::cout << COLOR_RED_BOLD << "Robot speed is so FAST" << COLOR_RESET << std::endl;
+//      if(!gazebo_check_)
+//      {
+//        joint_vel_limits_ = true;
+//        control_check_ = false;
+//      }
+//      else
+//        joint_vel_limits_ = false;
+//    }
+//  }
 
   //send command in joint space to ur robot or gazebo
   if(!joint_vel_limits_)
@@ -390,11 +389,10 @@ bool TaskRobot::hybrid_controller()
   {
     control_check_ = false;
   }
-
   time_count_ += control_time_;
   //data log save
   data_log_->set_time_count(time_count_);
-  data_log_->set_data_getActualQ(joint_positions_);
+  data_log_->set_data_getActualQ(current_q_);
   data_log_->set_data_getActualTCPPose(actual_tcp_pose_);
   data_log_->set_data_getTargetTCPPose(target_tcp_pose_);
   data_log_->set_data_getActualTCPForceTorque(raw_ft_data_);

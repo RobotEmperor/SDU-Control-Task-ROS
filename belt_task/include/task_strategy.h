@@ -73,6 +73,8 @@ public:
   double get_gripper_move_values();
   double get_controller_smooth_gain_change();
   Transform3D<> get_current_reference_frame_();
+  Transform3D<> get_a_part_frame_();
+  Transform3D<> get_b_part_frame_();
   std::vector<double> get_current_way_points_();
   std::vector<double> get_current_way_init_vel_points_();
   std::vector<double> get_current_way_final_vel_points_();
@@ -135,6 +137,9 @@ private:
   //estimation of belt pose
   rw::math::Vector3D<> insert_belt_way_points_;
   rw::math::Vector3D<> desired_groove_position_;
+
+  rw::math::Transform3D<> tf_a_parts;
+  rw::math::Transform3D<> tf_b_parts;
 
   // input
   // robot is moving check
