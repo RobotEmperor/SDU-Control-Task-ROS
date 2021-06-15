@@ -5,6 +5,7 @@
  *      Author: yik
  */
 #include "data_logging.h"
+#include <ctime>
 
 
 DataLogging::DataLogging(std::string path)
@@ -17,8 +18,14 @@ DataLogging::~DataLogging()
 }
 void DataLogging::initialize()
 {
+  time_t ttime = time(0);
+
+  tm* local_time = localtime(&ttime);
+
+  std::string files = std::to_string(local_time->tm_mon) + "_"+ std::to_string(local_time->tm_mday)+"_"+ std::to_string(local_time->tm_hour)+"_"+ std::to_string(local_time->tm_min)+"_"+ std::to_string(local_time->tm_sec);
+
   out = new std::ofstream;
-  out->open(path_+"/"+"data_log.csv");
+  out->open(path_+"/"+"data_log"+"_"+files+".csv");
 
   //initial position
   //data variables define

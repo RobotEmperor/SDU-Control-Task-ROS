@@ -79,6 +79,7 @@ public:
 
 	void set_controller_smooth_change(double time);
 	void set_desired_force_values(std::vector<double> desired_force_values);
+	void set_tf_part_base(Transform3D<> temp);
 
 	std::vector<double> get_raw_ft_data_();
 	std::vector<double> get_target_tcp_pose_data_();
@@ -176,12 +177,16 @@ private:
 
   std::vector<double> data_current_belt_;
   std::vector<double> data_desired_belt_;
+  std::vector<double> data_tf_part_ee;
 
 	//tf
 	rw::math::Transform3D<> tf_tcp_desired_pose_;
 	rw::math::Transform3D<> tf_modified_pose_;
 	rw::math::Transform3D<> tf_current_;
 	rw::math::Transform3D<> tf_desired_;
+
+	rw::math::Transform3D<> tf_part_ee;
+	rw::math::Transform3D<> tf_part_base;
 
 	rw::math::Wrench6D<> current_ft_;
 

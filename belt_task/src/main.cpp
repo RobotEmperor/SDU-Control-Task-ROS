@@ -30,6 +30,8 @@ void *thread_func_robot_a ( void *param )
 
   robot_a_object_estimation->set_initial_grab_poses(robot_a->get_tf_current_());
 
+  robot_a->set_tf_part_base(robot_a_strategy->get_a_part_frame_());
+
   while(!exit_program)
   {
     clock_gettime ( CLOCK_MONOTONIC, &t_now );
@@ -60,12 +62,19 @@ void *thread_func_robot_a ( void *param )
       if(finished_insertion != 0)
       {
         //gain switch
-        robot_a->set_force_controller_x_gain(0.00007,0,0);
-        robot_a->set_position_controller_x_gain(0.8,0,0);
-        robot_a->set_force_controller_y_gain(0.00007,0,0);
-        robot_a->set_position_controller_y_gain(0.8,0,0);
-        robot_a->set_force_controller_z_gain(0.00007,0,0);
-        robot_a->set_position_controller_z_gain(0.8,0,0);
+//        robot_a->set_force_controller_x_gain(0.00007,0,0);
+//        robot_a->set_position_controller_x_gain(0.8,0,0);
+//        robot_a->set_force_controller_y_gain(0.00007,0,0);
+//        robot_a->set_position_controller_y_gain(0.8,0,0);
+//        robot_a->set_force_controller_z_gain(0.00007,0,0);
+//        robot_a->set_position_controller_z_gain(0.8,0,0);
+
+        robot_a->set_force_controller_x_gain(0.0008,0.000015,0);
+        robot_a->set_position_controller_x_gain(0.06,0,0);
+        robot_a->set_force_controller_y_gain(0.0008,0.000015,0);
+        robot_a->set_position_controller_y_gain(0.06,0,0);
+        robot_a->set_force_controller_z_gain(0.0008,0.000015,0);
+        robot_a->set_position_controller_z_gain(0.06,0,0);
 
         robot_a_strategy->set_type("master");
       }
@@ -73,7 +82,10 @@ void *thread_func_robot_a ( void *param )
     else
     {
       if(robot_a_strategy->get_finish_task_check())
+      {
+        exit_program = true;
         finished_insertion = 1;
+      }
     }
 
     robot_a_strategy->tasks();
@@ -254,22 +266,22 @@ int main (int argc, char **argv)
   std::cout << COLOR_YELLOW_BOLD << "Waiting for input paths :: "<< COLOR_RESET << std::endl;
 
   //trajopt experiments
-  while(!ros_state->check_input_paths() && !ros_state->check_input_paths())
-  {
-    if(exit_program)
-    {
-      wait_command = true;
-      ros_state->shout_down_ros();
-
-      robot_a->terminate_data_log();
-      robot_b->terminate_data_log();
-
-      std::cout << COLOR_RED_BOLD << "Terminate program" << COLOR_RESET << std::endl;
-      return 0;
-    }
-    ros_state->update_ros_data();
-    usleep(1);
-  }
+//  while(!ros_state->check_input_paths())
+//  {
+//    if(exit_program)
+//    {
+//      wait_command = true;
+//      ros_state->shout_down_ros();
+//
+//      robot_a->terminate_data_log();
+//      robot_b->terminate_data_log();
+//
+//      std::cout << COLOR_RED_BOLD << "Terminate program" << COLOR_RESET << std::endl;
+//      return 0;
+//    }
+//    ros_state->update_ros_data();
+//    usleep(1);
+//  }
 
   std::cout << COLOR_YELLOW_BOLD << "Recieved :: " << ros_state->check_input_paths() << COLOR_RESET << std::endl;
   robot_a_strategy->input_paths(ros_state->get_a_tool_paths());
@@ -284,23 +296,37 @@ int main (int argc, char **argv)
   Transform3D<> tf_world_base_a;
   Transform3D<> tf_world_base_b;
 
+  Transform3D<> tf_cell_base_a;
+  Transform3D<> tf_cell_base_b;
+
+  //Transform3D<> tf_a_base_corner;
+  //Transform3D<> tf_corner_to_big_pulley;
+
+  tf_cell_base_a = Transform3D<> (Vector3D<>(0.596718340385182, -0.308285332939805, 0.00557538063819106), EAA<>(0.00969272790958452, 0.0051652521972913, -1.5820114865231).toRotation3D());
+  tf_cell_base_b = Transform3D<> (Vector3D<>(0.5967482693965416, 1.0980636814842386, 0.009255715558339806), EAA<>(0.00460145682828943, -0.003686739825168772, 1.5685774911729364).toRotation3D());
+  //tf_a_base_corner = Transform3D<> (Vector3D<>(-0.7734, 0.1032, 0.2001), EAA<>(-0.7313354979535918, -1.7622417854008892, 1.7568650899341813).toRotation3D());
+  //tf_corner_to_big_pulley = Transform3D<> (Vector3D<>(-0.04, -0.0425, 0), EAA<>(0, 0, 0).toRotation3D());
+  //tf_a_big_pulley = tf_a_base_corner*tf_corner_to_big_pulley;
+
   tf_world_base_a = Transform3D<> (Vector3D<>(0, 0, 0.05), EAA<>(0, 0, 180*DEGREE2RADIAN).toRotation3D());
 
   tf_a_big_pulley = robot_a_strategy->get_a_part_frame_();
   tf_b_big_pulley = robot_a_strategy->get_b_part_frame_();
 
-  tf_a_b = tf_a_big_pulley*inverse(tf_b_big_pulley);
-  tf_b_big_pulley = inverse(tf_a_b) * tf_a_big_pulley;
+  tf_a_b = inverse(tf_cell_base_a)*tf_cell_base_b;
+  //tf_b_big_pulley = inverse(tf_a_b) * tf_a_big_pulley;
 
-  initial_position_a_ = Transform3D<> (Vector3D<>(-0.13, 0, -0.04), RPY<> (0,0,0).toRotation3D()); // RPY
+  initial_position_a_ = Transform3D<> (Vector3D<>(0, 0, 0), RPY<> (0,0,0).toRotation3D()); // RPY
   initial_position_a_ = tf_a_big_pulley * initial_position_a_ ;
 
   initial_position_b_ = Transform3D<> (Vector3D<>(0.02, 0, -0.04), RPY<> (0,-25*DEGREE2RADIAN,0).toRotation3D()); // RPY
   initial_position_b_ = tf_b_big_pulley * initial_position_b_ ;
 
-  tf_a_b = tf_a_big_pulley*inverse(tf_b_big_pulley);
 
   tf_world_base_b = tf_world_base_a * tf_a_b;
+
+
+
 
   std::cout << "A :: ---------------------------- " << std::endl;
 
@@ -324,17 +350,20 @@ int main (int argc, char **argv)
 
   std::cout << "a_b :: ---------------------------- " << std::endl;
 
-  std::cout << (tf_a_b.P())[0] << std::endl;
-  std::cout << (tf_a_b.P())[1] << std::endl;
-  std::cout << (tf_a_b.P())[2] << std::endl;
+//  std::cout << RPY<> (tf_cell_base_b.R())[0] << std::endl;
+//  std::cout << RPY<> (tf_cell_base_b.R())[1] << std::endl;
+//  std::cout << RPY<> (tf_cell_base_b.R())[2] << std::endl;
+//
+//  std::cout << RPY<> (tf_cell_base_a.R())[0] << std::endl;
+//  std::cout << RPY<> (tf_cell_base_a.R())[1] << std::endl;
+//  std::cout << RPY<> (tf_cell_base_a.R())[2] << std::endl;
 
-  std::cout << RPY<> (tf_a_b.R())[0] << std::endl;
-  std::cout << RPY<> (tf_a_b.R())[1] << std::endl;
-  std::cout << RPY<> (tf_a_b.R())[2] << std::endl;
+  //exit_program = true;
 
 
   std::cout << COLOR_YELLOW_BOLD << "Simulation On [ yes / no ]" << COLOR_RESET << std::endl;
   std::cin >> silmulation_on_off;
+  //silmulation_on_off = "y";
 
   if(!silmulation_on_off.compare("yes") || !silmulation_on_off.compare("y"))
     std::cout << COLOR_GREEN_BOLD << "Setting up Simulation " << COLOR_RESET << std::endl;
@@ -383,12 +412,19 @@ int main (int argc, char **argv)
 
   if(!robot_a_strategy->get_type().compare("master"))
   {
-    robot_a->set_force_controller_x_gain(0.00007,0,0);
-    robot_a->set_position_controller_x_gain(0.8,0,0);
-    robot_a->set_force_controller_y_gain(0.00007,0,0);
-    robot_a->set_position_controller_y_gain(0.8,0,0);
-    robot_a->set_force_controller_z_gain(0.00007,0,0);
-    robot_a->set_position_controller_z_gain(0.8,0,0);
+//    robot_a->set_force_controller_x_gain(0.00007,0,0);
+//    robot_a->set_position_controller_x_gain(0.8,0,0);
+//    robot_a->set_force_controller_y_gain(0.00007,0,0);
+//    robot_a->set_position_controller_y_gain(0.8,0,0);
+//    robot_a->set_force_controller_z_gain(0.00007,0,0);
+//    robot_a->set_position_controller_z_gain(0.8,0,0);
+
+    robot_a->set_force_controller_x_gain(0.0008,0.000015,0);
+    robot_a->set_position_controller_x_gain(0.06,0,0);
+    robot_a->set_force_controller_y_gain(0.0008,0.000015,0);
+    robot_a->set_position_controller_y_gain(0.06,0,0);
+    robot_a->set_force_controller_z_gain(0.0008,0.000015,0);
+    robot_a->set_position_controller_z_gain(0.06,0,0);
   }
   else
   {

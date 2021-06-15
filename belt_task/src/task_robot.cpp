@@ -36,6 +36,7 @@ TaskRobot::TaskRobot(std::string robot_name, std::string init_path)
 
   data_current_belt_.assign(3,0);
   data_desired_belt_.assign(3,0);
+  data_tf_part_ee.assign(3,0);
 
   force_controller_gain_.x_kp = 0;
   force_controller_gain_.x_ki = 0;
@@ -119,6 +120,7 @@ TaskRobot::TaskRobot(std::string robot_name, std::string init_path)
   force_x_compensator_->set_smooth_gain_time(2);
   force_y_compensator_->set_smooth_gain_time(2);
   force_z_compensator_->set_smooth_gain_time(2);
+
 }
 TaskRobot::~TaskRobot()
 {
@@ -311,6 +313,12 @@ bool TaskRobot::hybrid_controller()
       RPY<>(compensated_pose_vector_[3], compensated_pose_vector_[4], compensated_pose_vector_[5]).toRotation3D()); // // EAA
 
   target_tcp_pose_ = compensated_pose_vector_;
+  tf_part_ee = tf_part_base*tf_desired_;
+
+  data_tf_part_ee[0] = tf_part_ee.P()[0];
+  data_tf_part_ee[1] = tf_part_ee.P()[1];
+  data_tf_part_ee[2] = tf_part_ee.P()[2];
+
   //solve ik problem
   solutions_ = solver_->solve(tf_desired_, state_);
 
@@ -359,7 +367,7 @@ bool TaskRobot::hybrid_controller()
   //check velocity
 //  for(int num = 0; num <6 ; num ++)
 //  {
-//    if(fabs((compensated_q_[num] - current_q_[num])/control_time_) > 270*DEGREE2RADIAN)
+//    if(fabs((compensated_q_[num] - current_q_[num])/control_time_) > 360*DEGREE2RADIAN)
 //    {
 //      std::cout << robot_name_ << "::" << num << "::" << fabs((compensated_q_[num] - current_q_[num])/control_time_) << std::endl;
 //      std::cout << COLOR_RED_BOLD << "Robot speed is so FAST" << COLOR_RESET << std::endl;
@@ -403,6 +411,7 @@ bool TaskRobot::hybrid_controller()
   data_log_->set_data_getDesiredTCPPose(desired_pose_vector_);
   data_log_->set_data_getBeltPosition(data_current_belt_);
   data_log_->set_data_getDesiredBeltPosition(data_desired_belt_);  //data_bearing_tcp_belt_
+  data_log_->set_data_getBearingTCPPosition(data_tf_part_ee);
   data_log_->set_data_new_line();
 
   return control_check_;
@@ -481,6 +490,10 @@ void TaskRobot::parse_init_data_(const std::string &path)
   initial_pose_vector_[3] = robot_initial_pose[3].as<double>();
   initial_pose_vector_[4] = robot_initial_pose[4].as<double>();
   initial_pose_vector_[5] = robot_initial_pose[5].as<double>();
+}
+void TaskRobot::set_tf_part_base(Transform3D<> temp)
+{
+  tf_part_base = inverse(temp);
 }
 void TaskRobot::set_force_controller_x_gain(double kp,double ki,double kd)
 {

@@ -12,6 +12,7 @@ TaskStrategy::TaskStrategy()
 TaskStrategy::TaskStrategy(std::string robot_name)
 {
   initial_pose_vector_.assign(6,0);
+  initial_pose_vector_rpy_.assign(6,0);
   current_way_points_.assign(7,0);
   current_way_init_vel_points_.assign(6,0);
   current_way_final_vel_points_.assign(6,0);
@@ -104,12 +105,21 @@ void TaskStrategy::initialize(const std::string &path)
 
   tf_b_parts =  Transform3D<> (Vector3D<>(temp_vector_[0],temp_vector_[1],temp_vector_[2]), EAA<>(temp_vector_[3],temp_vector_[4],temp_vector_[5]).toRotation3D());
 
-  initial_pose_vector_[0] = robot_initial_pose[0].as<double>();
-  initial_pose_vector_[1] = robot_initial_pose[1].as<double>();
-  initial_pose_vector_[2] = robot_initial_pose[2].as<double>();
-  initial_pose_vector_[3] = robot_initial_pose[3].as<double>();
-  initial_pose_vector_[4] = robot_initial_pose[4].as<double>();
-  initial_pose_vector_[5] = robot_initial_pose[5].as<double>();
+  temp_vector_[0] = robot_initial_pose[0].as<double>();
+  temp_vector_[1] = robot_initial_pose[1].as<double>();
+  temp_vector_[2] = robot_initial_pose[2].as<double>();
+  temp_vector_[3] = robot_initial_pose[3].as<double>();
+  temp_vector_[4] = robot_initial_pose[4].as<double>();
+  temp_vector_[5] = robot_initial_pose[5].as<double>();
+
+  tf_initial_pose_ = Transform3D<> (Vector3D<>(temp_vector_[0],temp_vector_[1],temp_vector_[2]), EAA<>(temp_vector_[3],temp_vector_[4],temp_vector_[5]).toRotation3D());
+
+  initial_pose_vector_rpy_[0] = tf_initial_pose_.P()[0];
+  initial_pose_vector_rpy_[1] = tf_initial_pose_.P()[1];
+  initial_pose_vector_rpy_[2] = tf_initial_pose_.P()[2];
+  initial_pose_vector_rpy_[3] = RPY<>(tf_initial_pose_.R())[0]; // z
+  initial_pose_vector_rpy_[4] = RPY<>(tf_initial_pose_.R())[1]; // y
+  initial_pose_vector_rpy_[5] = RPY<>(tf_initial_pose_.R())[2]; // x
 }
 void TaskStrategy::assign_parts(std::string master, std::string slave)
 {
@@ -470,7 +480,10 @@ void TaskStrategy::input_paths(geometry_msgs::PoseArray paths_)
     temp_points_.push_back(pitch_y);
     temp_points_.push_back(roll_x);
 
-    temp_points_.push_back(1); // should be modified
+    if(num < 2)
+      temp_points_.push_back(1); // should be modified
+    else
+      temp_points_.push_back(1); // should be modified
 
     master_way_points_[num] = temp_points_;
 
@@ -487,8 +500,26 @@ void TaskStrategy::input_paths(geometry_msgs::PoseArray paths_)
   {
     temp_vel_.push_back(0);
   }
+  // add initialize motion for collection data
+//
+//
+//  temp_points_.push_back(initial_pose_vector_rpy_[0]);
+//  temp_points_.push_back(initial_pose_vector_rpy_[1]);
+//  temp_points_.push_back(initial_pose_vector_rpy_[2]);
+//  temp_points_.push_back(initial_pose_vector_rpy_[3]);
+//  temp_points_.push_back(initial_pose_vector_rpy_[4]);
+//  temp_points_.push_back(initial_pose_vector_rpy_[5]);
+//
+//  temp_points_.push_back(1); // should be modified
+//
+//  master_way_points_[master_way_points_numbers_] = temp_points_; // num+1
+//  std::cout << robot_name_ << " master_way_points_ " << master_way_points_numbers_  <<"::"<< master_way_points_[master_way_points_numbers_]  << std::endl;
+//  master_way_points_numbers_ ++;
+//
+//  temp_points_.clear();
 
   std::cout << robot_name_ << " master_way_points_numbers_ " << master_way_points_numbers_  << std::endl;
+
 
   for(int num = 0; num < master_way_points_numbers_; num ++)
   {

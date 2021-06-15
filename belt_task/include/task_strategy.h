@@ -101,6 +101,8 @@ private:
 
   //initial pose
   std::vector<double> initial_pose_vector_; //(6);
+  std::vector<double> initial_pose_vector_rpy_; //(6);
+  rw::math::Transform3D<> tf_initial_pose_;
 
 
   //master robot way points

@@ -327,7 +327,8 @@ bool RosNode::get_test()
 }
 bool RosNode::check_input_paths()
 {
-  if(check_input_paths_ && check_input_b_paths_)
+  //if(check_input_paths_ && check_input_b_paths_)
+  if(check_input_paths_)
     return check_input_paths_;
   else
     return false;
