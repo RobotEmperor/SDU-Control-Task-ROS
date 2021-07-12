@@ -1,8 +1,8 @@
 preferred_solution_number: 3 #3
 tool_mass: 1.72
-part_position: [-0.745247, 0.0747897, 0.242603, -0.7313354979535918, -1.7622417854008892, 1.7568650899341813] #pulley
-robot_initial_pose: [-0.745247, 0.0747897, 0.242603, -0.731335, -1.76224, 1.75687] #robot initial pose
-initial_joint_states : [2.9966, -1.6559, -2.331, -2.30144, -2.49991, -3.14564] # for gazebo
+part_position: [-0.645009239360538, 0.183897585106531, 0.345624830765288, 2.21642101059823, -2.21642096769922, -0.0110968867026749] #pulley
+robot_initial_pose: [-0.645009239360538, 0.183897585106531, 0.345624830765288, 2.21642101059823, -2.21642096769922, -0.0110968867026749] #robot initial pose
+initial_joint_states : [3.12608892488384, -1.52028611600049, -1.85446742889107, -1.32746492527331, -4.71472745404594,-3.15798824844802] # for gazebo
 pulley_radious: [0.0175,0.0275]
 
 #force controller gain
@@ -56,22 +56,31 @@ p_eaa_z_ki : 0
 p_eaa_z_kd : 0
 
 #everyting is with respect to own pulley's frame 
-master_pulley_big: # 
-  0: [-0.05,0,-0.008,0,0,0,2.5] # close to the pulley
-  1: [0,0.026,-0.001,0,0,-20,5] # a desired belt point
-  2: [-0.05,-0.04,-0.002,30,0,0,1.5] # up motion
-  3: [0.01,-0.04,-0.002,0,0,0,1.5]  # finish1
-  4: [0.01,-0.04,-0.02,0,0,0,1.5] # finish1
-  5: [-0.06,0,-0.04,0,0,0,1.5] # finish1
+master_pulley_big: # roll -40< <0 pitch -40< <0 yaw -35< <35
+  0: [0.039,0,0.0173,0,0,0,5] # close to the pulley
+  1: [0,0.0295,0.0173,20,0,0,2.5] # a desired belt point
+  2: [0.039,-0.04,0.0173,20,0,0,1] # up motion
+  3: [-0.025,-0.04,0.0173,20,0,0,1] # finish1
+  4: [0.15,-0.04,-0.5,20,0,0,2]  # finish1
 
 slave_pulley_big: # 
-  0: [-0.01,-0.02,-0.005,0,0,0,5] # close to the pulley
-  1: [-0.01,-0.02,-0.005,0,0,0,5] # keep the previous position
+  0: [0,0,0,0,0,0,5] # close to the pulley
+
+master_pulley_small: # roll -40< <0 pitch -40< <0 yaw -35< <35
+  0: [0.037,0,-0.01,0,0,0,3] # close to the pulley
+  1: [0,-0.01,0.0135,0,0,0,1] # a desired belt point ## 0.008
+  2: [0.037,0.025,0.0135,0,0,0,1] # up motion
+  3: [-0.01,0.025,-0.003,15,0,0,1]  # finish1
+  4: [-0.01,0.025,-0.008,15,0,0,1]  # finish1
+
+slave_pulley_small: # 
+  0: [0.14,0,-0.014,0,0,0,5] # close to the pulley
+  1: [0.14,0,-0.014,0,0,0,5] # close to the pulley
+  
 
 desired_force_value:
-  0: [12,1.3,-0.2]
-  1: [14,1.3,-0.2]
-
+  0: [-14,0,0.8]
+  1: [-16,0,0.8]
 
 
 
