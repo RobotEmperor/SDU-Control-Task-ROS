@@ -219,6 +219,8 @@ void executeAction(const belt_task::belt_task_actionGoalConstPtr &start_end, Ser
   temp_b_big.assign(6,0);
   temp_b_small.assign(6,0);
 
+
+
   for(int num = 0; num < 3; num ++)
   {
     temp_a_big[num] =  start_end->transform_a_big_pulley[num];
@@ -226,15 +228,36 @@ void executeAction(const belt_task::belt_task_actionGoalConstPtr &start_end, Ser
 
     temp_b_big[num] =  start_end->transform_b_big_pulley[num];
     temp_b_small[num] =  start_end->transform_b_small_pulley[num];
-
   }
 
-  robot_a_strategy->set_parts_data(temp_a_big, temp_a_small);
-  if(!robot_a_strategy->get_type().compare("master"))
-    robot_b_strategy->set_type("slave");
-  else
-    robot_b_strategy->set_type("master");
-  robot_b_strategy->set_parts_data(temp_b_big, temp_b_small);
+  //  rw::math::Transform3D<> tf_a_base_to_big_;
+  //  rw::math::Transform3D<> tf_big_to_small_;
+  //  rw::math::Transform3D<> tf_a_base_to_small_;
+  //  tf_a_base_to_big_= Transform3D<> (Vector3D<>(temp_a_big[0], temp_a_big[1], temp_a_big[2]), EAA<>(-0.7313354979535918, -1.7622417854008892, 1.7568650899341813).toRotation3D());
+  //  tf_big_to_small_ = Transform3D<> (Vector3D<>(-0.13, 0.007, 0), EAA<>(0,0,0).toRotation3D());
+  //  tf_a_base_to_small_ = tf_a_base_to_big_*tf_big_to_small_;
+  //
+  //  for(int num = 0; num < 3; num ++)
+  //  {
+  //    temp_a_small[num] = tf_a_base_to_small_.P()[num];
+  //  }
+  //  cout << COLOR_GREEN_BOLD << "tf_a_base_to_small_ : "<< tf_a_base_to_small_.P() << COLOR_RESET << endl;
+
+  robot_b_strategy->set_type("master");
+  robot_b_strategy->set_parts_data(temp_b_big, temp_b_small); //robot_b_strategy->set_parts_data(temp_b_big, temp_b_small);
+
+
+  robot_a_strategy->set_type("slave");
+  robot_a_strategy->set_parts_data(temp_a_small, temp_a_big);
+
+
+
+  //  if(!robot_a_strategy->get_type().compare("master"))
+  //    robot_b_strategy->set_type("slave");
+  //  else
+  //    robot_b_strategy->set_type("master");
+  //  robot_b_strategy->set_type("slave");
+  //  robot_b_strategy->set_parts_data(temp_b_small, temp_b_big); //robot_b_strategy->set_parts_data(temp_b_big, temp_b_small);
 
 
   if(start_end->on_off)
@@ -355,31 +378,44 @@ int main (int argc, char **argv)
 
   if(!robot_a_strategy->get_type().compare("master"))
   {
-    robot_a->set_force_controller_x_gain(0.00007,0,0);
-    robot_a->set_position_controller_x_gain(0.8,0,0);
-    robot_a->set_force_controller_y_gain(0.00007,0,0);
-    robot_a->set_position_controller_y_gain(0.8,0,0);
-    robot_a->set_force_controller_z_gain(0.00007,0,0);
-    robot_a->set_position_controller_z_gain(0.8,0,0);
+    robot_a->set_force_controller_x_gain(0,0,0);
+    robot_a->set_position_controller_x_gain(1,0,0);
+    robot_a->set_force_controller_y_gain(0,0,0);
+    robot_a->set_position_controller_y_gain(1,0,0);
+    robot_a->set_force_controller_z_gain(0,0,0);
+    robot_a->set_position_controller_z_gain(1,0,0);
   }
   else
   {
+    //    robot_a->set_force_controller_x_gain(0.0008,0.000015,0);
+    //    robot_a->set_position_controller_x_gain(0.06,0,0);
+    //    robot_a->set_force_controller_y_gain(0.0008,0.000015,0);
+    //    robot_a->set_position_controller_y_gain(0.06,0,0);
+    //    robot_a->set_force_controller_z_gain(0.0008,0.000015,0);
+    //    robot_a->set_position_controller_z_gain(0.06,0,0);
+
     robot_a->set_force_controller_x_gain(0.0008,0.000015,0);
-    robot_a->set_position_controller_x_gain(0.06,0,0);
-    robot_a->set_force_controller_y_gain(0.0008,0.000015,0);
-    robot_a->set_position_controller_y_gain(0.06,0,0);
-    robot_a->set_force_controller_z_gain(0.0008,0.000015,0);
-    robot_a->set_position_controller_z_gain(0.06,0,0);
+    robot_a->set_position_controller_x_gain(0,0,0);
+
+    robot_a->set_force_controller_y_gain(0,0,0);
+    robot_a->set_position_controller_y_gain(1,0,0);
+    robot_a->set_force_controller_z_gain(0,0,0);
+    robot_a->set_position_controller_z_gain(1,0,0);
+
+//    robot_a->set_force_controller_y_gain(0.0008,0.000015,0);
+//    robot_a->set_position_controller_y_gain(0.06,0,0);
+//    robot_a->set_force_controller_z_gain(0.0008,0.000015,0);
+//    robot_a->set_position_controller_z_gain(0.06,0,0);
   }
 
   if(!robot_b_strategy->get_type().compare("master"))
   {
-    robot_b->set_force_controller_x_gain(0.00007,0,0);
-    robot_b->set_position_controller_x_gain(0.8,0,0);
-    robot_b->set_force_controller_y_gain(0.00007,0,0);
-    robot_b->set_position_controller_y_gain(0.8,0,0);
-    robot_b->set_force_controller_z_gain(0.00007,0,0);
-    robot_b->set_position_controller_z_gain(0.8,0,0);
+    robot_b->set_force_controller_x_gain(0,0,0);
+    robot_b->set_position_controller_x_gain(1,0,0);
+    robot_b->set_force_controller_y_gain(0,0,0);
+    robot_b->set_position_controller_y_gain(1,0,0);
+    robot_b->set_force_controller_z_gain(0,0,0);
+    robot_b->set_position_controller_z_gain(1,0,0);
   }
   else
   {

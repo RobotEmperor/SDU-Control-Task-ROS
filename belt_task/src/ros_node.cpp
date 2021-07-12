@@ -45,7 +45,7 @@ void RosNode::initialize()
 	gazebo_wrist_3_position_pub_ = nh.advertise<std_msgs::Float64>("/ur10e_a/a_wrist_3_position/command", 10);
 
 	gazebo_shoulder_pan_position_b_pub_ = nh.advertise<std_msgs::Float64>("/ur10e_b/b_shoulder_pan_position/command", 10);
-	gazebo_shoulder_lift_position_b_pub_ = nh.advertise<std_msgs::Float64>("/ur10e_b/b_ur10e_robot_b/shoulder_lift_position/command", 10);
+	gazebo_shoulder_lift_position_b_pub_ = nh.advertise<std_msgs::Float64>("/ur10e_b/b_shoulder_lift_position/command", 10);
 	gazebo_elbow_position_b_pub_= nh.advertise<std_msgs::Float64>("/ur10e_b/b_elbow_position/command", 10);
 	gazebo_wrist_1_position_b_pub_= nh.advertise<std_msgs::Float64>("/ur10e_b/b_wrist_1_position/command", 10);
 	gazebo_wrist_2_position_b_pub_= nh.advertise<std_msgs::Float64>("/ur10e_b/b_wrist_2_position/command", 10);

@@ -191,7 +191,8 @@ void TaskRobot::moveL_to_init_pose()
 }
 void TaskRobot::motion_generator(Transform3D<> temp_reference_frame, std::vector<double> way_points)
 {
-  //std::cout << COLOR_GREEN << robot_name_ << temp_reference_frame << COLOR_RESET << std::endl;
+  //std::cout << COLOR_GREEN << robot_name_ << "::"  << temp_reference_frame.P() << COLOR_RESET << std::endl;
+  //std::cout << COLOR_GREEN << robot_name_ << "::" << EAA<> (temp_reference_frame .R())<< COLOR_RESET << std::endl;
   //std::cout << COLOR_GREEN << robot_name_ << way_points << COLOR_RESET << std::endl;
   robot_motion_->motion_to_desired_pose(temp_reference_frame, way_points[0], way_points[1], way_points[2], RPY<> (way_points[3],way_points[4],way_points[5]), way_points[6]);
   robot_motion_->generate_fifth_order_trajectory();
@@ -206,13 +207,13 @@ bool TaskRobot::hybrid_controller()
 
   //controller for pose controller
   position_x_controller_->set_pid_gain(position_controller_gain_.x_kp,position_controller_gain_.x_ki,position_controller_gain_.x_kd);
-  position_y_controller_->set_pid_gain(position_controller_gain_.x_kp,position_controller_gain_.x_ki,position_controller_gain_.x_kd);
-  position_z_controller_->set_pid_gain(position_controller_gain_.x_kp,position_controller_gain_.x_ki,position_controller_gain_.x_kd);
+  position_y_controller_->set_pid_gain(position_controller_gain_.y_kp,position_controller_gain_.y_ki,position_controller_gain_.y_kd);
+  position_z_controller_->set_pid_gain(position_controller_gain_.z_kp,position_controller_gain_.z_ki,position_controller_gain_.z_kd);
 
   //controller for force compensation
   force_x_compensator_->set_pid_gain(force_controller_gain_.x_kp,force_controller_gain_.x_ki,force_controller_gain_.x_kd);
-  force_y_compensator_->set_pid_gain(force_controller_gain_.x_kp,force_controller_gain_.x_ki,force_controller_gain_.x_kd);
-  force_z_compensator_->set_pid_gain(force_controller_gain_.x_kp,force_controller_gain_.x_ki,force_controller_gain_.x_kd);
+  force_y_compensator_->set_pid_gain(force_controller_gain_.y_kp,force_controller_gain_.y_ki,force_controller_gain_.y_kd);
+  force_z_compensator_->set_pid_gain(force_controller_gain_.z_kp,force_controller_gain_.z_ki,force_controller_gain_.z_kd);
 
   if(!gazebo_check_)
   {

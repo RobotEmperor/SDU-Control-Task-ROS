@@ -37,6 +37,8 @@ void TaskMotion::motion_to_desired_pose(Transform3D<> reference_frame, double x,
 
   tf_desired_pose_ = reference_frame*tf_tcp_desired_pose_;
 
+
+
   desired_pose_matrix_(0,1) = Vector3D<> (tf_desired_pose_.P())[0];
   desired_pose_matrix_(1,1) = Vector3D<> (tf_desired_pose_.P())[1];
   desired_pose_matrix_(2,1) = Vector3D<> (tf_desired_pose_.P())[2];

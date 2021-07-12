@@ -12,6 +12,7 @@ TaskStrategy::TaskStrategy()
 TaskStrategy::TaskStrategy(std::string robot_name)
 {
   initial_pose_vector_.assign(6,0);
+  parts_pose_vector_.assign(6,0);
   current_way_points_.assign(7,0);
   current_desired_force_vector_.assign(3,0);
   first_part_.assign(6,0);
@@ -79,12 +80,13 @@ void TaskStrategy::initialize(const std::string &path)
 
     temp_points_.clear();
   }
-  initial_pose_vector_[0] = robot_initial_pose[0].as<double>();
-  initial_pose_vector_[1] = robot_initial_pose[1].as<double>();
-  initial_pose_vector_[2] = robot_initial_pose[2].as<double>();
-  initial_pose_vector_[3] = robot_initial_pose[3].as<double>();
-  initial_pose_vector_[4] = robot_initial_pose[4].as<double>();
-  initial_pose_vector_[5] = robot_initial_pose[5].as<double>();
+
+  for(int num = 0; num < 6; num ++)
+  {
+    initial_pose_vector_[num] = robot_initial_pose[num].as<double>();
+    parts_pose_vector_[num] = part_position_node[num].as<double>();
+  }
+
 }
 void TaskStrategy::assign_parts(std::string master, std::string slave)
 {
@@ -159,43 +161,46 @@ void TaskStrategy::assign_parts(std::string master, std::string slave)
 }
 void TaskStrategy::initialize_reference_frame()
 {
-  rw::math::Transform3D<> temp_inv_;
-  double align_angle_z_ = 0;
-  tf_base_to_tcp_ = Transform3D<> (Vector3D<>(initial_pose_vector_[0], initial_pose_vector_[1], initial_pose_vector_[2]), EAA<>(initial_pose_vector_[3], initial_pose_vector_[4], initial_pose_vector_[5]).toRotation3D());
+  rw::math::Transform3D<> tf_base_parts;
+  //  rw::math::Transform3D<> temp_inv_;
+  //  double align_angle_z_ = 0;
+  tf_base_parts = Transform3D<> (Vector3D<>(parts_pose_vector_[0], parts_pose_vector_[1], parts_pose_vector_[2]), EAA<>(parts_pose_vector_[3], parts_pose_vector_[4], parts_pose_vector_[5]).toRotation3D());
 
-//  temp_inv_ = tf_base_to_tcp_;
-//  temp_inv_.invMult(temp_inv_, tf_base_to_start_);
-//  tf_tcp_to_start_ = temp_inv_;
-//
-//  temp_inv_ = tf_base_to_tcp_;
-//  temp_inv_.invMult(temp_inv_, tf_base_to_end_);
-//  tf_tcp_to_end_ = temp_inv_;
-//
-//  tf_tcp_to_direction_.P() = -(tf_tcp_to_end_.P() - tf_tcp_to_start_.P());
-//
-//  align_angle_z_ = atan2(tf_tcp_to_direction_.P()[1],tf_tcp_to_direction_.P()[0]);
-//
-//  if(align_angle_z_ > 69*DEGREE2RADIAN)
-//    align_angle_z_ = 69*DEGREE2RADIAN;
-//  if(align_angle_z_ < -69*DEGREE2RADIAN)
-//    align_angle_z_ = -69*DEGREE2RADIAN;
-//
-//  tf_tcp_to_rotate_ =  Transform3D<> (Vector3D<>(0,0,0), RPY<>(align_angle_z_,0,0).toRotation3D());
-//  tf_base_to_tcp_rotated_ = tf_base_to_tcp_*tf_tcp_to_rotate_;
-//
-//
-//  if(!type_.compare("master"))
-//  {
-//    tf_base_to_start_.R() = tf_base_to_tcp_.R();
-//  }
-//  else
-//  {
-//    tf_base_to_start_.R() = tf_base_to_tcp_rotated_.R();
-//    tf_base_to_end_.R() = tf_base_to_tcp_.R();
-//  }
+  //  temp_inv_ = tf_base_to_tcp_;
+  //  temp_inv_.invMult(temp_inv_, tf_base_to_start_);
+  //  tf_tcp_to_start_ = temp_inv_;
+  //
+  //  temp_inv_ = tf_base_to_tcp_;
+  //  temp_inv_.invMult(temp_inv_, tf_base_to_end_);
+  //  tf_tcp_to_end_ = temp_inv_;
+  //
+  //  tf_tcp_to_direction_.P() = -(tf_tcp_to_end_.P() - tf_tcp_to_start_.P());
+  //
+  //  align_angle_z_ = atan2(tf_tcp_to_direction_.P()[1],tf_tcp_to_direction_.P()[0]);
+  //
+  //  if(align_angle_z_ > 69*DEGREE2RADIAN)
+  //    align_angle_z_ = 69*DEGREE2RADIAN;
+  //  if(align_angle_z_ < -69*DEGREE2RADIAN)
+  //    align_angle_z_ = -69*DEGREE2RADIAN;
+  //
+  //  tf_tcp_to_rotate_ =  Transform3D<> (Vector3D<>(0,0,0), RPY<>(align_angle_z_,0,0).toRotation3D());
+  //  tf_base_to_tcp_rotated_ = tf_base_to_tcp_*tf_tcp_to_rotate_;
+  //
+  //
+  //  if(!type_.compare("master"))
+  //  {
+  //    tf_base_to_start_.R() = tf_base_to_tcp_.R();
+  //  }
+  //  else
+  //  {
+  //    tf_base_to_start_.R() = tf_base_to_tcp_rotated_.R();
+  //    tf_base_to_end_.R() = tf_base_to_tcp_.R();
+  //  }
 
-  current_reference_frame_ = tf_base_to_tcp_;
-  std::cout << robot_name_ <<"::  NEW initialize !! " << tf_base_to_tcp_ << std::endl;
+  //  current_reference_frame_ = tf_base_to_tcp_;
+  tf_base_to_start_.R() = tf_base_parts.R();
+  current_reference_frame_ = tf_base_to_start_;
+  std::cout << robot_name_ <<"::  NEW initialize !! " << current_reference_frame_ << std::endl;
 }
 void TaskStrategy::estimation_of_belt_position()
 {
@@ -234,59 +239,59 @@ void TaskStrategy::estimation_of_belt_position()
 }
 void TaskStrategy::decision_of_function()
 {
-  if(!type_.compare(""))
+  //  if(!type_.compare(""))
+  //  {
+  //    if(first_part_[1] > second_part_[1])
+  //    {
+  //      type_ = "slave"; // small
+  //      assign_parts("master_pulley_small", "slave_pulley_small");
+  //      tf_base_to_start_.P()[0] = second_part_[0];
+  //      tf_base_to_start_.P()[1] = second_part_[1];
+  //      tf_base_to_start_.P()[2] = second_part_[2];
+  //
+  //      tf_base_to_end_.P()[0] = first_part_[0];
+  //      tf_base_to_end_.P()[1] = first_part_[1];
+  //      tf_base_to_end_.P()[2] = first_part_[2];
+  //    }
+  //    if(first_part_[1] < second_part_[1])
+  //    {
+  //      type_ = "master";// big
+  //      assign_parts("master_pulley_big", "slave_pulley_big");
+  //      tf_base_to_start_.P()[0] = first_part_[0];
+  //      tf_base_to_start_.P()[1] = first_part_[1];
+  //      tf_base_to_start_.P()[2] = first_part_[2];
+  //
+  //      tf_base_to_end_.P()[0] = second_part_[0];
+  //      tf_base_to_end_.P()[1] = second_part_[1];
+  //      tf_base_to_end_.P()[2] = second_part_[2];
+  //    }
+  //  }
+  //  else
+  //  {
+  if(!type_.compare("master"))
   {
-    if(first_part_[1] > second_part_[1])
-    {
-      type_ = "slave"; // small
-      assign_parts("master_pulley_small", "slave_pulley_small");
-      tf_base_to_start_.P()[0] = second_part_[0];
-      tf_base_to_start_.P()[1] = second_part_[1];
-      tf_base_to_start_.P()[2] = second_part_[2];
+    assign_parts("master_pulley_big", "slave_pulley_big");
+    tf_base_to_start_.P()[0] = first_part_[0];
+    tf_base_to_start_.P()[1] = first_part_[1];
+    tf_base_to_start_.P()[2] = first_part_[2];
 
-      tf_base_to_end_.P()[0] = first_part_[0];
-      tf_base_to_end_.P()[1] = first_part_[1];
-      tf_base_to_end_.P()[2] = first_part_[2];
-    }
-    if(first_part_[1] < second_part_[1])
-    {
-      type_ = "master";// big
-      assign_parts("master_pulley_big", "slave_pulley_big");
-      tf_base_to_start_.P()[0] = first_part_[0];
-      tf_base_to_start_.P()[1] = first_part_[1];
-      tf_base_to_start_.P()[2] = first_part_[2];
-
-      tf_base_to_end_.P()[0] = second_part_[0];
-      tf_base_to_end_.P()[1] = second_part_[1];
-      tf_base_to_end_.P()[2] = second_part_[2];
-    }
+    //tf_base_to_end_.P()[0] = second_part_[0];
+    //tf_base_to_end_.P()[1] = second_part_[1];
+    //tf_base_to_end_.P()[2] = second_part_[2];
   }
-  else
+
+  if(!type_.compare("slave"))
   {
-    if(!type_.compare("master"))
-    {
-      assign_parts("master_pulley_big", "slave_pulley_big");
-      tf_base_to_start_.P()[0] = first_part_[0];
-      tf_base_to_start_.P()[1] = first_part_[1];
-      tf_base_to_start_.P()[2] = first_part_[2];
+    assign_parts("master_pulley_small", "slave_pulley_small");
+    tf_base_to_start_.P()[0] = first_part_[0];
+    tf_base_to_start_.P()[1] = first_part_[1];
+    tf_base_to_start_.P()[2] = first_part_[2];
 
-      tf_base_to_end_.P()[0] = second_part_[0];
-      tf_base_to_end_.P()[1] = second_part_[1];
-      tf_base_to_end_.P()[2] = second_part_[2];
-    }
-
-    if(!type_.compare("slave"))
-    {
-      assign_parts("master_pulley_small", "slave_pulley_small");
-      tf_base_to_start_.P()[0] = second_part_[0];
-      tf_base_to_start_.P()[1] = second_part_[1];
-      tf_base_to_start_.P()[2] = second_part_[2];
-
-      tf_base_to_end_.P()[0] = first_part_[0];
-      tf_base_to_end_.P()[1] = first_part_[1];
-      tf_base_to_end_.P()[2] = first_part_[2];
-    }
+    //tf_base_to_end_.P()[0] = first_part_[0];
+    //tf_base_to_end_.P()[1] = first_part_[1];
+    //tf_base_to_end_.P()[2] = first_part_[2];
   }
+  //  }
 }
 bool TaskStrategy::tasks() // first for only two pulleys
 {
@@ -383,7 +388,7 @@ void TaskStrategy::slave_robot()
 
     motion_phases_ = phases_;
     std::cout << "slave motion! " << std::endl;
-    current_reference_frame_ = tf_base_to_end_;
+    current_reference_frame_ = tf_base_to_start_;  // tf_base_to_start_ current_reference_frame_ = tf_base_to_end_; for two pulley
 
     for(int num = 0; num < 3; num ++)
     {
@@ -442,9 +447,9 @@ void TaskStrategy::set_type(std::string type)
   type_ = type;
 }
 Transform3D<> TaskStrategy::get_current_reference_frame_()
-{
+    {
   return current_reference_frame_;
-}
+    }
 std::vector<double> TaskStrategy::get_current_way_points_()
 {
   return current_way_points_;

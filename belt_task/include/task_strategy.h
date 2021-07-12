@@ -87,6 +87,7 @@ private:
 
   //initial pose
   std::vector<double> initial_pose_vector_; //(6);
+  std::vector<double> parts_pose_vector_; //(6);
 
 
   //master robot way points
