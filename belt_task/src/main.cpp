@@ -42,6 +42,7 @@ void *thread_func_robot_a ( void *param )
     {
       if(finished_insertion != 0)
       {
+
         //gain switch
         robot_a->set_force_controller_x_gain(0.00007,0,0);
         robot_a->set_position_controller_x_gain(0.8,0,0);
@@ -50,6 +51,7 @@ void *thread_func_robot_a ( void *param )
         robot_a->set_force_controller_z_gain(0.00007,0,0);
         robot_a->set_position_controller_z_gain(0.8,0,0);
 
+        robot_a->set_controller_smooth_change(robot_a_strategy->get_controller_smooth_gain_change());
         robot_a_strategy->set_type("master");
       }
     }
@@ -374,16 +376,17 @@ int main (int argc, char **argv)
     robot_b->moveL_to_init_pose();
   }
 
+  double p_gain = 0.8;
 
 
   if(!robot_a_strategy->get_type().compare("master"))
   {
     robot_a->set_force_controller_x_gain(0,0,0);
-    robot_a->set_position_controller_x_gain(1,0,0);
+    robot_a->set_position_controller_x_gain(p_gain,0,0);
     robot_a->set_force_controller_y_gain(0,0,0);
-    robot_a->set_position_controller_y_gain(1,0,0);
+    robot_a->set_position_controller_y_gain(p_gain,0,0);
     robot_a->set_force_controller_z_gain(0,0,0);
-    robot_a->set_position_controller_z_gain(1,0,0);
+    robot_a->set_position_controller_z_gain(p_gain,0,0);
   }
   else
   {
@@ -395,12 +398,12 @@ int main (int argc, char **argv)
     //    robot_a->set_position_controller_z_gain(0.06,0,0);
 
     robot_a->set_force_controller_x_gain(0.0008,0.000015,0);
-    robot_a->set_position_controller_x_gain(0,0,0);
+    robot_a->set_position_controller_x_gain(0.06,0,0);
 
     robot_a->set_force_controller_y_gain(0,0,0);
-    robot_a->set_position_controller_y_gain(1,0,0);
+    robot_a->set_position_controller_y_gain(p_gain,0,0);
     robot_a->set_force_controller_z_gain(0,0,0);
-    robot_a->set_position_controller_z_gain(1,0,0);
+    robot_a->set_position_controller_z_gain(p_gain,0,0);
 
 //    robot_a->set_force_controller_y_gain(0.0008,0.000015,0);
 //    robot_a->set_position_controller_y_gain(0.06,0,0);
@@ -411,11 +414,11 @@ int main (int argc, char **argv)
   if(!robot_b_strategy->get_type().compare("master"))
   {
     robot_b->set_force_controller_x_gain(0,0,0);
-    robot_b->set_position_controller_x_gain(1,0,0);
+    robot_b->set_position_controller_x_gain(p_gain,0,0);
     robot_b->set_force_controller_y_gain(0,0,0);
-    robot_b->set_position_controller_y_gain(1,0,0);
+    robot_b->set_position_controller_y_gain(p_gain,0,0);
     robot_b->set_force_controller_z_gain(0,0,0);
-    robot_b->set_position_controller_z_gain(1,0,0);
+    robot_b->set_position_controller_z_gain(p_gain,0,0);
   }
   else
   {

@@ -58,12 +58,12 @@ p_eaa_z_kd : 0
 #everyting is with respect to own pulley's frame 
 
 master_pulley_big: 
-  0: [0.035,0,-0.01,0,-25,0,5] # close to the pulley
-  1: [-0.012,0.039,-0.004,0,-25,-30,5] # a desired belt point
-  2: [0.035,-0.04,-0.004,-30,-25,0,5] # up motion
-  3: [-0.032,-0.04,-0.004,0,-25,0,5] # finish1
-  4: [-0.032,-0.04,-0.04,0,-25,0,5]  # finish1
-  5: [0.05,-0.04,-0.05,0,-25,0,5]  # finish1
+  0: [0.04,0,-0.01,0,-25,0,2.5] # close to the pulley
+  1: [0,0.035,-0.004,0,-25,-30,5] # a desired belt point
+  2: [0.04,-0.045,-0.01,-70,-25,0,3] # up motion
+  3: [-0.02,-0.045,-0.01,-70,-25,0,3] # finish1
+  4: [-0.02,-0.045,-0.04,-70,-25,0,3]  # finish1
+  5: [0.07,-0.045,-0.05,0,-25,0,3]  # finish1
 
 slave_pulley_big: # 
   0: [0.02,-0.02,-0.005,0,0,0,2.5] # close to the pulley
