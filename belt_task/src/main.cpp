@@ -219,43 +219,15 @@ void executeAction(const belt_task::belt_task_actionGoalConstPtr &start_end, Ser
   temp_b_big.assign(6,0);
   temp_b_small.assign(6,0);
 
-  //  temp_a_big_x = start_end->transform_a_big_pulley[0];
-  //  temp_a_big_y = start_end->transform_a_big_pulley[1];
-  //  temp_a_big_z = start_end->transform_a_big_pulley[2];
-  //
-  //  temp_a_small_x = start_end->transform_a_small_pulley[0];
-  //  temp_a_small_y = start_end->transform_a_small_pulley[1];
-  //  temp_a_small_z = start_end->transform_a_small_pulley[2];
-  //
-  //  temp_b_big_x = start_end->transform_b_big_pulley[0];
-  //  temp_b_big_y = start_end->transform_b_big_pulley[1];
-  //  temp_b_big_z = start_end->transform_b_big_pulley[2];
-  //
-  //  temp_b_small_x = start_end->transform_b_small_pulley[0];
-  //  temp_b_small_y = start_end->transform_b_small_pulley[1];
-  //  temp_b_small_z = start_end->transform_b_small_pulley[2];
+  for(int num = 0; num < 3; num ++)
+  {
+    temp_a_big[num] =  start_end->transform_a_big_pulley[num];
+    temp_a_small[num] =  start_end->transform_a_small_pulley[num];
 
-  //example
-  //transform_a_big_pulley   :  Q[6]{-0.57389, 0.376311, 0.0549096, -1.58493, 0.914809, 1.57408}
-  //transform_a_small_pulley   :  Q[6]{-0.459831, 0.444951, 0.0550761, -1.09482, 1.27564, 1.08678}
-  //transform_b_big_pulley   :  Q[6]{-0.836103, -0.384349, 0.0623581, 0.823434, 1.40879, -0.828878}
-  //transform_b_small_pulley   :  Q[6]{-0.950775, -0.451959, 0.0622844, 1.32863, 1.1246, -1.33446}
+    temp_b_big[num] =  start_end->transform_b_big_pulley[num];
+    temp_b_small[num] =  start_end->transform_b_small_pulley[num];
 
-  temp_a_big[0] = -0.57389;
-  temp_a_big[1] = 0.376311;
-  temp_a_big[2] = 0.0549096;
-
-  temp_a_small[0] = -0.459831;
-  temp_a_small[1] = 0.444951;
-  temp_a_small[2] = 0.0550761;
-
-  temp_b_big[0] = -0.836103;
-  temp_b_big[1] = -0.384349;
-  temp_b_big[2] = 0.0623581;
-
-  temp_b_small[0] = -0.950775;
-  temp_b_small[1] = -0.451959;
-  temp_b_small[2] = 0.0622844;
+  }
 
   robot_a_strategy->set_parts_data(temp_a_big, temp_a_small);
   if(!robot_a_strategy->get_type().compare("master"))

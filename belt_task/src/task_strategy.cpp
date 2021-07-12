@@ -163,36 +163,36 @@ void TaskStrategy::initialize_reference_frame()
   double align_angle_z_ = 0;
   tf_base_to_tcp_ = Transform3D<> (Vector3D<>(initial_pose_vector_[0], initial_pose_vector_[1], initial_pose_vector_[2]), EAA<>(initial_pose_vector_[3], initial_pose_vector_[4], initial_pose_vector_[5]).toRotation3D());
 
-  temp_inv_ = tf_base_to_tcp_;
-  temp_inv_.invMult(temp_inv_, tf_base_to_start_);
-  tf_tcp_to_start_ = temp_inv_;
-
-  temp_inv_ = tf_base_to_tcp_;
-  temp_inv_.invMult(temp_inv_, tf_base_to_end_);
-  tf_tcp_to_end_ = temp_inv_;
-
-  tf_tcp_to_direction_.P() = -(tf_tcp_to_end_.P() - tf_tcp_to_start_.P());
-
-  align_angle_z_ = atan2(tf_tcp_to_direction_.P()[1],tf_tcp_to_direction_.P()[0]);
-
-  if(align_angle_z_ > 69*DEGREE2RADIAN)
-    align_angle_z_ = 69*DEGREE2RADIAN;
-  if(align_angle_z_ < -69*DEGREE2RADIAN)
-    align_angle_z_ = -69*DEGREE2RADIAN;
-
-  tf_tcp_to_rotate_ =  Transform3D<> (Vector3D<>(0,0,0), RPY<>(align_angle_z_,0,0).toRotation3D());
-  tf_base_to_tcp_rotated_ = tf_base_to_tcp_*tf_tcp_to_rotate_;
-
-
-  if(!type_.compare("master"))
-  {
-    tf_base_to_start_.R() = tf_base_to_tcp_.R();
-  }
-  else
-  {
-    tf_base_to_start_.R() = tf_base_to_tcp_rotated_.R();
-    tf_base_to_end_.R() = tf_base_to_tcp_.R();
-  }
+//  temp_inv_ = tf_base_to_tcp_;
+//  temp_inv_.invMult(temp_inv_, tf_base_to_start_);
+//  tf_tcp_to_start_ = temp_inv_;
+//
+//  temp_inv_ = tf_base_to_tcp_;
+//  temp_inv_.invMult(temp_inv_, tf_base_to_end_);
+//  tf_tcp_to_end_ = temp_inv_;
+//
+//  tf_tcp_to_direction_.P() = -(tf_tcp_to_end_.P() - tf_tcp_to_start_.P());
+//
+//  align_angle_z_ = atan2(tf_tcp_to_direction_.P()[1],tf_tcp_to_direction_.P()[0]);
+//
+//  if(align_angle_z_ > 69*DEGREE2RADIAN)
+//    align_angle_z_ = 69*DEGREE2RADIAN;
+//  if(align_angle_z_ < -69*DEGREE2RADIAN)
+//    align_angle_z_ = -69*DEGREE2RADIAN;
+//
+//  tf_tcp_to_rotate_ =  Transform3D<> (Vector3D<>(0,0,0), RPY<>(align_angle_z_,0,0).toRotation3D());
+//  tf_base_to_tcp_rotated_ = tf_base_to_tcp_*tf_tcp_to_rotate_;
+//
+//
+//  if(!type_.compare("master"))
+//  {
+//    tf_base_to_start_.R() = tf_base_to_tcp_.R();
+//  }
+//  else
+//  {
+//    tf_base_to_start_.R() = tf_base_to_tcp_rotated_.R();
+//    tf_base_to_end_.R() = tf_base_to_tcp_.R();
+//  }
 
   current_reference_frame_ = tf_base_to_tcp_;
   std::cout << robot_name_ <<"::  NEW initialize !! " << tf_base_to_tcp_ << std::endl;
