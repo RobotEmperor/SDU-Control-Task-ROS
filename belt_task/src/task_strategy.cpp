@@ -342,9 +342,9 @@ void TaskStrategy::master_robot()
     std::cout << "Master motion! " << std::endl;
     current_reference_frame_ = tf_base_to_start_;
 
-    if(phases_ == 3)
+    if(phases_ == 4)
     {
-      gripper_move_values_ = 12;
+      gripper_move_values_ = 5;
     }
 
     if(phases_ == 1)
@@ -353,7 +353,7 @@ void TaskStrategy::master_robot()
       {
         current_desired_force_vector_[num] = 0;
       }
-      gripper_move_values_ = 6;
+      gripper_move_values_ = 0;
 
       desired_groove_position_[0] = master_way_points_[1][0];
       desired_groove_position_[1] = master_way_points_[1][1];

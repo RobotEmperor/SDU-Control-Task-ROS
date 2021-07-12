@@ -221,8 +221,8 @@ bool TaskRobot::hybrid_controller()
     acutal_tcp_acc_  = rtde_receive_->getActualToolAccelerometer();
     actual_tcp_pose_ = rtde_receive_->getActualTCPPose();
     actual_tcp_speed_ = rtde_receive_->getActualTCPSpeed();
-    //joint_positions_ = rtde_receive_->getActualQ();
-    current_q_ = rtde_receive_->getActualQ();
+    joint_positions_ = rtde_receive_->getActualQ();
+    //current_q_ = rtde_receive_->getActualQ();
 
     robot_motion_->set_current_pose_eaa(actual_tcp_pose_[0], actual_tcp_pose_[1], actual_tcp_pose_[2],actual_tcp_pose_[3], actual_tcp_pose_[4], actual_tcp_pose_[5]);
 
@@ -358,7 +358,7 @@ bool TaskRobot::hybrid_controller()
   //check velocity
   for(int num = 0; num <6 ; num ++)
   {
-    if(fabs((compensated_q_[num] - current_q_[num])/control_time_) > 270*DEGREE2RADIAN)
+    if(fabs((compensated_q_[num] - current_q_[num])/control_time_) > 360*DEGREE2RADIAN)
     {
       std::cout << robot_name_ << "::" << num << "::" << fabs((compensated_q_[num] - current_q_[num])/control_time_) << std::endl;
       std::cout << COLOR_RED_BOLD << "Robot speed is so FAST" << COLOR_RESET << std::endl;
@@ -392,7 +392,7 @@ bool TaskRobot::hybrid_controller()
   time_count_ += control_time_;
   //data log save
   data_log_->set_time_count(time_count_);
-  data_log_->set_data_getActualQ(current_q_);
+  data_log_->set_data_getActualQ(joint_positions_);
   data_log_->set_data_getActualTCPPose(actual_tcp_pose_);
   data_log_->set_data_getTargetTCPPose(target_tcp_pose_);
   data_log_->set_data_getActualTCPForceTorque(raw_ft_data_);

@@ -37,6 +37,8 @@ void *thread_func_robot_a ( void *param )
     robot_a_strategy->set_robot_current_tf(robot_a->get_tf_current_());
     robot_a_strategy->set_is_moving_check(robot_a->get_is_moving_check());
 
+    robot_a->set_desired_force_values(robot_a_strategy->get_current_desired_force_vector_());
+
     //to do
     if(!robot_a_strategy->get_type().compare("slave"))
     {
@@ -80,7 +82,7 @@ void *thread_func_robot_a ( void *param )
 
     m.unlock();
 
-    //ros_state->send_gripper_a_move(robot_a->get_gripper_move_values());
+    ros_state->send_gripper_a_move(robot_a_strategy->get_gripper_move_values());
     ros_state->update_ros_data();
 
     TIMESPEC_ADD (t_next, period);
@@ -163,7 +165,7 @@ void *thread_func_robot_b ( void *param )
     t_diff  = t_now;
     m.unlock();
 
-    //ros_state->send_gripper_b_move(robot_b->get_gripper_move_values());
+    ros_state->send_gripper_b_move(robot_b_strategy->get_gripper_move_values());
     ros_state->update_ros_data();
 
     TIMESPEC_ADD (t_next, period);
@@ -331,8 +333,8 @@ int main (int argc, char **argv)
   }
 
   std::cout << COLOR_YELLOW_BOLD << "Simulation On [ yes / no ]" << COLOR_RESET << std::endl;
-  //cin >> silmulation_on_off;
-  silmulation_on_off = "y";
+  cin >> silmulation_on_off;
+  //silmulation_on_off = "y";
 
   if(!silmulation_on_off.compare("yes") || !silmulation_on_off.compare("y"))
     std::cout << COLOR_GREEN_BOLD << "Setting up Simulation " << COLOR_RESET << std::endl;
@@ -340,8 +342,8 @@ int main (int argc, char **argv)
   {
     std::cout << COLOR_GREEN_BOLD << "REAL Robot, Be careful to run:" << COLOR_RESET << std::endl;
     std::cout << COLOR_GREEN_BOLD << "Are you sure ? [yes / no]" << COLOR_RESET << std::endl;
-    //cin >> silmulation_on_off;
-    silmulation_on_off = "y";
+    cin >> silmulation_on_off;
+    //silmulation_on_off = "y";
     if(silmulation_on_off.compare("y")!=0)
     {
       ros_state->shout_down_ros();
@@ -381,29 +383,30 @@ int main (int argc, char **argv)
 
   if(!robot_a_strategy->get_type().compare("master"))
   {
-    robot_a->set_force_controller_x_gain(0,0,0);
-    robot_a->set_position_controller_x_gain(p_gain,0,0);
-    robot_a->set_force_controller_y_gain(0,0,0);
-    robot_a->set_position_controller_y_gain(p_gain,0,0);
-    robot_a->set_force_controller_z_gain(0,0,0);
-    robot_a->set_position_controller_z_gain(p_gain,0,0);
+    //gain switch
+    robot_a->set_force_controller_x_gain(0.00007,0,0);
+    robot_a->set_position_controller_x_gain(0.8,0,0);
+    robot_a->set_force_controller_y_gain(0.00007,0,0);
+    robot_a->set_position_controller_y_gain(0.8,0,0);
+    robot_a->set_force_controller_z_gain(0.00007,0,0);
+    robot_a->set_position_controller_z_gain(0.8,0,0);
   }
   else
   {
-    //    robot_a->set_force_controller_x_gain(0.0008,0.000015,0);
-    //    robot_a->set_position_controller_x_gain(0.06,0,0);
-    //    robot_a->set_force_controller_y_gain(0.0008,0.000015,0);
-    //    robot_a->set_position_controller_y_gain(0.06,0,0);
-    //    robot_a->set_force_controller_z_gain(0.0008,0.000015,0);
-    //    robot_a->set_position_controller_z_gain(0.06,0,0);
+        robot_a->set_force_controller_x_gain(0.0008,0.000015,0);
+        robot_a->set_position_controller_x_gain(0.06,0,0);
+        robot_a->set_force_controller_y_gain(0.0008,0.000015,0);
+        robot_a->set_position_controller_y_gain(0.06,0,0);
+        robot_a->set_force_controller_z_gain(0.0008,0.000015,0);
+        robot_a->set_position_controller_z_gain(0.06,0,0);
 
-    robot_a->set_force_controller_x_gain(0.0008,0.000015,0);
-    robot_a->set_position_controller_x_gain(0.06,0,0);
-
-    robot_a->set_force_controller_y_gain(0,0,0);
-    robot_a->set_position_controller_y_gain(p_gain,0,0);
-    robot_a->set_force_controller_z_gain(0,0,0);
-    robot_a->set_position_controller_z_gain(p_gain,0,0);
+//    robot_a->set_force_controller_x_gain(0.0008,0.000015,0);
+//    robot_a->set_position_controller_x_gain(0.06,0,0);
+//
+//    robot_a->set_force_controller_y_gain(0,0,0);
+//    robot_a->set_position_controller_y_gain(p_gain,0,0);
+//    robot_a->set_force_controller_z_gain(0,0,0);
+//    robot_a->set_position_controller_z_gain(p_gain,0,0);
 
 //    robot_a->set_force_controller_y_gain(0.0008,0.000015,0);
 //    robot_a->set_position_controller_y_gain(0.06,0,0);
@@ -413,12 +416,12 @@ int main (int argc, char **argv)
 
   if(!robot_b_strategy->get_type().compare("master"))
   {
-    robot_b->set_force_controller_x_gain(0,0,0);
-    robot_b->set_position_controller_x_gain(p_gain,0,0);
-    robot_b->set_force_controller_y_gain(0,0,0);
-    robot_b->set_position_controller_y_gain(p_gain,0,0);
-    robot_b->set_force_controller_z_gain(0,0,0);
-    robot_b->set_position_controller_z_gain(p_gain,0,0);
+    robot_b->set_force_controller_x_gain(0.00007,0,0);
+    robot_b->set_position_controller_x_gain(0.8,0,0);
+    robot_b->set_force_controller_y_gain(0.00007,0,0);
+    robot_b->set_position_controller_y_gain(0.8,0,0);
+    robot_b->set_force_controller_z_gain(0.00007,0,0);
+    robot_b->set_position_controller_z_gain(0.8,0,0);
   }
   else
   {
