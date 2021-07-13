@@ -346,6 +346,10 @@ void TaskStrategy::master_robot()
     {
       gripper_move_values_ = 5;
     }
+    if(phases_ == 3)
+    {
+      gripper_move_values_ = 1;
+    }
 
     if(phases_ == 1)
     {
