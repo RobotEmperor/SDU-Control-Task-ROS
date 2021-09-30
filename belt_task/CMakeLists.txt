@@ -31,10 +31,13 @@ find_package(PkgConfig)
 pkg_check_modules(yaml_cpp yaml-cpp REQUIRED)
 
 catkin_package(
-  INCLUDE_DIRS include
+  INCLUDE_DIRS include 
   CATKIN_DEPENDS sdu_math roscpp actionlib actionlib_msgs std_msgs message_runtime
   DEPENDS system_lib
 )
+
+message(STATUS "print_all_variables------------------------------------------{")
+message(STATUS ${ROBWORK_INCLUDE_DIR})
 
 include_directories(include ${catkin_INCLUDE_DIRS}) 
 ###########
